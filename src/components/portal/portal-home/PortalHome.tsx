@@ -58,6 +58,7 @@ export default function PortalHome() {
             buttonText={loading ? '' : 'Ver todos los temas'}
             href="/temas"
             cards={topicCards}
+            loading={loading}
           />
         ) : null}
 

@@ -1,40 +1,89 @@
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { datasetsService } from '../../core/services/datasets.service';
 import { organizationsService } from '../../core/services/organizations.service';
 import type { Dataset, Organization } from '../../core/models/dataset.model';
 import type { Crumb } from '../shared/page-header/PageHeader';
+import { DATASET_FILTERS, mapFilterOptions } from '../../data/dataset-filters';
+import type { SortOrder } from '../datasets-list/useDatasetsList';
+
+const PAGE_SIZE = 10;
+const OPTIONS_BY_ID = mapFilterOptions(DATASET_FILTERS.sections);
 
 export function useOrganizationDetail() {
   const { organizationId = '' } = useParams();
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('recent');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Dataset | null>(null);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [org, list] = await Promise.all([
-        organizationsService.get(organizationId),
-        datasetsService.list(organizationId),
-      ]);
-      setOrganization(org);
-      setDatasets(list);
-    } catch {
-      setError('No se pudieron cargar los datasets.');
-    } finally {
-      setLoading(false);
-    }
+  const filterTerms = useMemo(
+    () =>
+      activeFilters
+        .map((id) => OPTIONS_BY_ID.get(id)?.label)
+        .filter((label): label is string => Boolean(label)),
+    [activeFilters],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [organizationId, query, sortOrder, activeFilters]);
+
+  useEffect(() => {
+    let active = true;
+    void organizationsService
+      .get(organizationId)
+      .then((org) => {
+        if (active) setOrganization(org);
+      })
+      .catch(() => {
+        if (active) setError('No se pudieron cargar los datasets.');
+      });
+    return () => {
+      active = false;
+    };
   }, [organizationId]);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let active = true;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      try {
+        const { total: count, items } = await datasetsService.listPaged(organizationId, {
+          q: query,
+          terms: filterTerms,
+          sort: sortOrder,
+          limit: PAGE_SIZE,
+          offset: (page - 1) * PAGE_SIZE,
+        });
+        if (!active) return;
+        setDatasets(items);
+        setTotal(count);
+      } catch {
+        if (active) setError('No se pudieron cargar los datasets.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [organizationId, query, filterTerms, sortOrder, page, refreshKey]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const goTo = (target: number) => setPage(Math.min(Math.max(1, target), totalPages));
 
   const crumbs: Crumb[] = useMemo(
     () => [
@@ -60,7 +109,11 @@ export function useOrganizationDetail() {
     setError(null);
     try {
       await datasetsService.remove(organizationId, dataset.id);
-      await reload();
+      if (datasets.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        setRefreshKey((key) => key + 1);
+      }
     } catch {
       setError('No se pudo borrar el dataset.');
     } finally {
@@ -73,6 +126,17 @@ export function useOrganizationDetail() {
     organizationId,
     organization,
     datasets,
+    page,
+    totalPages,
+    goTo,
+    hasCriteria: query.trim() !== '' || activeFilters.length > 0,
+    sortOrder,
+    onSearch: setQuery,
+    onSortChange: setSortOrder,
+    filtersOpen,
+    setFiltersOpen,
+    activeFilters,
+    setActiveFilters,
     loading,
     error,
     removingId,

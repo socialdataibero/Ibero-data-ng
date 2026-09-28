@@ -2,6 +2,7 @@ import { Button } from 'sectei-library';
 import { PortalDatasetHeader } from '../portal-dataset-header/PortalDatasetHeader';
 import { PortalChartsHeader } from '../../shared/portal/portal-charts-header/PortalChartsHeader';
 import { PortalModal } from '../../shared/portal/portal-modal/PortalModal';
+import { PortalChartsViewSkeleton } from './PortalChartsViewSkeleton';
 import { usePortalChartsView } from './usePortalChartsView';
 
 export default function PortalChartsView() {
@@ -30,15 +31,7 @@ export default function PortalChartsView() {
   } = usePortalChartsView();
 
   if (loading) {
-    return (
-      <main id="main-content">
-        <section className="container width-fixed" style={{ paddingBlock: '3rem' }}>
-          <p aria-live="polite" className="text-color-secondary">
-            Cargando datos desde el portal…
-          </p>
-        </section>
-      </main>
-    );
+    return <PortalChartsViewSkeleton />;
   }
 
   if (error || !pkg) {

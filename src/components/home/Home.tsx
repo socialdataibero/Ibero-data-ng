@@ -5,6 +5,7 @@ import { HorizontalCard } from '../shared/horizontal-card/HorizontalCard';
 import { OrganizationCard } from '../shared/organization-card/OrganizationCard';
 import { datasetToCardProps } from '../datasets-list/useDatasetsList';
 import { useHome } from './useHome';
+import { HomeRecentSkeleton } from './HomeSkeleton';
 import './home.css';
 
 const CRUMBS = [{ label: 'Inicio' }];
@@ -92,7 +93,7 @@ export function Home() {
 
       <section className="container width-fixed c-home__section" aria-label="Contenido reciente">
         {loading ? (
-          <p className="c-home__empty">Cargando…</p>
+          <HomeRecentSkeleton />
         ) : (
           <div className="c-home__recent">
             <div className="c-home__recent-header">

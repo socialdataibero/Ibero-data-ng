@@ -1,11 +1,12 @@
 import { useId } from 'react';
 import { Button, SearchField } from 'sectei-library';
-import { Icon } from '../shared/icon/Icon';
 import { PageHeader } from '../shared/page-header/PageHeader';
+import { Paginator } from '../shared/paginator/Paginator';
 import { Filters } from '../shared/filters/Filters';
 import { HorizontalCard } from '../shared/horizontal-card/HorizontalCard';
 import { DATASET_FILTERS } from '../../data/dataset-filters';
 import { CRUMBS, SORT_OPTIONS, useDatasetsList, type SortOrder } from './useDatasetsList';
+import { DatasetsListItemsSkeleton } from './DatasetsListSkeleton';
 import '../shared/cards-section/cards-section.css';
 import './datasets-list.css';
 
@@ -17,7 +18,6 @@ export function DatasetsList() {
     page,
     totalPages,
     pageItems,
-    pageNumbers,
     goTo,
     onSearch,
     onSortChange,
@@ -90,73 +90,25 @@ export function DatasetsList() {
         </div>
 
         {loading ? (
-          <p className="text-color-secondary m-0">Cargando…</p>
+          <DatasetsListItemsSkeleton />
         ) : pageItems.length === 0 ? (
           <p className="text-color-secondary m-0">No hay elementos para mostrar.</p>
         ) : (
-          <>
-            <ul className="cards-section__list">
-              {pageItems.map(
-                ({
-                  id,
-                  organizationId,
-                  createdAt: _createdAt,
-                  updatedAt: _updatedAt,
-                  ...card
-                }) => (
-                  <li key={id}>
-                    <HorizontalCard
-                      {...card}
-                      href={`/organizations/${organizationId}/datasets/${id}`}
-                    />
-                  </li>
-                ),
-              )}
-            </ul>
-
-            {totalPages > 1 && (
-              <nav className="paginator" aria-label="Paginación">
-                <button
-                  type="button"
-                  className="paginator__control"
-                  aria-label="Página anterior"
-                  disabled={page <= 1}
-                  onClick={() => goTo(page - 1)}
-                >
-                  <Icon name="chevron-left" size={16} />
-                </button>
-
-                <ul className="paginator__list">
-                  {pageNumbers.map((number) => (
-                    <li key={number}>
-                      <button
-                        type="button"
-                        className={`paginator__page${
-                          number === page ? ' paginator__page--current' : ''
-                        }`}
-                        aria-label={`Página ${number}`}
-                        aria-current={number === page ? 'page' : undefined}
-                        onClick={() => goTo(number)}
-                      >
-                        {number}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  className="paginator__control"
-                  aria-label="Página siguiente"
-                  disabled={page >= totalPages}
-                  onClick={() => goTo(page + 1)}
-                >
-                  <Icon name="chevron-right" size={16} />
-                </button>
-              </nav>
+          <ul className="cards-section__list">
+            {pageItems.map(
+              ({ id, organizationId, createdAt: _createdAt, updatedAt: _updatedAt, ...card }) => (
+                <li key={id}>
+                  <HorizontalCard
+                    {...card}
+                    href={`/organizations/${organizationId}/datasets/${id}`}
+                  />
+                </li>
+              ),
             )}
-          </>
+          </ul>
         )}
+
+        <Paginator page={page} totalPages={totalPages} onChange={goTo} />
       </section>
 
       <Filters

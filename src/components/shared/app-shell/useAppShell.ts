@@ -7,7 +7,7 @@ export type NavItem = SideMenuItem;
 export const NAV_ITEMS: NavItem[] = SIDE_MENU_ITEMS;
 
 export function useAppShell() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, loading, logout } = useAuth();
 
-  return { currentUser, logout, navItems: NAV_ITEMS };
+  return { currentUser, loading, logout, navItems: NAV_ITEMS };
 }

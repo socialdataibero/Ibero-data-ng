@@ -1,10 +1,13 @@
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { ProfileForm } from './ProfileForm';
+import { ProfileSkeleton } from './ProfileSkeleton';
 import { CRUMBS, useProfile } from './useProfile';
 import './profile.css';
 
 export function Profile() {
-  const { formValues } = useProfile();
+  const { currentUser, formValues } = useProfile();
+
+  if (!currentUser) return <ProfileSkeleton />;
 
   return (
     <div className="c-profile">

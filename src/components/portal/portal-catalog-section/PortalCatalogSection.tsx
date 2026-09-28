@@ -1,5 +1,8 @@
 import type { HTMLAttributes } from 'react';
 import { SearchField, Card } from 'sectei-library';
+import { CardSkeleton } from '../../shared/skeleton/CardSkeleton';
+import { Skeleton } from '../../shared/skeleton/Skeleton';
+import { SkeletonStatus } from '../../shared/skeleton/SkeletonStatus';
 import { usePortalCatalogSection } from './usePortalCatalogSection';
 import './portal-catalog-section.css';
 
@@ -19,8 +22,11 @@ export interface PortalCatalogSectionProps<T extends PortalCatalogItem> extends 
   onSearch?: (query: string) => void;
   onSortChange?: (sort: string) => void;
   disabled?: boolean;
+  loading?: boolean;
   className?: string;
 }
+
+const SKELETON_ITEMS = 6;
 
 export function PortalCatalogSection<T extends PortalCatalogItem>({
   items = [],
@@ -31,6 +37,7 @@ export function PortalCatalogSection<T extends PortalCatalogItem>({
   onSearch,
   onSortChange,
   disabled = false,
+  loading = false,
   className = '',
   ...rest
 }: PortalCatalogSectionProps<T>) {
@@ -60,11 +67,26 @@ export function PortalCatalogSection<T extends PortalCatalogItem>({
         </div>
       </div>
 
-      <p className="text-color-secondary m-b-4" aria-live="polite">
-        {countLabel}: {total ?? items.length}
-      </p>
+      {loading ? (
+        <Skeleton width="8rem" height="1rem" className="m-b-4" />
+      ) : (
+        <p className="text-color-secondary m-b-4" aria-live="polite">
+          {countLabel}: {total ?? items.length}
+        </p>
+      )}
 
-      {items.length > 0 ? (
+      {loading ? (
+        <SkeletonStatus label="Cargando resultados…" className="catalog-section__grid">
+          {Array.from({ length: SKELETON_ITEMS }, (_, index) => (
+            <CardSkeleton
+              key={index}
+              className="catalog-section__card"
+              imageHeight="10rem"
+              lines={3}
+            />
+          ))}
+        </SkeletonStatus>
+      ) : items.length > 0 ? (
         <div className="catalog-section__grid">
           {items.map((item, index) => {
             const { id, key, name: _name, className: cardClassName, ...cardProps } = item as PortalCatalogItem & { name?: unknown };

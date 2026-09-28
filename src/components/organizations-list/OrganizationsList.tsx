@@ -1,11 +1,12 @@
 import { useId } from 'react';
 import { Button, SearchField } from 'sectei-library';
-import { Icon } from '../shared/icon/Icon';
 import { PageHeader } from '../shared/page-header/PageHeader';
+import { Paginator } from '../shared/paginator/Paginator';
 import { Filters } from '../shared/filters/Filters';
 import { OrganizationCard } from '../shared/organization-card/OrganizationCard';
 import { ORGANIZATION_FILTERS } from '../../data/organization-filters';
 import { CRUMBS, SORT_OPTIONS, useOrganizationsList, type SortOrder } from './useOrganizationsList';
+import { OrganizationsListItemsSkeleton } from './OrganizationsListSkeleton';
 import '../shared/cards-section/cards-section.css';
 import './organizations-list.css';
 
@@ -17,7 +18,6 @@ export function OrganizationsList() {
     page,
     totalPages,
     pageItems,
-    pageNumbers,
     goTo,
     onSearch,
     onSortChange,
@@ -34,7 +34,7 @@ export function OrganizationsList() {
         intro="Organizaciones que publican y administran datasets en la plataforma."
         crumbs={CRUMBS}
         action={
-          <Button type="button" variant="primary" icon="pictogram-add">
+          <Button type="button" variant="primary" icon="pictogram-add" href="/organizations/new">
             Agregar organización
           </Button>
         }
@@ -90,62 +90,20 @@ export function OrganizationsList() {
         </div>
 
         {loading ? (
-          <p className="text-color-secondary m-0">Cargando…</p>
+          <OrganizationsListItemsSkeleton />
         ) : pageItems.length === 0 ? (
           <p className="text-color-secondary m-0">No hay elementos para mostrar.</p>
         ) : (
-          <>
-            <ul className="cards-section__grid">
-              {pageItems.map(({ id, createdAt: _createdAt, type: _type, scope: _scope, ...card }) => (
-                <li key={id}>
-                  <OrganizationCard {...card} />
-                </li>
-              ))}
-            </ul>
-
-            {totalPages > 1 && (
-              <nav className="paginator" aria-label="Paginación">
-                <button
-                  type="button"
-                  className="paginator__control"
-                  aria-label="Página anterior"
-                  disabled={page <= 1}
-                  onClick={() => goTo(page - 1)}
-                >
-                  <Icon name="chevron-left" size={16} />
-                </button>
-
-                <ul className="paginator__list">
-                  {pageNumbers.map((number) => (
-                    <li key={number}>
-                      <button
-                        type="button"
-                        className={`paginator__page${
-                          number === page ? ' paginator__page--current' : ''
-                        }`}
-                        aria-label={`Página ${number}`}
-                        aria-current={number === page ? 'page' : undefined}
-                        onClick={() => goTo(number)}
-                      >
-                        {number}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  className="paginator__control"
-                  aria-label="Página siguiente"
-                  disabled={page >= totalPages}
-                  onClick={() => goTo(page + 1)}
-                >
-                  <Icon name="chevron-right" size={16} />
-                </button>
-              </nav>
-            )}
-          </>
+          <ul className="cards-section__grid">
+            {pageItems.map(({ id, createdAt: _createdAt, type: _type, scope: _scope, ...card }) => (
+              <li key={id}>
+                <OrganizationCard {...card} />
+              </li>
+            ))}
+          </ul>
         )}
+
+        <Paginator page={page} totalPages={totalPages} onChange={goTo} />
       </section>
 
       <Filters

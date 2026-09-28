@@ -2,6 +2,7 @@ import { Button } from 'sectei-library';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { MappingStatusBadge } from '../../shared/mapping-status-badge/MappingStatusBadge';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
+import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
 import './harmonizer-mapping.css';
 
@@ -57,11 +58,7 @@ export function HarmonizerMapping() {
       <div className="container width-fixed c-harmonizer-mapping__body">
         {loadError ? <p className="c-harmonizer-mapping__error">{loadError}</p> : null}
 
-        {loading && !loadError ? (
-          <p className="text-color-secondary" aria-live="polite">
-            Cargando mapeo…
-          </p>
-        ) : null}
+        {loading && !loadError ? <HarmonizerMappingContentSkeleton /> : null}
 
         {!loading && !loadError ? (
           <>

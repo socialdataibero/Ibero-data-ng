@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from 'sectei-library';
 import { AnalysisBuilder } from '../analysis-builder/AnalysisBuilder';
 import { PageHeader } from '../shared/page-header/PageHeader';
+import { PageHeaderSkeleton } from '../shared/page-header/PageHeaderSkeleton';
+import { DatasetResourcesSkeleton } from './DatasetDetailSkeleton';
 import { useDatasetDetail } from './useDatasetDetail';
 import './dataset-detail.css';
 
@@ -44,10 +46,10 @@ export function DatasetDetail() {
 
   return (
     <div className="c-dataset-detail">
-      <PageHeader
-        title={dataset?.title ?? 'Dataset'}
-        intro={
-          dataset ? (
+      {dataset ? (
+        <PageHeader
+          title={dataset.title}
+          intro={
             <div className="c-dataset-detail__header-meta">
               <div className="c-dataset-detail__tags" aria-label="Clasificación">
                 <span className="c-dataset-detail__chip">
@@ -68,24 +70,24 @@ export function DatasetDetail() {
                 <p className="c-dataset-detail__description">{dataset.description}</p>
               ) : null}
             </div>
-          ) : (
-            'Detalle del dataset: recursos, importación y análisis.'
-          )
-        }
-        crumbs={crumbs}
-        action={
-          dataset && !dataset.supersededBy ? (
-            <Button
-              type="button"
-              variant="secondary"
-              icon="pictogram-add"
-              href={`/organizations/${organizationId}/datasets/new?revisionOf=${dataset.id}`}
-            >
-              Crear revisión
-            </Button>
-          ) : null
-        }
-      />
+          }
+          crumbs={crumbs}
+          action={
+            !dataset.supersededBy ? (
+              <Button
+                type="button"
+                variant="secondary"
+                icon="pictogram-add"
+                href={`/organizations/${organizationId}/datasets/new?revisionOf=${dataset.id}`}
+              >
+                Crear revisión
+              </Button>
+            ) : null
+          }
+        />
+      ) : (
+        <PageHeaderSkeleton />
+      )}
 
       <div className="container width-fixed c-dataset-detail__body">
         {dataset &&
@@ -177,7 +179,7 @@ export function DatasetDetail() {
             Recursos
           </h2>
           {loadingResources ? (
-            <p className="c-dataset-detail__help">Cargando…</p>
+            <DatasetResourcesSkeleton />
           ) : resources.length === 0 ? (
             <p className="c-dataset-detail__help">Todavía no hay archivos subidos.</p>
           ) : (

@@ -6,7 +6,7 @@ import './app-shell.css';
 
 export function AppShell() {
   const { pathname } = useLocation();
-  const { currentUser, logout, navItems } = useAppShell();
+  const { currentUser, loading, logout, navItems } = useAppShell();
 
   return (
     <div className="c-app-shell">
@@ -15,7 +15,7 @@ export function AppShell() {
       </a>
 
       <AdminMainNav
-        authenticated={Boolean(currentUser)}
+        authenticated={Boolean(currentUser) || loading}
         user={currentUser ? { name: currentUser.fullName } : null}
         onLogout={logout}
       />

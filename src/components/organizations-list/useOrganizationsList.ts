@@ -27,7 +27,7 @@ export const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: 'members-desc', label: 'Más miembros' },
 ];
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const OPTIONS_BY_ID = mapFilterOptions(ORGANIZATION_FILTERS.sections);
 
 export function organizationToCardProps(org: Organization): OrganizationListItem {
@@ -90,7 +90,6 @@ export function useOrganizationsList() {
   }, [query, filterTerms, sortOrder, page]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   const goTo = (target: number) => setPage(Math.min(Math.max(1, target), totalPages));
 
@@ -108,7 +107,6 @@ export function useOrganizationsList() {
     totalPages,
     pageItems: organizations,
     total,
-    pageNumbers,
     goTo,
     onSearch,
     onSortChange,

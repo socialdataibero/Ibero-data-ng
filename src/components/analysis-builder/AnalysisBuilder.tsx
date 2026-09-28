@@ -11,6 +11,7 @@ import {
   OP_LABELS,
   useAnalysisBuilder,
 } from './useAnalysisBuilder';
+import { AnalysisResultSkeleton, SavedAnalysesSkeleton } from './AnalysisBuilderSkeleton';
 import './analysis-builder.css';
 
 interface Props {
@@ -583,7 +584,7 @@ export function AnalysisBuilder({
           </p>
         ) : null}
         {b.loadingAnalyses ? (
-          <p className="c-analysis-builder__meta">Cargando…</p>
+          <SavedAnalysesSkeleton />
         ) : b.analyses.length === 0 ? (
           <p className="c-analysis-builder__meta">
             Todavía no hay análisis guardados para este dataset.
@@ -667,7 +668,7 @@ export function AnalysisBuilder({
                       </div>
                     </div>
                   ) : (
-                    <p className="c-analysis-builder__meta">Cargando resultado…</p>
+                    <AnalysisResultSkeleton />
                   )
                 ) : null}
               </li>

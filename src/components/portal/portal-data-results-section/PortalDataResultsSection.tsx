@@ -1,7 +1,13 @@
 import type { HTMLAttributes } from 'react';
 import { Button } from 'sectei-library';
 import { PortalGridViewIcon } from '../../shared/portal/portal-grid-view-icon/PortalGridViewIcon';
-import { PortalDataCard, type PortalDataCardProps } from '../../shared/portal/portal-data-card/PortalDataCard';
+import {
+  PortalDataCard,
+  type PortalDataCardProps,
+} from '../../shared/portal/portal-data-card/PortalDataCard';
+import { CardSkeleton } from '../../shared/skeleton/CardSkeleton';
+import { Skeleton } from '../../shared/skeleton/Skeleton';
+import { SkeletonStatus } from '../../shared/skeleton/SkeletonStatus';
 import { usePortalDataResultsSection } from './usePortalDataResultsSection';
 import './portal-data-results-section.css';
 
@@ -15,14 +21,18 @@ export interface PortalDataResultsSectionProps extends HTMLAttributes<HTMLElemen
   lastUpdated?: string;
   items?: PortalDataResultItem[];
   countLabel?: string;
+  loading?: boolean;
   className?: string;
 }
+
+const SKELETON_ITEMS = 6;
 
 export function PortalDataResultsSection({
   total,
   lastUpdated = '',
   items = [],
   countLabel = 'Datos disponibles',
+  loading = false,
   className = '',
   ...rest
 }: PortalDataResultsSectionProps) {
@@ -33,7 +43,7 @@ export function PortalDataResultsSection({
       <div className="data-results-section__header">
         <div className="data-results-section__info">
           <h2 id={titleId} className="data-results-section__title">
-            {count} {countLabel}
+            {loading ? <Skeleton width="14rem" height="1.75rem" /> : `${count} ${countLabel}`}
           </h2>
           {lastUpdated ? <p className="data-results-section__updated">Última actualización: {lastUpdated}</p> : null}
         </div>
@@ -53,7 +63,20 @@ export function PortalDataResultsSection({
         </div>
       </div>
 
-      {items.length > 0 ? (
+      {loading ? (
+        <SkeletonStatus
+          label="Cargando datos…"
+          className="data-results-section__list data-results-section__list--grid"
+        >
+          {Array.from({ length: SKELETON_ITEMS }, (_, index) => (
+            <CardSkeleton
+              key={index}
+              className="data-card data-results-section__card"
+              imageHeight="7.5rem"
+            />
+          ))}
+        </SkeletonStatus>
+      ) : items.length > 0 ? (
         <div className="data-results-section__list data-results-section__list--grid">
           {items.map((item, index) => {
             const { id, key, className: cardClassName, ...cardProps } = item;

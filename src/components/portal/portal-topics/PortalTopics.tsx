@@ -33,12 +33,6 @@ export default function PortalTopics() {
             No se pudieron cargar los temas: {error.message}
           </p>
         </section>
-      ) : loading ? (
-        <section className="container width-fixed" style={{ paddingBlock: '2rem' }}>
-          <p aria-live="polite" className="text-color-secondary">
-            Cargando temas…
-          </p>
-        </section>
       ) : (
         <>
           <PortalCatalogSection
@@ -49,6 +43,7 @@ export default function PortalTopics() {
             onSearch={setQuery}
             searchLabel="Buscar tema"
             countLabel="Temas"
+            loading={loading}
           />
 
           {totalPages > 1 ? (

@@ -16,6 +16,16 @@ export interface UploadDatasetPayload {
   newSurvey?: string;
 }
 
+export interface ListSurveysParams {
+  limit?: number;
+  offset?: number;
+}
+
+export interface ListSurveysResult {
+  total: number;
+  items: HarmonizerSurvey[];
+}
+
 function variablesQuery(variables?: string[]): string {
   if (!variables?.length) return '';
   const params = new URLSearchParams();
@@ -24,7 +34,18 @@ function variablesQuery(variables?: string[]): string {
 }
 
 export const harmonizerService = {
-  listSurveys: (signal?: AbortSignal) => http.get<HarmonizerSurvey[]>('/harmonizer/surveys', signal),
+  listSurveysPaged: ({ limit, offset }: ListSurveysParams = {}, signal?: AbortSignal) => {
+    const qs = new URLSearchParams();
+    if (limit !== undefined) qs.set('limit', String(limit));
+    if (offset !== undefined) qs.set('offset', String(offset));
+    const query = qs.toString();
+    return http.get<ListSurveysResult>(`/harmonizer/surveys${query ? `?${query}` : ''}`, signal);
+  },
+
+  listSurveys: async (signal?: AbortSignal): Promise<HarmonizerSurvey[]> => {
+    const { items } = await harmonizerService.listSurveysPaged({ limit: 200 }, signal);
+    return items;
+  },
 
   createSurvey: async (name: string, description?: string): Promise<HarmonizerSurvey> => {
     const created = await http.post<{ id: string; name: string; description: string | null }>(

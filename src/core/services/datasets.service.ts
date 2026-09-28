@@ -49,13 +49,8 @@ export const datasetsService = {
     http.get<ListDatasetsResult>(`/organizations/${organizationId}/datasets${buildQuery(params)}`),
 
   /** Paginated, filtered global listing — drives the admin Datasets page. */
-  listAllPaged: (params: ListDatasetsParams = {}) => http.get<ListDatasetsResult>(`/datasets${buildQuery(params)}`),
-
-  /** Bare list for callers that just need "all datasets of this org" (e.g. org detail page). */
-  list: async (organizationId: string): Promise<Dataset[]> => {
-    const { items } = await datasetsService.listPaged(organizationId, { limit: 200 });
-    return items;
-  },
+  listAllPaged: (params: ListDatasetsParams = {}) =>
+    http.get<ListDatasetsResult>(`/datasets${buildQuery(params)}`),
 
   /** Bare list for the dashboard's "recent datasets" widget. */
   listAll: async (limit?: number): Promise<Dataset[]> => {

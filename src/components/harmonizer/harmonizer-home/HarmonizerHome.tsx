@@ -1,12 +1,14 @@
 import { Button } from 'sectei-library';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../shared/page-header/PageHeader';
+import { Paginator } from '../../shared/paginator/Paginator';
 import { SurveyModule } from '../../shared/survey-module/SurveyModule';
 import { CRUMBS, useHarmonizerHome } from './useHarmonizerHome';
+import { HarmonizerHomeListSkeleton } from './HarmonizerHomeSkeleton';
 import './harmonizer-home.css';
 
 export function HarmonizerHome() {
-  const { surveys, loading, loadError } = useHarmonizerHome();
+  const { surveys, total, page, totalPages, goTo, loading, loadError } = useHarmonizerHome();
 
   return (
     <div className="c-harmonizer-home">
@@ -51,7 +53,7 @@ export function HarmonizerHome() {
           {!loading && !loadError ? (
             <span className="c-harmonizer-home__count text-color-secondary" aria-live="polite">
               {' '}
-              · {surveys.length}
+              · {total}
             </span>
           ) : null}
         </h2>
@@ -61,9 +63,7 @@ export function HarmonizerHome() {
             {loadError}
           </p>
         ) : loading ? (
-          <p className="text-color-secondary" aria-live="polite">
-            Cargando encuestas…
-          </p>
+          <HarmonizerHomeListSkeleton />
         ) : surveys.length === 0 ? (
           <div className="c-harmonizer-home__empty">
             <div className="c-harmonizer-home__empty-icon" aria-hidden="true">
@@ -89,6 +89,8 @@ export function HarmonizerHome() {
             ))}
           </div>
         )}
+
+        <Paginator page={page} totalPages={totalPages} onChange={goTo} />
 
         <p className="text-color-secondary c-harmonizer-home__footnote">
           ¿Necesitas otra edición?{' '}

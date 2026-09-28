@@ -8,7 +8,7 @@ import type { PortalCatalogItem } from '../portal-catalog-section/PortalCatalogS
 import { SORT_AZ } from '../portal-catalog-section/usePortalCatalogSection';
 
 const IMAGES = [cardMotif1, cardMotif2, cardMotif3];
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 function organizationToTopic(
   organization: CatalogOrganization,

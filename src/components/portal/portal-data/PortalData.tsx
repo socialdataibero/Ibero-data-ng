@@ -55,15 +55,14 @@ export default function PortalData() {
             No se pudo consultar el catálogo: {error.message}
           </p>
         </section>
-      ) : loading ? (
-        <section className="container width-fixed" style={{ paddingBlock: '2rem' }}>
-          <p aria-live="polite" className="text-color-secondary">
-            Cargando el catálogo…
-          </p>
-        </section>
       ) : (
         <>
-          <PortalDataResultsSection total={total} lastUpdated={lastUpdated} items={items} />
+          <PortalDataResultsSection
+            total={total}
+            lastUpdated={lastUpdated}
+            items={items}
+            loading={loading}
+          />
 
           {totalPages > 1 ? (
             <nav className="paginator container width-fixed" aria-label="Paginación" style={{ paddingBlock: '1rem 2rem' }}>

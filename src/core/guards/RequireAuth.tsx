@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { getToken } from '../api/http';
 import { useAuth } from '../auth/useAuth';
 
 export function RequireAuth() {
@@ -6,7 +7,7 @@ export function RequireAuth() {
   const location = useLocation();
 
   if (loading) {
-    return <p className="loading-session">Cargando…</p>;
+    return getToken() ? <Outlet /> : null;
   }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;

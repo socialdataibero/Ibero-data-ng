@@ -101,3 +101,7 @@ body[data-theme='dark'] .page-header {
     justify-content: center;
   }
 }
+
+.page-header-skeleton--centered .skeleton {
+  margin-inline: auto;
+}

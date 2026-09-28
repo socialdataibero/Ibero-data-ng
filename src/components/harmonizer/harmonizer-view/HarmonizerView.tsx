@@ -2,6 +2,7 @@ import { Button } from 'sectei-library';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
+import { HarmonizerViewContentSkeleton } from './HarmonizerViewSkeleton';
 import { useHarmonizerView } from './useHarmonizerView';
 import './harmonizer-view.css';
 
@@ -114,11 +115,7 @@ export function HarmonizerView() {
       <div className="container width-fixed c-harmonizer-view__body">
         {loadError ? <p className="c-harmonizer-view__error">{loadError}</p> : null}
 
-        {loading && !loadError ? (
-          <p className="text-color-secondary" aria-live="polite">
-            Cargando vista armonizada…
-          </p>
-        ) : null}
+        {loading && !loadError ? <HarmonizerViewContentSkeleton /> : null}
 
         {!loading && !loadError ? (
           <>

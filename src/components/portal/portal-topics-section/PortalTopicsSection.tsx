@@ -1,5 +1,7 @@
 import type { HTMLAttributes } from 'react';
 import { Button, Card } from 'sectei-library';
+import { CardSkeleton } from '../../shared/skeleton/CardSkeleton';
+import { SkeletonStatus } from '../../shared/skeleton/SkeletonStatus';
 import { usePortalTopicsSection } from './usePortalTopicsSection';
 import './portal-topics-section.css';
 
@@ -21,8 +23,11 @@ export interface PortalTopicsSectionProps extends HTMLAttributes<HTMLElement> {
   buttonSize?: string;
   disabled?: boolean;
   cards?: PortalTopicCard[];
+  loading?: boolean;
   className?: string;
 }
+
+const SKELETON_ITEMS = 3;
 
 export function PortalTopicsSection({
   title = '',
@@ -35,6 +40,7 @@ export function PortalTopicsSection({
   buttonSize = 'default',
   disabled = false,
   cards = [],
+  loading = false,
   className = '',
   ...rest
 }: PortalTopicsSectionProps) {
@@ -54,7 +60,18 @@ export function PortalTopicsSection({
         {summary ? <p className="topics-section__summary">{summary}</p> : null}
       </div>
 
-      {cards.length > 0 ? (
+      {loading ? (
+        <SkeletonStatus label="Cargando temas…" className="topics-section__cards">
+          {Array.from({ length: SKELETON_ITEMS }, (_, index) => (
+            <CardSkeleton
+              key={index}
+              className="topics-section__card"
+              imageHeight="10rem"
+              lines={3}
+            />
+          ))}
+        </SkeletonStatus>
+      ) : cards.length > 0 ? (
         <div className="topics-section__cards">
           {cards.map((card, index) => {
             const { id, key, className: cardClassName, ...cardProps } = card;

@@ -9,7 +9,7 @@ import type { PortalDataResultItem } from '../portal-data-results-section/Portal
 import type { PortalSortOption } from '../portal-search-header/usePortalSearchHeader';
 
 const IMAGES = [cardMotif1, cardMotif2, cardMotif3];
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 const SORT_OPTIONS: PortalSortOption[] = [
   { value: 'relevancia', label: 'Relevancia' },
