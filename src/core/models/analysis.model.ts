@@ -23,6 +23,8 @@ export interface PreviewResult {
 
 export type AnalysisStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
 
+export type AnalysisOrigin = 'IBERO' | 'VIZCANVAS';
+
 export interface Analysis {
   id: string;
   datasetId: string;
@@ -33,6 +35,7 @@ export interface Analysis {
   description?: string | null;
   visibility: DatasetVisibility;
   recipe: Step[];
+  origin: AnalysisOrigin;
   status: AnalysisStatus;
   errorMessage?: string | null;
   resultStorageKey?: string | null;

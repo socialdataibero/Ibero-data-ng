@@ -206,8 +206,12 @@ export function DatasetDetail() {
                 onClick={openInVizCanvas}
                 disabled={openingVizCanvas || !selectedResourceId}
               >
-                {openingVizCanvas ? 'Abriendo…' : 'Abrir en VizCanvas'}
+                {openingVizCanvas ? 'Abriendo…' : 'Crear análisis con VizCanvas'}
               </Button>
+              <p className="c-dataset-detail__help">
+                Abre este archivo en VizCanvas. Desde ahí, “Guardar en Ibero Data” lo publica como
+                análisis de este dataset con su receta completa.
+              </p>
               {vizCanvasError ? (
                 <p className="c-dataset-detail__error">{vizCanvasError}</p>
               ) : null}

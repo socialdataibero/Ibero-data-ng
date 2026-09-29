@@ -488,6 +488,16 @@
   color: var(--text-secondary, var(--color-secondary-7));
 }
 
+.c-analysis-builder__origin {
+  flex: 0 0 auto;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
 .c-analysis-builder__status--done {
   color: #15803d;
 }

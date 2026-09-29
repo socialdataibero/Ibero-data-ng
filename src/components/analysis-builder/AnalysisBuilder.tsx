@@ -601,6 +601,9 @@ export function AnalysisBuilder({
                   >
                     <span className="c-analysis-builder__folder">{analysis.folder}</span>
                     <span className="c-analysis-builder__item-title">{analysis.title}</span>
+                    {analysis.origin === 'VIZCANVAS' ? (
+                      <span className="c-analysis-builder__origin">VizCanvas</span>
+                    ) : null}
                     <span
                       className={`c-analysis-builder__status c-analysis-builder__status--${analysis.status.toLowerCase()}`}
                     >
@@ -608,15 +611,17 @@ export function AnalysisBuilder({
                     </span>
                   </button>
                   <div className="c-analysis-builder__item-actions">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      icon="pictogram-edit"
-                      onClick={() => onRequestEditResource?.(analysis)}
-                    >
-                      Editar
-                    </Button>
-                    {analysis.status === 'DONE' ? (
+                    {analysis.origin !== 'VIZCANVAS' ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        icon="pictogram-edit"
+                        onClick={() => onRequestEditResource?.(analysis)}
+                      >
+                        Editar
+                      </Button>
+                    ) : null}
+                    {analysis.status === 'DONE' || analysis.origin === 'VIZCANVAS' ? (
                       <Button
                         type="button"
                         variant="secondary"
@@ -624,7 +629,11 @@ export function AnalysisBuilder({
                         onClick={(e) => void b.openInVizCanvas(analysis, e as MouseEvent)}
                         disabled={b.openingVizCanvasId === analysis.id}
                       >
-                        {b.openingVizCanvasId === analysis.id ? 'Abriendo…' : 'VizCanvas'}
+                        {b.openingVizCanvasId === analysis.id
+                          ? 'Abriendo…'
+                          : analysis.origin === 'VIZCANVAS'
+                            ? 'Editar en VizCanvas'
+                            : 'VizCanvas'}
                       </Button>
                     ) : null}
                     <Button
