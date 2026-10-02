@@ -5,6 +5,10 @@ export function isValidSlug(value: string): boolean {
   return SLUG_RE.test(value);
 }
 
+export function looksLikeUrl(value: string): boolean {
+  return /^(https?:\/\/|www\.)/i.test(value.trim());
+}
+
 export function isValidEmail(value: string): boolean {
   return EMAIL_RE.test(value);
 }

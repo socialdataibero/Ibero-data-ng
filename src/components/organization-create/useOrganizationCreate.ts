@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { organizationsService } from '../../core/services/organizations.service';
 import { errorMessage, fieldErrors } from '../../core/api/http';
-import { isValidSlug } from '../../core/utils/validation';
+import { isValidSlug, looksLikeUrl } from '../../core/utils/validation';
 
 export function useOrganizationCreate() {
   const navigate = useNavigate();
@@ -26,7 +26,10 @@ export function useOrganizationCreate() {
     }
 
     if (!slug.trim()) {
-      setErrorSlug('La URL de la organización es obligatoria.');
+      setErrorSlug('El identificador de la organización es obligatorio.');
+      ok = false;
+    } else if (looksLikeUrl(slug)) {
+      setErrorSlug('Esto parece una URL. Aquí escribe un nombre corto para la organización (ej. universidad-ibero).');
       ok = false;
     } else if (!isValidSlug(slug)) {
       setErrorSlug('Solo se permiten minúsculas, números y guiones.');

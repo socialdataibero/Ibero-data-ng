@@ -52,7 +52,7 @@ export function OrganizationCreate() {
                 </div>
 
                 <div className="c-dataset-create__field">
-                  <label htmlFor="slug">URL de la organización *</label>
+                  <label htmlFor="slug">Identificador de la organización *</label>
                   <input
                     id="slug"
                     type="text"
@@ -69,7 +69,7 @@ export function OrganizationCreate() {
                     </p>
                   ) : (
                     <p id="slug-help" className="form-help">
-                      Solo minúsculas, números y guiones (ej. universidad-ibero).
+                      Nombre corto para reconocer la organización en el sistema. No es una URL: solo minúsculas, números y guiones (ej. universidad-ibero).
                     </p>
                   )}
                 </div>

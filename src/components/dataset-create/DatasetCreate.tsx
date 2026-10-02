@@ -69,7 +69,7 @@ export function DatasetCreate() {
                 </div>
 
                 <div className="c-dataset-create__field">
-                  <label htmlFor="slug">URL del dataset *</label>
+                  <label htmlFor="slug">Identificador del dataset *</label>
                   <input
                     id="slug"
                     type="text"
@@ -86,7 +86,7 @@ export function DatasetCreate() {
                     </p>
                   ) : (
                     <p id="slug-help" className="form-help">
-                      Solo minúsculas, números y guiones (ej. enigh-2024-v1).
+                      Nombre corto para reconocer el dataset en el sistema. No es una URL: solo minúsculas, números y guiones (ej. enigh-2024-v1).
                     </p>
                   )}
                 </div>

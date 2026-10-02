@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { datasetsService } from '../../core/services/datasets.service';
 import { errorMessage, fieldErrors } from '../../core/api/http';
-import { isValidSlug, isValidUrl, isValidYear } from '../../core/utils/validation';
+import { isValidSlug, isValidUrl, isValidYear, looksLikeUrl } from '../../core/utils/validation';
 import type {
   Dataset,
   DatasetVisibility,
@@ -61,7 +61,10 @@ export function useDatasetCreate() {
     }
 
     if (!slug.trim()) {
-      setErrorSlug('La URL del dataset es obligatoria.');
+      setErrorSlug('El identificador del dataset es obligatorio.');
+      ok = false;
+    } else if (looksLikeUrl(slug)) {
+      setErrorSlug('Esto parece una URL. Si es el enlace a los datos, pégalo en «URL de la fuente original» y aquí escribe un nombre corto (ej. enigh-2024-v1).');
       ok = false;
     } else if (!isValidSlug(slug)) {
       setErrorSlug('Solo se permiten minúsculas, números y guiones.');
