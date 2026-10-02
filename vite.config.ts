@@ -1,15 +1,22 @@
-import { defineConfig } from 'vite';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { realpathSync } from 'node:fs';
 
-const secteiComponents = fileURLToPath(new URL('../sectei-components', import.meta.url));
-let secteiResolved = secteiComponents;
-try {
-  secteiResolved = realpathSync(secteiComponents);
-} catch {
-  /* symlink may be missing in some setups */
+const projectRoot = fileURLToPath(new URL('.', import.meta.url));
+const linkedPackages = ['sectei-library'];
+
+function resolveRealPath(path: string): string | null {
+  try {
+    return realpathSync(path);
+  } catch {
+    return null;
+  }
 }
+
+const linkedPackageDirs = linkedPackages
+  .map((name) => resolveRealPath(fileURLToPath(new URL(`./node_modules/${name}`, import.meta.url))))
+  .filter((path): path is string => path !== null);
 
 export default defineConfig({
   plugins: [react()],
@@ -21,7 +28,7 @@ export default defineConfig({
     port: 4200,
     strictPort: true,
     fs: {
-      allow: ['.', secteiComponents, secteiResolved],
+      allow: [searchForWorkspaceRoot(projectRoot), ...linkedPackageDirs],
     },
   },
 });
