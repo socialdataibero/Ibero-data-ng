@@ -16,6 +16,11 @@ export interface UploadDatasetPayload {
   newSurvey?: string;
 }
 
+export interface UpdateSurveyPayload {
+  name?: string;
+  description?: string;
+}
+
 export interface ListSurveysParams {
   limit?: number;
   offset?: number;
@@ -55,6 +60,18 @@ export const harmonizerService = {
     return { ...created, datasets: [] };
   },
 
+  getSurvey: (surveyId: string, signal?: AbortSignal) =>
+    http.get<{ id: string; name: string; description: string | null }>(
+      `/harmonizer/surveys/${surveyId}`,
+      signal,
+    ),
+
+  updateSurvey: (surveyId: string, payload: UpdateSurveyPayload) =>
+    http.patch<{ id: string; name: string; description: string | null }>(
+      `/harmonizer/surveys/${surveyId}`,
+      payload,
+    ),
+
   uploadDataset: (payload: UploadDatasetPayload, file: File) => {
     const form = new FormData();
     form.append('name', payload.name);
@@ -69,7 +86,9 @@ export const harmonizerService = {
     http.get<MappingInfo>(`/harmonizer/datasets/${datasetId}/mapping`, signal),
 
   saveMapping: (datasetId: string, columns: MappingChoice[]) =>
-    http.put<{ ok: true; datasetId: string }>(`/harmonizer/datasets/${datasetId}/mapping`, { columns }),
+    http.put<{ ok: true; datasetId: string }>(`/harmonizer/datasets/${datasetId}/mapping`, {
+      columns,
+    }),
 
   getDatasetHarmonized: (datasetId: string, signal?: AbortSignal) =>
     http.get<DatasetHarmonizedView>(`/harmonizer/datasets/${datasetId}/harmonized`, signal),
@@ -81,11 +100,17 @@ export const harmonizerService = {
     ),
 
   downloadDatasetExport: async (datasetId: string, fmt: ExportFormat): Promise<void> => {
-    const { blob, filename } = await downloadBlob(`/harmonizer/datasets/${datasetId}/harmonized.${fmt}`);
+    const { blob, filename } = await downloadBlob(
+      `/harmonizer/datasets/${datasetId}/harmonized.${fmt}`,
+    );
     triggerDownload(blob, filename ?? `harmonized.${fmt}`);
   },
 
-  downloadSurveyExport: async (surveyId: string, fmt: ExportFormat, variables?: string[]): Promise<void> => {
+  downloadSurveyExport: async (
+    surveyId: string,
+    fmt: ExportFormat,
+    variables?: string[],
+  ): Promise<void> => {
     const { blob, filename } = await downloadBlob(
       `/harmonizer/surveys/${surveyId}/harmonized.${fmt}${variablesQuery(variables)}`,
     );

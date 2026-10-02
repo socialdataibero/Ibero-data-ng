@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormE
 import { useNavigate } from 'react-router-dom';
 import { NEW_OPTION, type HarmonizerSurvey } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
-import { errorMessage, fieldErrors } from '../../../core/api/http';
+import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
 import { isValidYear } from '../../../core/utils/validation';
 import type { Crumb } from '../../shared/page-header/PageHeader';
 
@@ -37,9 +37,9 @@ export function useHarmonizerUpload() {
         const list = await harmonizerService.listSurveys(controller.signal);
         if (!active) return;
         setSurveys(list);
-        if (list.length > 0) setUploadSurveyId((current) => (current === NEW_OPTION ? list[0].id : current));
-      } catch {
-      }
+        if (list.length > 0)
+          setUploadSurveyId((current) => (current === NEW_OPTION ? list[0].id : current));
+      } catch {}
     })();
     return () => {
       active = false;
@@ -108,6 +108,12 @@ export function useHarmonizerUpload() {
           );
           void navigate(`/harmonizer/datasets/${datasetId}/mapping`);
         } catch (err) {
+          if (err instanceof ApiError && err.body?.code === 'survey_name_taken') {
+            setErrorNewSurveyName(
+              'Ya existe una encuesta con ese nombre. Elígela en la lista de encuestas.',
+            );
+            return;
+          }
           const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey']);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);

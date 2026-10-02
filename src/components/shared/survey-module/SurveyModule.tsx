@@ -36,6 +36,13 @@ export function SurveyModule({ survey }: Props) {
             Subir CSV
             <span className="pictogram-file-upload" aria-hidden="true" />
           </Link>
+          <span className="survey-module__link-separator" aria-hidden="true">
+            |
+          </span>
+          <Link to={`/harmonizer/surveys/${survey.id}/edit`} className="hyperlink">
+            Editar
+            <span className="pictogram-edit" aria-hidden="true" />
+          </Link>
         </nav>
       </header>
 

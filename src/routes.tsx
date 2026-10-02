@@ -145,6 +145,11 @@ export function AppRoutes() {
               <HarmonizerNewSurvey />,
               <HarmonizerNewSurveySkeleton />,
             )}
+            {lazyRoute(
+              '/harmonizer/surveys/:surveyId/edit',
+              <HarmonizerNewSurvey />,
+              <HarmonizerNewSurveySkeleton />,
+            )}
             {lazyRoute('/harmonizer/upload', <HarmonizerUpload />, <HarmonizerUploadSkeleton />)}
             {lazyRoute(
               '/harmonizer/datasets/:datasetId/mapping',

@@ -30,12 +30,7 @@ export function HarmonizerUpload() {
         intro="Sube una edición (CSV) a una encuesta existente o crea una encuesta nueva al mismo tiempo."
         crumbs={CRUMBS}
         action={
-          <Button
-            type="button"
-            variant="secondary"
-            icon="pictogram-arrow-left"
-            href="/harmonizer"
-          >
+          <Button type="button" variant="secondary" icon="pictogram-arrow-left" href="/harmonizer">
             Encuestas
           </Button>
         }
