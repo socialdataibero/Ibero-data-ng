@@ -35,8 +35,14 @@ const packageJson = JSON.parse(
   version: string;
 };
 
+function resolveVersion(baseVersion: string): string {
+  const [major = '0', minor = '0', patch = '0'] = baseVersion.split('.');
+  const commitCount = runGit('rev-list --count HEAD');
+  return `${major}.${minor}.${commitCount ?? patch}`;
+}
+
 const buildInfo = {
-  version: packageJson.version,
+  version: resolveVersion(packageJson.version),
   commit: runGit('rev-parse --short HEAD'),
   dirty: (runGit('status --porcelain') ?? '') !== '',
   builtAt: new Date().toISOString(),
