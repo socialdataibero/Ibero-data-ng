@@ -7,11 +7,26 @@ import {
   type Survey,
 } from '../../core/models/dataset.model';
 import { PageHeader } from '../shared/page-header/PageHeader';
+import { OrganizationNotFound } from '../shared/organization-not-found/OrganizationNotFound';
 import { useDatasetCreate } from './useDatasetCreate';
+import { DatasetCreateSkeleton } from './DatasetCreateSkeleton';
 import './dataset-create.css';
 
 export function DatasetCreate() {
-  const { organizationId, saving, error, revisionOf, fields, fieldErrors, submit } = useDatasetCreate();
+  const {
+    organizationId,
+    checkingOrganization,
+    organizationNotFound,
+    saving,
+    error,
+    revisionOf,
+    fields,
+    fieldErrors,
+    submit,
+  } = useDatasetCreate();
+
+  if (organizationNotFound) return <OrganizationNotFound />;
+  if (checkingOrganization) return <DatasetCreateSkeleton />;
 
   const crumbs = [
     { label: 'Inicio', href: '/dashboard' },
@@ -86,7 +101,8 @@ export function DatasetCreate() {
                     </p>
                   ) : (
                     <p id="slug-help" className="form-help">
-                      Nombre corto para reconocer el dataset en el sistema. No es una URL: solo minúsculas, números y guiones (ej. enigh-2024-v1).
+                      Nombre corto para reconocer el dataset en el sistema. No es una URL: solo
+                      minúsculas, números y guiones (ej. enigh-2024-v1).
                     </p>
                   )}
                 </div>
@@ -271,11 +287,7 @@ export function DatasetCreate() {
 
           <div className="c-dataset-create__footer">
             <div className="c-dataset-create__actions">
-              <Button
-                type="button"
-                variant="secondary"
-                href={`/organizations/${organizationId}`}
-              >
+              <Button type="button" variant="secondary" href={`/organizations/${organizationId}`}>
                 Cancelar
               </Button>
               <Button type="submit" variant="primary" disabled={saving} icon="pictogram-add">

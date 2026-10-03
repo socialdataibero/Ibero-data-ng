@@ -219,7 +219,7 @@
     width: 100%;
   }
 
-  .c-dataset-create__actions   .c-dataset-create__actions .button {
+  .c-dataset-create__actions .c-dataset-create__actions .button {
     flex: 1 1 auto;
     justify-content: center;
   }

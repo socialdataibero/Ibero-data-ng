@@ -24,6 +24,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isNotFound(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 404;
+}
+
 export function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError && err.body?.message ? err.body.message : fallback;
 }
@@ -51,7 +55,10 @@ interface RequestOptions {
   signal?: AbortSignal;
 }
 
-async function request<T>(path: string, { method = 'GET', body, signal }: RequestOptions = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  { method = 'GET', body, signal }: RequestOptions = {},
+): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -70,8 +77,7 @@ async function request<T>(path: string, { method = 'GET', body, signal }: Reques
     let responseBody: { message?: string } | null = null;
     try {
       responseBody = (await res.json()) as { message?: string };
-    } catch {
-    }
+    } catch {}
     throw new ApiError(res.status, responseBody);
   }
 
@@ -96,8 +102,7 @@ export async function downloadBlob(path: string): Promise<DownloadedFile> {
     let responseBody: { message?: string } | null = null;
     try {
       responseBody = (await res.json()) as { message?: string };
-    } catch {
-    }
+    } catch {}
     throw new ApiError(res.status, responseBody);
   }
 

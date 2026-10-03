@@ -3,6 +3,7 @@ import { Button, SearchField } from 'sectei-library';
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { Paginator } from '../shared/paginator/Paginator';
 import { ConfirmDialog } from '../shared/confirm-dialog/ConfirmDialog';
+import { OrganizationNotFound } from '../shared/organization-not-found/OrganizationNotFound';
 import { Filters } from '../shared/filters/Filters';
 import { DATASET_FILTERS } from '../../data/dataset-filters';
 import { SORT_OPTIONS, type SortOrder } from '../datasets-list/useDatasetsList';
@@ -22,6 +23,7 @@ export function OrganizationDetail() {
   const {
     organizationId,
     organization,
+    organizationNotFound,
     datasets,
     page,
     totalPages,
@@ -43,6 +45,8 @@ export function OrganizationDetail() {
     confirmRemoveDataset,
     crumbs,
   } = useOrganizationDetail();
+
+  if (organizationNotFound) return <OrganizationNotFound />;
 
   return (
     <div className="c-organization-detail">
@@ -141,9 +145,7 @@ export function OrganizationDetail() {
                   <p className="card-title c-organization-detail__title">{dataset.title}</p>
 
                   {dataset.supersededById ? (
-                    <p className="c-organization-detail__meta">
-                      Hay una revisión más reciente
-                    </p>
+                    <p className="c-organization-detail__meta">Hay una revisión más reciente</p>
                   ) : null}
 
                   <div className="c-organization-detail__actions">

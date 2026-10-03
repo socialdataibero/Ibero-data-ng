@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { datasetsService } from '../../core/services/datasets.service';
 import { organizationsService } from '../../core/services/organizations.service';
+import { isNotFound } from '../../core/api/http';
 import type { Dataset, Organization } from '../../core/models/dataset.model';
 import type { Crumb } from '../shared/page-header/PageHeader';
 import { DATASET_FILTERS, mapFilterOptions } from '../../data/dataset-filters';
@@ -14,6 +15,7 @@ export function useOrganizationDetail() {
   const { organizationId = '' } = useParams();
 
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [organizationNotFound, setOrganizationNotFound] = useState(false);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -41,13 +43,20 @@ export function useOrganizationDetail() {
 
   useEffect(() => {
     let active = true;
+    setOrganization(null);
+    setOrganizationNotFound(false);
     void organizationsService
       .get(organizationId)
       .then((org) => {
         if (active) setOrganization(org);
       })
-      .catch(() => {
-        if (active) setError('No se pudieron cargar los datasets.');
+      .catch((err: unknown) => {
+        if (!active) return;
+        if (isNotFound(err)) {
+          setOrganizationNotFound(true);
+        } else {
+          setError('No se pudo cargar la organización.');
+        }
       });
     return () => {
       active = false;
@@ -70,8 +79,8 @@ export function useOrganizationDetail() {
         if (!active) return;
         setDatasets(items);
         setTotal(count);
-      } catch {
-        if (active) setError('No se pudieron cargar los datasets.');
+      } catch (err) {
+        if (active && !isNotFound(err)) setError('No se pudieron cargar los datasets.');
       } finally {
         if (active) setLoading(false);
       }
@@ -125,6 +134,7 @@ export function useOrganizationDetail() {
   return {
     organizationId,
     organization,
+    organizationNotFound,
     datasets,
     page,
     totalPages,

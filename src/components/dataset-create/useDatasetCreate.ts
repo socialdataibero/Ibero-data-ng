@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { datasetsService } from '../../core/services/datasets.service';
-import { errorMessage, fieldErrors } from '../../core/api/http';
+import { organizationsService } from '../../core/services/organizations.service';
+import { ApiError, errorMessage, fieldErrors, isNotFound } from '../../core/api/http';
 import { isValidSlug, isValidUrl, isValidYear, looksLikeUrl } from '../../core/utils/validation';
 import type {
   Dataset,
@@ -15,6 +16,8 @@ export function useDatasetCreate() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const [checkingOrganization, setCheckingOrganization] = useState(true);
+  const [organizationNotFound, setOrganizationNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revisionOf, setRevisionOf] = useState<Dataset | null>(null);
@@ -36,6 +39,23 @@ export function useDatasetCreate() {
   const [errorSlug, setErrorSlug] = useState('');
   const [errorYear, setErrorYear] = useState('');
   const [errorSourceUrl, setErrorSourceUrl] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setCheckingOrganization(true);
+    setOrganizationNotFound(false);
+    organizationsService
+      .get(organizationId)
+      .catch((err: unknown) => {
+        if (active && isNotFound(err)) setOrganizationNotFound(true);
+      })
+      .finally(() => {
+        if (active) setCheckingOrganization(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [organizationId]);
 
   useEffect(() => {
     const revisionOfId = searchParams.get('revisionOf');
@@ -64,7 +84,9 @@ export function useDatasetCreate() {
       setErrorSlug('El identificador del dataset es obligatorio.');
       ok = false;
     } else if (looksLikeUrl(slug)) {
-      setErrorSlug('Esto parece una URL. Si es el enlace a los datos, pégalo en «URL de la fuente original» y aquí escribe un nombre corto (ej. enigh-2024-v1).');
+      setErrorSlug(
+        'Esto parece una URL. Si es el enlace a los datos, pégalo en «URL de la fuente original» y aquí escribe un nombre corto (ej. enigh-2024-v1).',
+      );
       ok = false;
     } else if (!isValidSlug(slug)) {
       setErrorSlug('Solo se permiten minúsculas, números y guiones.');
@@ -118,6 +140,10 @@ export function useDatasetCreate() {
       });
       navigate(`/organizations/${organizationId}/datasets/${dataset.id}`);
     } catch (err) {
+      if (err instanceof ApiError && err.body?.code === 'organization_not_found') {
+        setOrganizationNotFound(true);
+        return;
+      }
       const matched = fieldErrors(err, ['title', 'slug', 'year', 'sourceUrl']);
       if (matched.title) setErrorTitle(matched.title);
       if (matched.slug) setErrorSlug(matched.slug);
@@ -138,6 +164,8 @@ export function useDatasetCreate() {
 
   return {
     organizationId,
+    checkingOrganization,
+    organizationNotFound,
     saving,
     error,
     revisionOf,
