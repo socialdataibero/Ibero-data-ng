@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { AdminMainNav } from '../admin-main-nav';
 import { SideMenu } from '../side-menu/SideMenu';
+import { BuildInfo } from '../build-info/BuildInfo';
 import { useAppShell } from './useAppShell';
 import './app-shell.css';
 
@@ -36,6 +37,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      <BuildInfo />
     </div>
   );
 }

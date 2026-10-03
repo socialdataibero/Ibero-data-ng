@@ -2,6 +2,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { MainNav } from 'sectei-library';
 import { AccessibilityMenu } from '../../accessibility-menu/AccessibilityMenu';
 import logoCdmx from '../../../../assets/logo-cdmx-2024.svg';
+import { BuildInfo } from '../../build-info/BuildInfo';
 import { usePortalShell } from './usePortalShell';
 import './portal-shell.css';
 
@@ -58,6 +59,8 @@ export function PortalShell() {
       </MainNav>
 
       <Outlet />
+
+      <BuildInfo />
     </div>
   );
 }
