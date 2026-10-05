@@ -12,9 +12,15 @@ import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 
 export interface ColumnRow {
-  column: { name: string; selectedCanonicalId: string | null; suggested: string | null; suggestionSource: 'history' | 'name' | null };
+  column: { name: string; selectedCanonicalId: string | null; suggested: string | null; suggestionSource: 'history' | 'name' | null; missingCodes: string[] };
   choice: string;
   newName: string;
+  /** Códigos de no especificado separados por comas, tal como los escribe el usuario. */
+  missingCodes: string;
+}
+
+function parseMissingCodes(text: string): string[] {
+  return [...new Set(text.split(',').map((c) => c.trim()).filter((c) => c !== ''))];
 }
 
 export const SUGGESTION_LABEL: Record<'history' | 'name', string> = {
@@ -49,6 +55,7 @@ export function useHarmonizerMapping() {
             column,
             choice: column.selectedCanonicalId ? `${CANONICAL_PREFIX}${column.selectedCanonicalId}` : '',
             newName: '',
+            missingCodes: column.missingCodes.join(', '),
           })),
         );
       } catch (err) {
@@ -92,8 +99,12 @@ export function useHarmonizerMapping() {
     });
   }, []);
 
+  const setMissingCodes = useCallback((index: number, missingCodes: string) => {
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, missingCodes } : row)));
+  }, []);
+
   const clearAll = useCallback(() => {
-    setRows((prev) => prev.map((row) => ({ ...row, choice: '', newName: '' })));
+    setRows((prev) => prev.map((row) => ({ ...row, choice: '', newName: '', missingCodes: '' })));
     setRowErrors(new Set());
   }, []);
 
@@ -143,6 +154,7 @@ export function useHarmonizerMapping() {
           column: row.column.name,
           choice: row.choice,
           newName: row.choice === NEW_OPTION ? row.newName.trim() : undefined,
+          missingCodes: parseMissingCodes(row.missingCodes),
         }));
 
       void (async () => {
@@ -178,6 +190,7 @@ export function useHarmonizerMapping() {
     mappedCount,
     setChoice,
     setNewName,
+    setMissingCodes,
     clearAll,
     save,
     crumbs,

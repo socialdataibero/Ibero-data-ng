@@ -34,6 +34,7 @@ export interface MappingColumn {
   selectedCanonicalId: string | null;
   suggested: string | null;
   suggestionSource: SuggestionSource | null;
+  missingCodes: string[];
 }
 
 export interface MappingInfo {
@@ -49,9 +50,11 @@ export interface MappingChoice {
   column: string;
   choice: string;
   newName?: string;
+  missingCodes?: string[];
 }
 
-export type HarmonizedRow = Record<string, string | number>;
+/** `null` es un valor faltante: celda vacía o código de no especificado. */
+export type HarmonizedRow = Record<string, string | number | null>;
 
 export interface DatasetHarmonizedView {
   dataset: HarmonizerDataset;

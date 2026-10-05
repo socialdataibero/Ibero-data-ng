@@ -20,6 +20,7 @@ export function HarmonizerMapping() {
     mappedCount,
     setChoice,
     setNewName,
+    setMissingCodes,
     clearAll,
     save,
     crumbs,
@@ -68,6 +69,12 @@ export function HarmonizerMapping() {
               columna mapeada en otra edición de esta encuesta) o del <em>nombre</em>. Nada se
               guarda hasta pulsar «Guardar mapeo».
             </p>
+            <p className="text-color-secondary">
+              En <em>No especificado</em> escribe, separados por comas, los códigos que en esta
+              edición significan «no especificado» (ej. <code>9, 99</code>). En la vista armonizada
+              y en las descargas esos valores y las celdas vacías salen como valor faltante (nulo
+              en Parquet). El cero y cualquier otro valor se conservan.
+            </p>
 
             <div className="c-harmonizer-mapping__summary">
               <MappingStatusBadge mappedColumns={mappedCount} totalColumns={rows.length} />
@@ -83,6 +90,7 @@ export function HarmonizerMapping() {
                     <tr>
                       <th scope="col">Columna del CSV</th>
                       <th scope="col">Variable canónica</th>
+                      <th scope="col">No especificado</th>
                       <th scope="col">Sugerencia</th>
                     </tr>
                   </thead>
@@ -139,6 +147,20 @@ export function HarmonizerMapping() {
                               </>
                             ) : null}
                           </div>
+                        </td>
+                        <td>
+                          <label className="a11y-sr-only" htmlFor={`missing-${row.column.name}`}>
+                            Códigos de no especificado para {row.column.name}
+                          </label>
+                          <input
+                            id={`missing-${row.column.name}`}
+                            type="text"
+                            value={row.missingCodes}
+                            onChange={(e) => setMissingCodes(index, e.target.value)}
+                            name={`missing-${row.column.name}`}
+                            placeholder="ej. 9, 99"
+                            disabled={row.choice === ''}
+                          />
                         </td>
                         <td>
                           {row.column.suggestionSource ? (

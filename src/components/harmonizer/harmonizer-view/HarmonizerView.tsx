@@ -292,7 +292,11 @@ export function HarmonizerView() {
                                 header.startsWith('_') ? 'text-color-secondary' : undefined
                               }
                             >
-                              {row[header] ?? ''}
+                              {row[header] ?? (
+                                <span className="text-color-secondary" title="Valor faltante">
+                                  —
+                                </span>
+                              )}
                             </td>
                           ))}
                         </tr>

@@ -88,7 +88,7 @@ export function useHarmonizerView() {
         _year: row._year,
       };
       for (const header of headers) {
-        next[header] = row[header] ?? '';
+        next[header] = row[header] ?? null;
       }
       return next;
     });
