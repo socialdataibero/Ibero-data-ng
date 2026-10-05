@@ -114,6 +114,12 @@ export function useHarmonizerUpload() {
             );
             return;
           }
+          if (err instanceof ApiError && err.body?.code === 'csv_not_utf8') {
+            setErrorFile(
+              'El archivo no está en UTF-8 y sus acentos se perderían. Vuelve a guardarlo como "CSV UTF-8" y súbelo de nuevo.',
+            );
+            return;
+          }
           const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey']);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);
