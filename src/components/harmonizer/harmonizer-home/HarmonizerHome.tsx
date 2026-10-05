@@ -3,12 +3,27 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { Paginator } from '../../shared/paginator/Paginator';
 import { SurveyModule } from '../../shared/survey-module/SurveyModule';
+import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { CRUMBS, useHarmonizerHome } from './useHarmonizerHome';
 import { HarmonizerHomeListSkeleton } from './HarmonizerHomeSkeleton';
 import './harmonizer-home.css';
 
 export function HarmonizerHome() {
-  const { surveys, total, page, totalPages, goTo, loading, loadError } = useHarmonizerHome();
+  const {
+    surveys,
+    total,
+    page,
+    totalPages,
+    goTo,
+    loading,
+    loadError,
+    pendingDelete,
+    removingId,
+    deleteError,
+    requestRemoveSurvey,
+    cancelRemoveSurvey,
+    confirmRemoveSurvey,
+  } = useHarmonizerHome();
 
   return (
     <div className="c-harmonizer-home">
@@ -58,6 +73,12 @@ export function HarmonizerHome() {
           ) : null}
         </h2>
 
+        {deleteError ? (
+          <p className="c-harmonizer-home__empty-text" role="alert">
+            {deleteError}
+          </p>
+        ) : null}
+
         {loadError ? (
           <p className="c-harmonizer-home__empty-text" role="alert">
             {loadError}
@@ -85,7 +106,12 @@ export function HarmonizerHome() {
         ) : (
           <div className="c-harmonizer-home__list">
             {surveys.map((survey) => (
-              <SurveyModule key={survey.id} survey={survey} />
+              <SurveyModule
+                key={survey.id}
+                survey={survey}
+                onDelete={requestRemoveSurvey}
+                deleting={removingId === survey.id}
+              />
             ))}
           </div>
         )}
@@ -104,6 +130,24 @@ export function HarmonizerHome() {
           .
         </p>
       </section>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Borrar encuesta"
+        message={
+          pendingDelete ? (
+            <>
+              ¿Borrar la encuesta "{pendingDelete.name}"? Se borran también sus ediciones, mapeos y
+              variables canónicas. Esto no se puede deshacer.
+            </>
+          ) : null
+        }
+        confirmLabel="Borrar"
+        danger
+        confirming={removingId === pendingDelete?.id}
+        onConfirm={() => void confirmRemoveSurvey()}
+        onCancel={cancelRemoveSurvey}
+      />
     </div>
   );
 }

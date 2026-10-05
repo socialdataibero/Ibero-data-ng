@@ -72,6 +72,8 @@ export const harmonizerService = {
       payload,
     ),
 
+  removeSurvey: (surveyId: string) => http.delete<void>(`/harmonizer/surveys/${surveyId}`),
+
   uploadDataset: (payload: UploadDatasetPayload, file: File) => {
     const form = new FormData();
     form.append('name', payload.name);

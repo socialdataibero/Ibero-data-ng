@@ -112,6 +112,29 @@ export function useHarmonizerMapping() {
         return;
       }
       setRowErrors(new Set());
+
+      // Dos columnas a la misma canónica: en la vista armonizada una sobrescribiría a la otra.
+      const columnsByTarget = new Map<string, string[]>();
+      for (const row of rows) {
+        if (row.choice === '') continue;
+        let target = row.choice;
+        if (row.choice === NEW_OPTION) {
+          const name = row.newName.trim();
+          const existing = canonicalVariables.find((cv) => cv.name === name);
+          target = existing ? `${CANONICAL_PREFIX}${existing.id}` : `${NEW_OPTION}${name}`;
+        }
+        columnsByTarget.set(target, [...(columnsByTarget.get(target) ?? []), row.column.name]);
+      }
+      const collisions = [...columnsByTarget.values()].filter((names) => names.length > 1);
+      if (collisions.length > 0) {
+        setSaveError(
+          `Cada variable canónica solo puede asignarse a una columna. Estas columnas comparten canónica: ${collisions
+            .map((names) => names.join(', '))
+            .join('; ')}.`,
+        );
+        return;
+      }
+
       setSaving(true);
 
       const columns: MappingChoice[] = rows
@@ -133,7 +156,7 @@ export function useHarmonizerMapping() {
         }
       })();
     },
-    [datasetId, rows, navigate],
+    [datasetId, rows, canonicalVariables, navigate],
   );
 
   const crumbs: Crumb[] = [

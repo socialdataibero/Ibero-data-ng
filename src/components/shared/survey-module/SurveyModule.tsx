@@ -5,9 +5,11 @@ import './survey-module.css';
 
 interface Props {
   survey: HarmonizerSurvey;
+  onDelete?: (survey: HarmonizerSurvey) => void;
+  deleting?: boolean;
 }
 
-export function SurveyModule({ survey }: Props) {
+export function SurveyModule({ survey, onDelete, deleting = false }: Props) {
   const datasetLabel = survey.datasets.length === 1 ? 'edición' : 'ediciones';
   const titleId = `survey-${survey.id}-title`;
 
@@ -43,6 +45,23 @@ export function SurveyModule({ survey }: Props) {
             Editar
             <span className="pictogram-edit" aria-hidden="true" />
           </Link>
+          {onDelete ? (
+            <>
+              <span className="survey-module__link-separator" aria-hidden="true">
+                |
+              </span>
+              <button
+                type="button"
+                className="hyperlink"
+                aria-label={`Eliminar encuesta ${survey.name}`}
+                disabled={deleting}
+                onClick={() => onDelete(survey)}
+              >
+                Eliminar
+                <span className="pictogram-delete" aria-hidden="true" />
+              </button>
+            </>
+          ) : null}
         </nav>
       </header>
 

@@ -14,6 +14,10 @@ export function useHarmonizerHome() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<HarmonizerSurvey | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -40,11 +44,52 @@ export function useHarmonizerHome() {
       active = false;
       controller.abort();
     };
-  }, [page]);
+  }, [page, refreshKey]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const goTo = (target: number) => setPage(Math.min(Math.max(1, target), totalPages));
 
-  return { surveys, total, page, totalPages, goTo, loading, loadError };
+  const requestRemoveSurvey = (survey: HarmonizerSurvey) => {
+    setDeleteError(null);
+    setPendingDelete(survey);
+  };
+
+  const cancelRemoveSurvey = () => setPendingDelete(null);
+
+  const confirmRemoveSurvey = async () => {
+    if (!pendingDelete) return;
+    const survey = pendingDelete;
+    setRemovingId(survey.id);
+    setDeleteError(null);
+    try {
+      await harmonizerService.removeSurvey(survey.id);
+      if (surveys.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        setRefreshKey((key) => key + 1);
+      }
+    } catch (err) {
+      setDeleteError(errorMessage(err, 'No se pudo borrar la encuesta.'));
+    } finally {
+      setRemovingId(null);
+      setPendingDelete(null);
+    }
+  };
+
+  return {
+    surveys,
+    total,
+    page,
+    totalPages,
+    goTo,
+    loading,
+    loadError,
+    pendingDelete,
+    removingId,
+    deleteError,
+    requestRemoveSurvey,
+    cancelRemoveSurvey,
+    confirmRemoveSurvey,
+  };
 }
