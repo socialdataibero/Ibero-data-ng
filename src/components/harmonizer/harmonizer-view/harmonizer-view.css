@@ -73,6 +73,31 @@
   font-size: 0.9em;
 }
 
+.c-harmonizer-view__note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-harmonizer-view .container-table .c-harmonizer-view__origin {
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-harmonizer-view .container-table .c-harmonizer-view__origin-end {
+  border-right: 2px solid var(--color-secondary-4, #ccc);
+}
+
+.c-harmonizer-view__groups th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body[data-theme='dark'] .c-harmonizer-view .container-table .c-harmonizer-view__origin-end {
+  border-right-color: var(--color-secondary-8, #555);
+}
+
 .c-harmonizer-view__success {
   margin: 0;
   font-size: 0.9rem;

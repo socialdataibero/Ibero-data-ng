@@ -52,8 +52,16 @@ export function HarmonizerUpload() {
                 placeholder="Ej: ENIGH 2024"
                 required
                 aria-invalid={!!fieldErrors.datasetName}
-                aria-describedby={fieldErrors.datasetName ? 'dataset-name-error' : undefined}
+                aria-describedby={
+                  fieldErrors.datasetName
+                    ? 'dataset-name-help dataset-name-error'
+                    : 'dataset-name-help'
+                }
               />
+              <p id="dataset-name-help" className="form-help">
+                Debe ser único dentro de la encuesta, por ejemplo «Censo 2020 – Personas». Es el
+                nombre que identifica a la edición en la vista armonizada.
+              </p>
               {fieldErrors.datasetName ? (
                 <p id="dataset-name-error" className="c-harmonizer-upload__error" role="alert">
                   {fieldErrors.datasetName}

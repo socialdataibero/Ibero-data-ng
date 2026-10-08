@@ -15,7 +15,25 @@ import type { Crumb } from '../../shared/page-header/PageHeader';
 
 const ATTACH_RESULTS_LIMIT = 8;
 
-const SURVEY_ORIGIN_COLUMNS = ['_dataset', '_year'];
+// Columnas que agrega el servidor a la vista por encuesta. En las descargas se
+// llaman igual (`_dataset`, `_year`, `_row`); en pantalla se muestran con
+// `label` y `title` explica de dónde salen.
+export const SURVEY_ORIGIN_COLUMNS: Record<string, { label: string; title: string }> = {
+  _dataset: {
+    label: 'Edición',
+    title: 'Edición de la que viene la fila. En las descargas es la columna _dataset.',
+  },
+  _year: {
+    label: 'Año',
+    title: 'Año de la edición. En las descargas es la columna _year.',
+  },
+  _row: {
+    label: 'Fila',
+    title:
+      'Número de registro en el archivo original, sin contar el encabezado. En las descargas es la columna _row.',
+  },
+};
+const SURVEY_ORIGIN_KEYS = Object.keys(SURVEY_ORIGIN_COLUMNS);
 export const MAX_VISIBLE_ROWS = 500;
 
 export function useHarmonizerView() {
@@ -86,6 +104,7 @@ export function useHarmonizerView() {
       const next: HarmonizedRow = {
         _dataset: row._dataset,
         _year: row._year,
+        _row: row._row,
       };
       for (const header of headers) {
         next[header] = row[header] ?? null;
@@ -103,7 +122,7 @@ export function useHarmonizerView() {
 
   const headers = useMemo(() => {
     if (datasetView) return datasetView.headers;
-    if (surveyView) return [...SURVEY_ORIGIN_COLUMNS, ...surveyView.headers];
+    if (surveyView) return [...SURVEY_ORIGIN_KEYS, ...surveyView.headers];
     return [];
   }, [datasetView, surveyView]);
 
@@ -252,6 +271,7 @@ export function useHarmonizerView() {
     downloading,
     downloadError,
     headers,
+    originCount: surveyView ? SURVEY_ORIGIN_KEYS.length : 0,
     rows,
     visibleRows,
     title,

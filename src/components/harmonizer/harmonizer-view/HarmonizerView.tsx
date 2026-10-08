@@ -3,8 +3,15 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { HarmonizerViewContentSkeleton } from './HarmonizerViewSkeleton';
-import { useHarmonizerView } from './useHarmonizerView';
+import { SURVEY_ORIGIN_COLUMNS, useHarmonizerView } from './useHarmonizerView';
 import './harmonizer-view.css';
+
+function originClass(index: number, originCount: number): string | undefined {
+  if (index >= originCount) return undefined;
+  return index === originCount - 1
+    ? 'c-harmonizer-view__origin c-harmonizer-view__origin-end'
+    : 'c-harmonizer-view__origin';
+}
 
 export function HarmonizerView() {
   const {
@@ -16,6 +23,7 @@ export function HarmonizerView() {
     downloading,
     downloadError,
     headers,
+    originCount,
     rows,
     visibleRows,
     title,
@@ -46,7 +54,8 @@ export function HarmonizerView() {
   const intro =
     !loadError && datasetView ? (
       <>
-        Edición <strong>{title}</strong> · encuesta <strong>{datasetView.dataset.surveyName}</strong>
+        Edición <strong>{title}</strong> · encuesta{' '}
+        <strong>{datasetView.dataset.surveyName}</strong>
       </>
     ) : !loadError && surveyView ? (
       <>
@@ -181,9 +190,7 @@ export function HarmonizerView() {
                               onClick={() => selectAttachTarget(d)}
                             >
                               {d.title}{' '}
-                              <span className="text-color-secondary">
-                                — {d.organization?.name}
-                              </span>
+                              <span className="text-color-secondary">— {d.organization?.name}</span>
                             </button>
                           </li>
                         ))
@@ -263,21 +270,45 @@ export function HarmonizerView() {
               </p>
             ) : (
               <>
+                {originCount > 0 ? (
+                  <p className="c-harmonizer-view__note">
+                    Cada fila se identifica por <strong>Edición + Fila</strong>. Los identificadores
+                    del archivo (por ejemplo{' '}
+                    <code className="c-harmonizer-view__code">id_persona</code>) pueden repetirse
+                    entre ediciones: para unir estos datos con otra fuente, usa también la columna
+                    Edición.
+                  </p>
+                ) : null}
                 <div className="container-table">
                   <table className="table-condensed">
                     <thead>
+                      {originCount > 0 ? (
+                        <tr className="c-harmonizer-view__groups">
+                          <th
+                            scope="colgroup"
+                            colSpan={originCount}
+                            className="c-harmonizer-view__origin c-harmonizer-view__origin-end"
+                          >
+                            Origen
+                          </th>
+                          <th scope="colgroup" colSpan={headers.length - originCount}>
+                            Variables armonizadas
+                          </th>
+                        </tr>
+                      ) : null}
                       <tr>
-                        {headers.map((header) => (
+                        {headers.map((header, i) => (
                           <th
                             key={header}
                             scope="col"
-                            className={header.startsWith('_') ? 'text-color-secondary' : undefined}
+                            title={
+                              i < originCount ? SURVEY_ORIGIN_COLUMNS[header]?.title : undefined
+                            }
+                            className={originClass(i, originCount)}
                           >
-                            {header.startsWith('_') ? (
-                              <code className="c-harmonizer-view__code">{header}</code>
-                            ) : (
-                              header
-                            )}
+                            {i < originCount
+                              ? (SURVEY_ORIGIN_COLUMNS[header]?.label ?? header)
+                              : header}
                           </th>
                         ))}
                       </tr>
@@ -285,13 +316,8 @@ export function HarmonizerView() {
                     <tbody>
                       {visibleRows.map((row, rowIndex) => (
                         <tr key={rowIndex}>
-                          {headers.map((header) => (
-                            <td
-                              key={header}
-                              className={
-                                header.startsWith('_') ? 'text-color-secondary' : undefined
-                              }
-                            >
+                          {headers.map((header, i) => (
+                            <td key={header} className={originClass(i, originCount)}>
                               {row[header] ?? (
                                 <span className="text-color-secondary" title="Valor faltante">
                                   —
