@@ -78,6 +78,11 @@ export function HarmonizerMapping() {
 
             <div className="c-harmonizer-mapping__summary">
               <MappingStatusBadge mappedColumns={mappedCount} totalColumns={rows.length} />
+              {dataset ? (
+                <StatusBadge variant="neutral">
+                  Filas cargadas: {dataset.rowCount.toLocaleString('es-MX')}
+                </StatusBadge>
+              ) : null}
               <Button type="button" variant="secondary" size="small" onClick={clearAll}>
                 Desmapear todas
               </Button>

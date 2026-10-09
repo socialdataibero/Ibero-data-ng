@@ -20,6 +20,7 @@ export interface HarmonizerDataset {
   year: number;
   surveyId: string;
   surveyName: string;
+  rowCount: number;
 }
 
 export interface CanonicalVariable {
