@@ -2,13 +2,13 @@ import { Button } from 'sectei-library';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { MappingStatusBadge } from '../../shared/mapping-status-badge/MappingStatusBadge';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
+import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
 import './harmonizer-mapping.css';
 
 export function HarmonizerMapping() {
   const {
-    datasetId,
     dataset,
     renamedColumns,
     canonicalVariables,
@@ -19,6 +19,12 @@ export function HarmonizerMapping() {
     saveError,
     rowErrors,
     mappedCount,
+    pendingHref,
+    leavingToHarmonized,
+    viewHarmonized,
+    backToHarmonizer,
+    cancelLeave,
+    leaveWithoutSaving,
     setChoice,
     setNewName,
     setMissingCodes,
@@ -50,7 +56,7 @@ export function HarmonizerMapping() {
             type="button"
             variant="secondary"
             icon="pictogram-arrow-left"
-            href="/harmonizer"
+            onClick={backToHarmonizer}
           >
             Armonizador
           </Button>
@@ -218,7 +224,7 @@ export function HarmonizerMapping() {
                   type="button"
                   variant="secondary"
                   icon="pictogram-arrow-right"
-                  href={`/harmonizer/datasets/${datasetId}/harmonized`}
+                  onClick={viewHarmonized}
                 >
                   Ver armonizado
                 </Button>
@@ -227,6 +233,24 @@ export function HarmonizerMapping() {
           </>
         ) : null}
       </div>
+
+      <ConfirmDialog
+        open={pendingHref !== null}
+        title="Cambios sin guardar"
+        message={
+          <>
+            Hay asignaciones que no se han guardado, incluidas las sugerencias precargadas.
+            {leavingToHarmonized ? ' La vista armonizada solo muestra el mapeo guardado.' : ''} Si
+            continúas sin guardar, estos cambios se pierden. Para conservarlos, pulsa «Guardar
+            mapeo».
+          </>
+        }
+        cancelLabel="Seguir editando"
+        confirmLabel={leavingToHarmonized ? 'Ver sin guardar' : 'Salir sin guardar'}
+        danger
+        onConfirm={leaveWithoutSaving}
+        onCancel={cancelLeave}
+      />
     </div>
   );
 }

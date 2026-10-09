@@ -24,6 +24,21 @@ function parseMissingCodes(text: string): string[] {
   return [...new Set(text.split(',').map((c) => c.trim()).filter((c) => c !== ''))];
 }
 
+/**
+ * Si la fila difiere de lo guardado en el servidor (H-17). Las sugerencias precargadas
+ * (histórico o por nombre) cuentan como cambio: se ven seleccionadas pero no están guardadas.
+ */
+function isRowDirty(row: ColumnRow): boolean {
+  const { column } = row;
+  const savedChoice =
+    column.suggestionSource === null && column.selectedCanonicalId
+      ? `${CANONICAL_PREFIX}${column.selectedCanonicalId}`
+      : '';
+  if (row.choice !== savedChoice) return true;
+  if (row.choice === '') return false;
+  return parseMissingCodes(row.missingCodes).join('\n') !== column.missingCodes.join('\n');
+}
+
 export const SUGGESTION_LABEL: Record<'history' | 'name', string> = {
   history: 'histórico',
   name: 'por nombre',
@@ -43,6 +58,8 @@ export function useHarmonizerMapping() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [rowErrors, setRowErrors] = useState<Set<number>>(new Set());
+  // Destino pendiente mientras se pide confirmación por cambios sin guardar (H-17).
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +98,31 @@ export function useHarmonizerMapping() {
       ).length,
     [rows],
   );
+
+  const hasUnsavedChanges = useMemo(() => rows.some(isRowDirty), [rows]);
+
+  const harmonizedHref = `/harmonizer/datasets/${datasetId}/harmonized`;
+
+  // "Ver armonizado" y "Armonizador" no guardan: si hay cambios pendientes, piden confirmación
+  // antes de salir (H-17).
+  const leaveTo = useCallback(
+    (href: string) => {
+      if (hasUnsavedChanges) setPendingHref(href);
+      else void navigate(href);
+    },
+    [hasUnsavedChanges, navigate],
+  );
+
+  const viewHarmonized = useCallback(() => leaveTo(harmonizedHref), [leaveTo, harmonizedHref]);
+
+  const backToHarmonizer = useCallback(() => leaveTo('/harmonizer'), [leaveTo]);
+
+  const cancelLeave = useCallback(() => setPendingHref(null), []);
+
+  const leaveWithoutSaving = useCallback(() => {
+    if (pendingHref) void navigate(pendingHref);
+    setPendingHref(null);
+  }, [navigate, pendingHref]);
 
   const setChoice = useCallback((index: number, choice: string) => {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, choice } : row)));
@@ -163,7 +205,7 @@ export function useHarmonizerMapping() {
       void (async () => {
         try {
           await harmonizerService.saveMapping(datasetId, columns);
-          void navigate(`/harmonizer/datasets/${datasetId}/harmonized`);
+          void navigate(harmonizedHref);
         } catch (err) {
           setSaveError(errorMessage(err, 'No se pudo guardar el mapeo.'));
         } finally {
@@ -171,7 +213,7 @@ export function useHarmonizerMapping() {
         }
       })();
     },
-    [datasetId, rows, canonicalVariables, navigate],
+    [datasetId, rows, canonicalVariables, navigate, harmonizedHref],
   );
 
   const crumbs: Crumb[] = [
@@ -192,6 +234,13 @@ export function useHarmonizerMapping() {
     saveError,
     rowErrors,
     mappedCount,
+    hasUnsavedChanges,
+    pendingHref,
+    leavingToHarmonized: pendingHref === harmonizedHref,
+    viewHarmonized,
+    backToHarmonizer,
+    cancelLeave,
+    leaveWithoutSaving,
     setChoice,
     setNewName,
     setMissingCodes,

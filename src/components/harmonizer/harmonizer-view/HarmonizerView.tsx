@@ -129,12 +129,31 @@ export function HarmonizerView() {
         {!loading && !loadError ? (
           <>
             <div className="c-harmonizer-view__summary">
-              <StatusBadge variant="neutral">
-                Variables: {selectedCount}
-                {availableCount > 0 ? ` de ${availableCount}` : ''}
-              </StatusBadge>
+              {datasetView ? (
+                <StatusBadge variant="neutral">
+                  Columnas mapeadas: {selectedCount} de {datasetView.dataset.columnCount}
+                </StatusBadge>
+              ) : (
+                <StatusBadge variant="neutral">
+                  Variables canónicas: {selectedCount}
+                  {availableCount > 0 ? ` de ${availableCount}` : ''}
+                </StatusBadge>
+              )}
               <StatusBadge variant="neutral">Filas: {rows.length}</StatusBadge>
             </div>
+
+            {/* H-18: la vista solo muestra columnas mapeadas; aclarar que las demás no se pierden. */}
+            {datasetView && datasetView.dataset.columnCount > selectedCount ? (
+              <p className="text-color-secondary">
+                {datasetView.dataset.columnCount - selectedCount === 1
+                  ? 'La columna sin mapear no aparece en esta vista ni en las descargas, pero se conserva: '
+                  : `Las ${datasetView.dataset.columnCount - selectedCount} columnas sin mapear no aparecen en esta vista ni en las descargas, pero se conservan: `}
+                <Link to={`/harmonizer/datasets/${datasetView.dataset.id}/mapping`} className="hyperlink">
+                  asígnalas en el mapeo
+                </Link>{' '}
+                para incluirlas.
+              </p>
+            ) : null}
 
             {downloadError ? <p className="c-harmonizer-view__error">{downloadError}</p> : null}
 

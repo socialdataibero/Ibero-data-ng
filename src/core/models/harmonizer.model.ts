@@ -21,6 +21,8 @@ export interface HarmonizerDataset {
   surveyId: string;
   surveyName: string;
   rowCount: number;
+  /** Columnas del archivo, mapeadas o no. */
+  columnCount: number;
 }
 
 /** Encabezado repetido en el CSV que el servidor renombró al subirlo. */
