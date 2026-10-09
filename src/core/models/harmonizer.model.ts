@@ -23,6 +23,19 @@ export interface HarmonizerDataset {
   rowCount: number;
 }
 
+/** Encabezado repetido en el CSV que el servidor renombró al subirlo. */
+export interface RenamedColumn {
+  /** Posición de la columna en el archivo, empezando en 1. */
+  position: number;
+  original: string;
+  renamed: string;
+}
+
+/** Estado de navegación de la subida a la pantalla de mapeo. */
+export interface MappingRouteState {
+  renamedColumns?: RenamedColumn[];
+}
+
 export interface CanonicalVariable {
   id: string;
   name: string;

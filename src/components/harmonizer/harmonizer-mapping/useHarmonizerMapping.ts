@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { Crumb } from '../../shared/page-header/PageHeader';
 import {
   CANONICAL_PREFIX,
@@ -7,6 +7,7 @@ import {
   type CanonicalVariable,
   type HarmonizerDataset,
   type MappingChoice,
+  type MappingRouteState,
 } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
@@ -31,6 +32,8 @@ export const SUGGESTION_LABEL: Record<'history' | 'name', string> = {
 export function useHarmonizerMapping() {
   const { datasetId = '' } = useParams<{ datasetId: string }>();
   const navigate = useNavigate();
+  // Solo llega justo después de subir el archivo (H-10).
+  const renamedColumns = (useLocation().state as MappingRouteState | null)?.renamedColumns ?? [];
 
   const [dataset, setDataset] = useState<HarmonizerDataset | null>(null);
   const [canonicalVariables, setCanonicalVariables] = useState<CanonicalVariable[]>([]);
@@ -180,6 +183,7 @@ export function useHarmonizerMapping() {
   return {
     datasetId,
     dataset,
+    renamedColumns,
     canonicalVariables,
     rows,
     loading,

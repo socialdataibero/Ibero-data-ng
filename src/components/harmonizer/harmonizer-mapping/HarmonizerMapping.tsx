@@ -10,6 +10,7 @@ export function HarmonizerMapping() {
   const {
     datasetId,
     dataset,
+    renamedColumns,
     canonicalVariables,
     rows,
     loading,
@@ -75,6 +76,26 @@ export function HarmonizerMapping() {
               y en las descargas esos valores y las celdas vacías salen como valor faltante (nulo
               en Parquet). El cero y cualquier otro valor se conservan.
             </p>
+
+            {renamedColumns.length > 0 ? (
+              <div className="c-harmonizer-mapping__notice" role="status">
+                <p>
+                  El archivo tenía columnas con el mismo nombre. Para conservarlas todas, se
+                  renombraron así:
+                </p>
+                <ul>
+                  {renamedColumns.map((r) => (
+                    <li key={r.position}>
+                      Columna {r.position}: <code>{r.original}</code> → <code>{r.renamed}</code>
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Revisa a qué variable corresponde cada una antes de mapearlas; los nombres
+                  renombrados no existen en el archivo original.
+                </p>
+              </div>
+            ) : null}
 
             <div className="c-harmonizer-mapping__summary">
               <MappingStatusBadge mappedColumns={mappedCount} totalColumns={rows.length} />

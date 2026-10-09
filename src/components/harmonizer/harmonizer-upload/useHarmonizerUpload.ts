@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NEW_OPTION, type HarmonizerSurvey } from '../../../core/models/harmonizer.model';
+import {
+  NEW_OPTION,
+  type HarmonizerSurvey,
+  type MappingRouteState,
+} from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
 import { isValidYear } from '../../../core/utils/validation';
@@ -97,7 +101,7 @@ export function useHarmonizerUpload() {
 
       void (async () => {
         try {
-          const { datasetId } = await harmonizerService.uploadDataset(
+          const { datasetId, renamedColumns } = await harmonizerService.uploadDataset(
             {
               name: datasetName.trim(),
               year: Number(datasetYear),
@@ -106,7 +110,8 @@ export function useHarmonizerUpload() {
             },
             file,
           );
-          void navigate(`/harmonizer/datasets/${datasetId}/mapping`);
+          const state: MappingRouteState = { renamedColumns };
+          void navigate(`/harmonizer/datasets/${datasetId}/mapping`, { state });
         } catch (err) {
           if (err instanceof ApiError && err.body?.code === 'survey_name_taken') {
             setErrorNewSurveyName(

@@ -7,6 +7,7 @@ import type {
   DatasetHarmonizedView,
   SurveyHarmonizedView,
   ExportFormat,
+  RenamedColumn,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -81,7 +82,11 @@ export const harmonizerService = {
     form.append('surveyId', payload.surveyId);
     if (payload.newSurvey) form.append('newSurvey', payload.newSurvey);
     form.append('file', file);
-    return http.post<{ datasetId: string; dataset: HarmonizerDataset }>('/harmonizer/upload', form);
+    return http.post<{
+      datasetId: string;
+      dataset: HarmonizerDataset;
+      renamedColumns: RenamedColumn[];
+    }>('/harmonizer/upload', form);
   },
 
   getMapping: (datasetId: string, signal?: AbortSignal) =>
