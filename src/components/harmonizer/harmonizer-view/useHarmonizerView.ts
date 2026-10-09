@@ -95,10 +95,11 @@ export function useHarmonizerView() {
 
   const surveyView = useMemo(() => {
     if (!baseSurveyView) return null;
+    // Siempre en el orden de la lista de variables, como en la descarga (H-14).
     const selected =
       selectedVariables.length === 0
         ? baseSurveyView.availableVariables
-        : selectedVariables.filter((v) => baseSurveyView.availableVariables.includes(v));
+        : baseSurveyView.availableVariables.filter((v) => selectedVariables.includes(v));
     const headers = selected;
     const rows = baseSurveyView.rows.map((row) => {
       const next: HarmonizedRow = {
@@ -146,9 +147,10 @@ export function useHarmonizerView() {
         selectedVariables.length === 0
           ? [...baseSurveyView.availableVariables]
           : [...selectedVariables];
+      // Al volver a marcar una variable, regresa a su lugar en vez de irse al final (H-14).
       const next = current.includes(variable)
         ? current.filter((v) => v !== variable)
-        : [...current, variable];
+        : baseSurveyView.availableVariables.filter((v) => v === variable || current.includes(v));
       setSelectedVariables(next);
       setSearchParams(
         (prev) => {
