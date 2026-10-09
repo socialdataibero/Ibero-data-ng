@@ -129,6 +129,13 @@ export function useHarmonizerUpload() {
             );
             return;
           }
+          if (
+            err instanceof ApiError &&
+            (err.body?.code === 'csv_empty' || err.body?.code === 'csv_no_rows')
+          ) {
+            setErrorFile(err.message);
+            return;
+          }
           const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey']);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);
