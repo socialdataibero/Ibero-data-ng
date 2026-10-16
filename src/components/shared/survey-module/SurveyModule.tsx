@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
-import type { HarmonizerSurvey } from '../../../core/models/harmonizer.model';
+import type {
+  HarmonizerDatasetSummary,
+  HarmonizerSurvey,
+} from '../../../core/models/harmonizer.model';
 import { MappingStatusBadge } from '../mapping-status-badge/MappingStatusBadge';
 import './survey-module.css';
 
@@ -7,9 +10,17 @@ interface Props {
   survey: HarmonizerSurvey;
   onDelete?: (survey: HarmonizerSurvey) => void;
   deleting?: boolean;
+  onDeleteDataset?: (survey: HarmonizerSurvey, dataset: HarmonizerDatasetSummary) => void;
+  deletingDatasetId?: string | null;
 }
 
-export function SurveyModule({ survey, onDelete, deleting = false }: Props) {
+export function SurveyModule({
+  survey,
+  onDelete,
+  deleting = false,
+  onDeleteDataset,
+  deletingDatasetId = null,
+}: Props) {
   const datasetLabel = survey.datasets.length === 1 ? 'edición' : 'ediciones';
   const titleId = `survey-${survey.id}-title`;
 
@@ -114,6 +125,22 @@ export function SurveyModule({ survey, onDelete, deleting = false }: Props) {
                         >
                           Vista armonizada
                         </Link>
+                        {onDeleteDataset ? (
+                          <>
+                            <span className="survey-module__link-separator" aria-hidden="true">
+                              |
+                            </span>
+                            <button
+                              type="button"
+                              className="hyperlink"
+                              aria-label={`Eliminar edición ${dataset.name}`}
+                              disabled={deletingDatasetId === dataset.id}
+                              onClick={() => onDeleteDataset(survey, dataset)}
+                            >
+                              Eliminar
+                            </button>
+                          </>
+                        ) : null}
                       </nav>
                     </td>
                   </tr>

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
-import type { HarmonizerSurvey } from '../../../core/models/harmonizer.model';
+import type {
+  HarmonizerDatasetSummary,
+  HarmonizerSurvey,
+} from '../../../core/models/harmonizer.model';
 import type { Crumb } from '../../shared/page-header/PageHeader';
 
 export const CRUMBS: Crumb[] = [{ label: 'Inicio', href: '/dashboard' }, { label: 'Armonizador' }];
@@ -18,6 +21,11 @@ export function useHarmonizerHome() {
   const [pendingDelete, setPendingDelete] = useState<HarmonizerSurvey | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pendingDatasetDelete, setPendingDatasetDelete] = useState<{
+    survey: HarmonizerSurvey;
+    dataset: HarmonizerDatasetSummary;
+  } | null>(null);
+  const [removingDatasetId, setRemovingDatasetId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -77,6 +85,29 @@ export function useHarmonizerHome() {
     }
   };
 
+  const requestRemoveDataset = (survey: HarmonizerSurvey, dataset: HarmonizerDatasetSummary) => {
+    setDeleteError(null);
+    setPendingDatasetDelete({ survey, dataset });
+  };
+
+  const cancelRemoveDataset = () => setPendingDatasetDelete(null);
+
+  const confirmRemoveDataset = async () => {
+    if (!pendingDatasetDelete) return;
+    const { dataset } = pendingDatasetDelete;
+    setRemovingDatasetId(dataset.id);
+    setDeleteError(null);
+    try {
+      await harmonizerService.removeDataset(dataset.id);
+      setRefreshKey((key) => key + 1);
+    } catch (err) {
+      setDeleteError(errorMessage(err, 'No se pudo borrar la edición.'));
+    } finally {
+      setRemovingDatasetId(null);
+      setPendingDatasetDelete(null);
+    }
+  };
+
   return {
     surveys,
     total,
@@ -91,5 +122,10 @@ export function useHarmonizerHome() {
     requestRemoveSurvey,
     cancelRemoveSurvey,
     confirmRemoveSurvey,
+    pendingDatasetDelete,
+    removingDatasetId,
+    requestRemoveDataset,
+    cancelRemoveDataset,
+    confirmRemoveDataset,
   };
 }

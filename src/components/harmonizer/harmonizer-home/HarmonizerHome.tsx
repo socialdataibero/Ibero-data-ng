@@ -23,6 +23,11 @@ export function HarmonizerHome() {
     requestRemoveSurvey,
     cancelRemoveSurvey,
     confirmRemoveSurvey,
+    pendingDatasetDelete,
+    removingDatasetId,
+    requestRemoveDataset,
+    cancelRemoveDataset,
+    confirmRemoveDataset,
   } = useHarmonizerHome();
 
   return (
@@ -111,6 +116,8 @@ export function HarmonizerHome() {
                 survey={survey}
                 onDelete={requestRemoveSurvey}
                 deleting={removingId === survey.id}
+                onDeleteDataset={requestRemoveDataset}
+                deletingDatasetId={removingDatasetId}
               />
             ))}
           </div>
@@ -147,6 +154,26 @@ export function HarmonizerHome() {
         confirming={removingId === pendingDelete?.id}
         onConfirm={() => void confirmRemoveSurvey()}
         onCancel={cancelRemoveSurvey}
+      />
+
+      <ConfirmDialog
+        open={pendingDatasetDelete !== null}
+        title="Borrar edición"
+        message={
+          pendingDatasetDelete ? (
+            <>
+              ¿Borrar la edición "{pendingDatasetDelete.dataset.name}" de la encuesta "
+              {pendingDatasetDelete.survey.name}"? Se borran su archivo y su mapeo; las demás
+              ediciones y las variables canónicas se conservan. Después puedes volver a subirla con
+              el mismo nombre. Esto no se puede deshacer.
+            </>
+          ) : null
+        }
+        confirmLabel="Borrar"
+        danger
+        confirming={removingDatasetId === pendingDatasetDelete?.dataset.id}
+        onConfirm={() => void confirmRemoveDataset()}
+        onCancel={cancelRemoveDataset}
       />
     </div>
   );
