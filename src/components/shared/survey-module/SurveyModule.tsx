@@ -12,6 +12,8 @@ interface Props {
   deleting?: boolean;
   onDeleteDataset?: (survey: HarmonizerSurvey, dataset: HarmonizerDatasetSummary) => void;
   deletingDatasetId?: string | null;
+  onDownloadOriginal?: (dataset: HarmonizerDatasetSummary) => void;
+  downloadingDatasetId?: string | null;
 }
 
 export function SurveyModule({
@@ -20,6 +22,8 @@ export function SurveyModule({
   deleting = false,
   onDeleteDataset,
   deletingDatasetId = null,
+  onDownloadOriginal,
+  downloadingDatasetId = null,
 }: Props) {
   const datasetLabel = survey.datasets.length === 1 ? 'edición' : 'ediciones';
   const titleId = `survey-${survey.id}-title`;
@@ -131,6 +135,25 @@ export function SurveyModule({
                         >
                           Vista armonizada
                         </Link>
+                        {onDownloadOriginal ? (
+                          <>
+                            <span className="survey-module__link-separator" aria-hidden="true">
+                              |
+                            </span>
+                            <button
+                              type="button"
+                              className="hyperlink"
+                              aria-label={`Descargar el CSV original de ${dataset.name}`}
+                              title="Todas las columnas del archivo subido, mapeadas o no, con los datos tal como se subieron"
+                              disabled={downloadingDatasetId === dataset.id}
+                              onClick={() => onDownloadOriginal(dataset)}
+                            >
+                              {downloadingDatasetId === dataset.id
+                                ? 'Descargando…'
+                                : 'Descargar original'}
+                            </button>
+                          </>
+                        ) : null}
                         {onDeleteDataset ? (
                           <>
                             <span className="survey-module__link-separator" aria-hidden="true">
@@ -153,6 +176,13 @@ export function SurveyModule({
                 ))}
               </tbody>
             </table>
+            {onDownloadOriginal ? (
+              <p className="survey-module__note text-color-secondary">
+                «Descargar original» trae todas las columnas con los datos tal como se subieron. Si
+                lo abres en Excel, revisa que no haya celdas que empiecen con =, +, - o @: Excel
+                podría ejecutarlas como fórmulas.
+              </p>
+            ) : null}
           </div>
         ) : (
           <p className="survey-module__empty text-color-secondary">

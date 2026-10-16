@@ -28,6 +28,9 @@ export function HarmonizerHome() {
     requestRemoveDataset,
     cancelRemoveDataset,
     confirmRemoveDataset,
+    downloadingDatasetId,
+    downloadError,
+    downloadOriginal,
   } = useHarmonizerHome();
 
   return (
@@ -84,6 +87,12 @@ export function HarmonizerHome() {
           </p>
         ) : null}
 
+        {downloadError ? (
+          <p className="c-harmonizer-home__empty-text" role="alert">
+            {downloadError}
+          </p>
+        ) : null}
+
         {loadError ? (
           <p className="c-harmonizer-home__empty-text" role="alert">
             {loadError}
@@ -118,6 +127,8 @@ export function HarmonizerHome() {
                 deleting={removingId === survey.id}
                 onDeleteDataset={requestRemoveDataset}
                 deletingDatasetId={removingDatasetId}
+                onDownloadOriginal={(dataset) => void downloadOriginal(dataset)}
+                downloadingDatasetId={downloadingDatasetId}
               />
             ))}
           </div>

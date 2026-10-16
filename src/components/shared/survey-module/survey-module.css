@@ -57,6 +57,11 @@
   color: var(--text-secondary, var(--color-secondary-7));
 }
 
+.survey-module__note {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
 .survey-module__empty {
   margin: 0;
 }

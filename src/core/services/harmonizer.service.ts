@@ -128,6 +128,12 @@ export const harmonizerService = {
     triggerDownload(blob, filename ?? `harmonized.${fmt}`);
   },
 
+  /** The uploaded CSV rebuilt from what the server stored: every column, values as read. */
+  downloadDatasetOriginal: async (datasetId: string): Promise<void> => {
+    const { blob, filename } = await downloadBlob(`/harmonizer/datasets/${datasetId}/original.csv`);
+    triggerDownload(blob, filename ?? 'original.csv');
+  },
+
   downloadSurveyExport: async (
     surveyId: string,
     fmt: ExportFormat,

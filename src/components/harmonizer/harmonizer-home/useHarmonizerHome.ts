@@ -26,6 +26,8 @@ export function useHarmonizerHome() {
     dataset: HarmonizerDatasetSummary;
   } | null>(null);
   const [removingDatasetId, setRemovingDatasetId] = useState<string | null>(null);
+  const [downloadingDatasetId, setDownloadingDatasetId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -108,6 +110,20 @@ export function useHarmonizerHome() {
     }
   };
 
+  const downloadOriginal = async (dataset: HarmonizerDatasetSummary) => {
+    setDownloadingDatasetId(dataset.id);
+    setDownloadError(null);
+    try {
+      await harmonizerService.downloadDatasetOriginal(dataset.id);
+    } catch (err) {
+      setDownloadError(
+        errorMessage(err, `No se pudo descargar el archivo original de «${dataset.name}».`),
+      );
+    } finally {
+      setDownloadingDatasetId(null);
+    }
+  };
+
   return {
     surveys,
     total,
@@ -127,5 +143,8 @@ export function useHarmonizerHome() {
     requestRemoveDataset,
     cancelRemoveDataset,
     confirmRemoveDataset,
+    downloadingDatasetId,
+    downloadError,
+    downloadOriginal,
   };
 }
