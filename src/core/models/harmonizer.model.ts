@@ -38,9 +38,20 @@ export interface MappingRouteState {
   renamedColumns?: RenamedColumn[];
 }
 
+/** Tipo de una variable en el Parquet exportado. El CSV siempre es texto. */
+export type ValueType = 'text' | 'integer' | 'decimal';
+
+export const VALUE_TYPE_LABEL: Record<ValueType, string> = {
+  text: 'Texto',
+  integer: 'Entero',
+  decimal: 'Decimal',
+};
+
 export interface CanonicalVariable {
   id: string;
   name: string;
+  /** Tipo confirmado al guardar un mapeo; `null` = sin confirmar. */
+  dataType: ValueType | null;
 }
 
 export type SuggestionSource = 'history' | 'name';
@@ -51,6 +62,8 @@ export interface MappingColumn {
   suggested: string | null;
   suggestionSource: SuggestionSource | null;
   missingCodes: string[];
+  /** Tipo que sugieren los valores de esta edición. */
+  inferredType: ValueType;
 }
 
 export interface MappingInfo {
@@ -66,6 +79,7 @@ export interface MappingChoice {
   column: string;
   choice: string;
   newName?: string;
+  dataType?: ValueType;
   missingCodes?: string[];
 }
 

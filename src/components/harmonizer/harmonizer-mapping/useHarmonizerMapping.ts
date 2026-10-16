@@ -4,20 +4,62 @@ import type { Crumb } from '../../shared/page-header/PageHeader';
 import {
   CANONICAL_PREFIX,
   NEW_OPTION,
+  VALUE_TYPE_LABEL,
   type CanonicalVariable,
   type HarmonizerDataset,
   type MappingChoice,
+  type MappingColumn,
   type MappingRouteState,
+  type ValueType,
 } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 
 export interface ColumnRow {
-  column: { name: string; selectedCanonicalId: string | null; suggested: string | null; suggestionSource: 'history' | 'name' | null; missingCodes: string[] };
+  column: MappingColumn;
   choice: string;
   newName: string;
   /** Códigos de no especificado separados por comas, tal como los escribe el usuario. */
   missingCodes: string;
+  /** Tipo de la variable en el Parquet exportado. Se confirma al guardar. */
+  dataType: ValueType;
+}
+
+/** `confirmed`: el guardado de la canónica; `suggested`: el inferido, sin confirmar; `changed`: lo cambió el usuario. */
+export type TypeStatus = 'confirmed' | 'suggested' | 'changed';
+
+/** Tipo confirmado de la canónica elegida, si la fila apunta a una existente que lo tiene. */
+function confirmedType(choice: string, canonicals: CanonicalVariable[]): ValueType | null {
+  if (!choice.startsWith(CANONICAL_PREFIX)) return null;
+  const id = choice.slice(CANONICAL_PREFIX.length);
+  return canonicals.find((cv) => cv.id === id)?.dataType ?? null;
+}
+
+/** El tipo con que se precarga una fila: el confirmado de su canónica o, si no hay, el inferido. */
+function defaultType(choice: string, column: MappingColumn, canonicals: CanonicalVariable[]): ValueType {
+  return confirmedType(choice, canonicals) ?? column.inferredType;
+}
+
+function typeStatus(row: ColumnRow, canonicals: CanonicalVariable[]): TypeStatus {
+  const confirmed = confirmedType(row.choice, canonicals);
+  if (confirmed !== null) return row.dataType === confirmed ? 'confirmed' : 'changed';
+  return row.dataType === row.column.inferredType ? 'suggested' : 'changed';
+}
+
+/** Texto bajo el selector de tipo: de dónde viene y qué pasa al guardar. */
+function typeHint(row: ColumnRow, canonicals: CanonicalVariable[]): string {
+  const inferred = VALUE_TYPE_LABEL[row.column.inferredType];
+  const differs = row.dataType !== row.column.inferredType;
+  switch (typeStatus(row, canonicals)) {
+    case 'confirmed':
+      return differs ? `Confirmado. Los valores de esta edición sugieren ${inferred}.` : 'Confirmado.';
+    case 'suggested':
+      return 'Sugerido por los valores. Se confirma al guardar.';
+    case 'changed':
+      return confirmedType(row.choice, canonicals) !== null
+        ? 'Cambia el tipo de esta variable en todas las ediciones.'
+        : `Los valores sugieren ${inferred}. Se confirma al guardar.`;
+  }
 }
 
 function parseMissingCodes(text: string): string[] {
@@ -26,9 +68,10 @@ function parseMissingCodes(text: string): string[] {
 
 /**
  * Si la fila difiere de lo guardado en el servidor (H-17). Las sugerencias precargadas
- * (histórico o por nombre) cuentan como cambio: se ven seleccionadas pero no están guardadas.
+ * (histórico o por nombre) y los tipos sin confirmar cuentan como cambio: se ven
+ * seleccionados pero no están guardados.
  */
-function isRowDirty(row: ColumnRow): boolean {
+function isRowDirty(row: ColumnRow, canonicals: CanonicalVariable[]): boolean {
   const { column } = row;
   const savedChoice =
     column.suggestionSource === null && column.selectedCanonicalId
@@ -36,6 +79,7 @@ function isRowDirty(row: ColumnRow): boolean {
       : '';
   if (row.choice !== savedChoice) return true;
   if (row.choice === '') return false;
+  if (row.dataType !== confirmedType(row.choice, canonicals)) return true;
   return parseMissingCodes(row.missingCodes).join('\n') !== column.missingCodes.join('\n');
 }
 
@@ -71,12 +115,16 @@ export function useHarmonizerMapping() {
         setDataset(info.dataset);
         setCanonicalVariables(info.canonicalVariables);
         setRows(
-          info.columns.map((column) => ({
-            column,
-            choice: column.selectedCanonicalId ? `${CANONICAL_PREFIX}${column.selectedCanonicalId}` : '',
-            newName: '',
-            missingCodes: column.missingCodes.join(', '),
-          })),
+          info.columns.map((column) => {
+            const choice = column.selectedCanonicalId ? `${CANONICAL_PREFIX}${column.selectedCanonicalId}` : '';
+            return {
+              column,
+              choice,
+              newName: '',
+              missingCodes: column.missingCodes.join(', '),
+              dataType: defaultType(choice, column, info.canonicalVariables),
+            };
+          }),
         );
       } catch (err) {
         if (!active) return;
@@ -99,7 +147,10 @@ export function useHarmonizerMapping() {
     [rows],
   );
 
-  const hasUnsavedChanges = useMemo(() => rows.some(isRowDirty), [rows]);
+  const hasUnsavedChanges = useMemo(
+    () => rows.some((row) => isRowDirty(row, canonicalVariables)),
+    [rows, canonicalVariables],
+  );
 
   const harmonizedHref = `/harmonizer/datasets/${datasetId}/harmonized`;
 
@@ -124,14 +175,28 @@ export function useHarmonizerMapping() {
     setPendingHref(null);
   }, [navigate, pendingHref]);
 
-  const setChoice = useCallback((index: number, choice: string) => {
-    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, choice } : row)));
-    setRowErrors((prev) => {
-      if (!prev.has(index)) return prev;
-      const next = new Set(prev);
-      next.delete(index);
-      return next;
-    });
+  // Al cambiar de canónica el tipo vuelve al confirmado de la nueva, o al inferido.
+  const setChoice = useCallback(
+    (index: number, choice: string) => {
+      setRows((prev) =>
+        prev.map((row, i) =>
+          i === index
+            ? { ...row, choice, dataType: defaultType(choice, row.column, canonicalVariables) }
+            : row,
+        ),
+      );
+      setRowErrors((prev) => {
+        if (!prev.has(index)) return prev;
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    },
+    [canonicalVariables],
+  );
+
+  const setDataType = useCallback((index: number, dataType: ValueType) => {
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, dataType } : row)));
   }, []);
 
   const setNewName = useCallback((index: number, newName: string) => {
@@ -149,7 +214,15 @@ export function useHarmonizerMapping() {
   }, []);
 
   const clearAll = useCallback(() => {
-    setRows((prev) => prev.map((row) => ({ ...row, choice: '', newName: '', missingCodes: '' })));
+    setRows((prev) =>
+      prev.map((row) => ({
+        ...row,
+        choice: '',
+        newName: '',
+        missingCodes: '',
+        dataType: row.column.inferredType,
+      })),
+    );
     setRowErrors(new Set());
   }, []);
 
@@ -199,6 +272,7 @@ export function useHarmonizerMapping() {
           column: row.column.name,
           choice: row.choice,
           newName: row.choice === NEW_OPTION ? row.newName.trim() : undefined,
+          dataType: row.dataType,
           missingCodes: parseMissingCodes(row.missingCodes),
         }));
 
@@ -244,6 +318,10 @@ export function useHarmonizerMapping() {
     setChoice,
     setNewName,
     setMissingCodes,
+    setDataType,
+    typeHint: (row: ColumnRow) => typeHint(row, canonicalVariables),
+    typeStatus: (row: ColumnRow) => typeStatus(row, canonicalVariables),
+    valueTypeLabel: VALUE_TYPE_LABEL,
     clearAll,
     save,
     crumbs,

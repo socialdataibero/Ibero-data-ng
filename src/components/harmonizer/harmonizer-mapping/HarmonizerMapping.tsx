@@ -5,6 +5,7 @@ import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
+import type { ValueType } from '../../../core/models/harmonizer.model';
 import './harmonizer-mapping.css';
 
 export function HarmonizerMapping() {
@@ -28,6 +29,10 @@ export function HarmonizerMapping() {
     setChoice,
     setNewName,
     setMissingCodes,
+    setDataType,
+    typeHint,
+    typeStatus,
+    valueTypeLabel,
     clearAll,
     save,
     crumbs,
@@ -82,6 +87,15 @@ export function HarmonizerMapping() {
               y en las descargas esos valores y las celdas vacías salen como valor faltante (nulo
               en Parquet). El cero y cualquier otro valor se conservan.
             </p>
+            <p className="text-color-secondary">
+              En <em>Tipo</em> elige cómo se guarda la variable al descargar el Parquet o usarlo en
+              un dataset: <em>Entero</em> o <em>Decimal</em> permiten sumar, promediar, multiplicar
+              por el factor de expansión y filtrar con «mayor que»; <em>Texto</em> conserva el valor
+              tal cual (útil para claves como <code>01</code>). Viene sugerido según los valores de
+              esta edición; al guardar queda confirmado para la variable en todas las ediciones. Si
+              algún valor no es número, el guardado lo indica para que lo marques como no
+              especificado o elijas Texto.
+            </p>
 
             {renamedColumns.length > 0 ? (
               <div className="c-harmonizer-mapping__notice" role="status">
@@ -122,6 +136,7 @@ export function HarmonizerMapping() {
                     <tr>
                       <th scope="col">Columna del CSV</th>
                       <th scope="col">Variable canónica</th>
+                      <th scope="col">Tipo</th>
                       <th scope="col">No especificado</th>
                       <th scope="col">Sugerencia</th>
                     </tr>
@@ -177,6 +192,35 @@ export function HarmonizerMapping() {
                                   <p className="form-help">Escribe el nombre canónico a crear.</p>
                                 )}
                               </>
+                            ) : null}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="c-harmonizer-mapping__field c-harmonizer-mapping__field--type">
+                            <label className="a11y-sr-only" htmlFor={`type-${row.column.name}`}>
+                              Tipo de {row.column.name}
+                            </label>
+                            <select
+                              id={`type-${row.column.name}`}
+                              value={row.dataType}
+                              onChange={(e) => setDataType(index, e.target.value as ValueType)}
+                              name={`type-${row.column.name}`}
+                              disabled={row.choice === ''}
+                              aria-describedby={row.choice === '' ? undefined : `type-${row.column.name}-hint`}
+                            >
+                              {(Object.keys(valueTypeLabel) as ValueType[]).map((type) => (
+                                <option key={type} value={type}>
+                                  {valueTypeLabel[type]}
+                                </option>
+                              ))}
+                            </select>
+                            {row.choice !== '' ? (
+                              <p
+                                id={`type-${row.column.name}-hint`}
+                                className={`form-help c-harmonizer-mapping__type-hint c-harmonizer-mapping__type-hint--${typeStatus(row)}`}
+                              >
+                                {typeHint(row)}
+                              </p>
                             ) : null}
                           </div>
                         </td>
@@ -239,7 +283,8 @@ export function HarmonizerMapping() {
         title="Cambios sin guardar"
         message={
           <>
-            Hay asignaciones que no se han guardado, incluidas las sugerencias precargadas.
+            Hay asignaciones que no se han guardado, incluidas las sugerencias precargadas y los
+            tipos sin confirmar.
             {leavingToHarmonized ? ' La vista armonizada solo muestra el mapeo guardado.' : ''} Si
             continúas sin guardar, estos cambios se pierden. Para conservarlos, pulsa «Guardar
             mapeo».

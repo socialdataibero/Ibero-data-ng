@@ -75,3 +75,20 @@ body[data-theme='dark'] .c-harmonizer-mapping__notice {
 .c-harmonizer-mapping input[type='text'] {
   width: 100%;
 }
+
+.c-harmonizer-mapping__field--type {
+  min-width: 9rem;
+}
+
+.c-harmonizer-mapping__type-hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.c-harmonizer-mapping__type-hint--changed {
+  color: #92400e;
+}
+
+body[data-theme='dark'] .c-harmonizer-mapping__type-hint--changed {
+  color: #fde68a;
+}
