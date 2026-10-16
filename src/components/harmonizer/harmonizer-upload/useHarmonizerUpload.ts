@@ -128,15 +128,10 @@ export function useHarmonizerUpload() {
             );
             return;
           }
-          if (err instanceof ApiError && err.body?.code === 'csv_not_utf8') {
-            setErrorFile(
-              'El archivo no está en UTF-8 y sus acentos se perderían. Vuelve a guardarlo como "CSV UTF-8" y súbelo de nuevo.',
-            );
-            return;
-          }
           if (
             err instanceof ApiError &&
-            (err.body?.code === 'csv_empty' ||
+            (err.body?.code === 'csv_not_utf8' ||
+              err.body?.code === 'csv_empty' ||
               err.body?.code === 'csv_no_rows' ||
               err.body?.code === 'csv_invalid')
           ) {
