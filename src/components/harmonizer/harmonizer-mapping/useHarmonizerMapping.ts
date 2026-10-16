@@ -14,6 +14,7 @@ import {
 } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
+import { canonicalNameProblem, sameCanonicalName } from '../../../core/utils/validation';
 
 export interface ColumnRow {
   column: MappingColumn;
@@ -101,7 +102,7 @@ export function useHarmonizerMapping() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [rowErrors, setRowErrors] = useState<Set<number>>(new Set());
+  const [rowErrors, setRowErrors] = useState<Map<number, string>>(new Map());
   // Destino pendiente mientras se pide confirmación por cambios sin guardar (H-17).
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
@@ -187,7 +188,7 @@ export function useHarmonizerMapping() {
       );
       setRowErrors((prev) => {
         if (!prev.has(index)) return prev;
-        const next = new Set(prev);
+        const next = new Map(prev);
         next.delete(index);
         return next;
       });
@@ -203,7 +204,7 @@ export function useHarmonizerMapping() {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, newName } : row)));
     setRowErrors((prev) => {
       if (!prev.has(index)) return prev;
-      const next = new Set(prev);
+      const next = new Map(prev);
       next.delete(index);
       return next;
     });
@@ -223,7 +224,7 @@ export function useHarmonizerMapping() {
         dataType: row.column.inferredType,
       })),
     );
-    setRowErrors(new Set());
+    setRowErrors(new Map());
   }, []);
 
   const save = useCallback(
@@ -231,16 +232,41 @@ export function useHarmonizerMapping() {
       event.preventDefault();
       setSaveError(null);
 
-      const invalidIndexes = new Set<number>();
+      // Mismas reglas que el servidor. Un nombre idéntico a una canónica existente la
+      // reutiliza aunque se haya creado antes de las reglas.
+      const invalidRows = new Map<number, string>();
+      const newNames: string[] = [];
       rows.forEach((row, index) => {
-        if (row.choice === NEW_OPTION && row.newName.trim() === '') invalidIndexes.add(index);
+        if (row.choice !== NEW_OPTION) return;
+        const name = row.newName.trim();
+        if (name === '') {
+          invalidRows.set(index, 'Escribe el nombre canónico o cambia la selección.');
+          return;
+        }
+        if (canonicalVariables.some((cv) => cv.name === name)) return;
+        const problem = canonicalNameProblem(name);
+        if (problem) {
+          invalidRows.set(index, `El nombre no es válido: ${problem}.`);
+          return;
+        }
+        const clash =
+          canonicalVariables.find((cv) => sameCanonicalName(cv.name, name))?.name ??
+          newNames.find((other) => other !== name && sameCanonicalName(other, name));
+        if (clash) {
+          invalidRows.set(
+            index,
+            `Ya existe «${clash}»; los nombres no distinguen mayúsculas. Elige esa variable o usa otro nombre.`,
+          );
+          return;
+        }
+        newNames.push(name);
       });
-      if (invalidIndexes.size > 0) {
-        setRowErrors(invalidIndexes);
-        setSaveError('Escribe el nombre canónico nuevo en cada columna marcada como "Crear nueva…", o cambia esa selección.');
+      if (invalidRows.size > 0) {
+        setRowErrors(invalidRows);
+        setSaveError('Revisa los nombres canónicos nuevos marcados en la tabla.');
         return;
       }
-      setRowErrors(new Set());
+      setRowErrors(new Map());
 
       // Dos columnas a la misma canónica: en la vista armonizada una sobrescribiría a la otra.
       const columnsByTarget = new Map<string, string[]>();

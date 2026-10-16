@@ -54,6 +54,25 @@ export interface CanonicalVariable {
   dataType: ValueType | null;
 }
 
+/** Edición que mapea una variable canónica, y desde qué columna. */
+export interface CanonicalVariableUsage {
+  datasetId: string;
+  datasetName: string;
+  year: number;
+  column: string;
+}
+
+export interface SurveyCanonicalVariable extends CanonicalVariable {
+  /** `false` para nombres creados antes de las reglas: siguen funcionando, pero conviene renombrarlos. */
+  nameValid: boolean;
+  usages: CanonicalVariableUsage[];
+}
+
+export interface SurveyCanonicalVariables {
+  survey: { id: string; name: string };
+  items: SurveyCanonicalVariable[];
+}
+
 export type SuggestionSource = 'history' | 'name';
 
 export interface MappingColumn {

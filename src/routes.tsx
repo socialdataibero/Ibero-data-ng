@@ -12,6 +12,7 @@ import { HarmonizerUploadSkeleton } from './components/harmonizer/harmonizer-upl
 import { HarmonizerMappingSkeleton } from './components/harmonizer/harmonizer-mapping/HarmonizerMappingSkeleton';
 import { HarmonizerHomeSkeleton } from './components/harmonizer/harmonizer-home/HarmonizerHomeSkeleton';
 import { HarmonizerViewSkeleton } from './components/harmonizer/harmonizer-view/HarmonizerViewSkeleton';
+import { HarmonizerVariablesSkeleton } from './components/harmonizer/harmonizer-variables/HarmonizerVariablesSkeleton';
 import { HomeSkeleton } from './components/home/HomeSkeleton';
 import { DatasetsListSkeleton } from './components/datasets-list/DatasetsListSkeleton';
 import { OrganizationsListSkeleton } from './components/organizations-list/OrganizationsListSkeleton';
@@ -80,6 +81,11 @@ const HarmonizerMapping = lazy(() =>
 const HarmonizerView = lazy(() =>
   import('./components/harmonizer/harmonizer-view/HarmonizerView').then((m) => ({
     default: m.HarmonizerView,
+  })),
+);
+const HarmonizerVariables = lazy(() =>
+  import('./components/harmonizer/harmonizer-variables/HarmonizerVariables').then((m) => ({
+    default: m.HarmonizerVariables,
   })),
 );
 
@@ -160,6 +166,11 @@ export function AppRoutes() {
               '/harmonizer/datasets/:datasetId/harmonized',
               <HarmonizerView />,
               <HarmonizerViewSkeleton />,
+            )}
+            {lazyRoute(
+              '/harmonizer/surveys/:surveyId/variables',
+              <HarmonizerVariables />,
+              <HarmonizerVariablesSkeleton />,
             )}
             {lazyRoute(
               '/harmonizer/surveys/:surveyId/harmonized',

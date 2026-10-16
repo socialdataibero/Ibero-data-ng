@@ -8,6 +8,8 @@ import type {
   SurveyHarmonizedView,
   ExportFormat,
   RenamedColumn,
+  CanonicalVariable,
+  SurveyCanonicalVariables,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -76,6 +78,17 @@ export const harmonizerService = {
   removeSurvey: (surveyId: string) => http.delete<void>(`/harmonizer/surveys/${surveyId}`),
 
   removeDataset: (datasetId: string) => http.delete<void>(`/harmonizer/datasets/${datasetId}`),
+
+  listVariables: (surveyId: string, signal?: AbortSignal) =>
+    http.get<SurveyCanonicalVariables>(`/harmonizer/surveys/${surveyId}/variables`, signal),
+
+  renameVariable: (surveyId: string, variableId: string, name: string) =>
+    http.patch<CanonicalVariable>(`/harmonizer/surveys/${surveyId}/variables/${variableId}`, {
+      name,
+    }),
+
+  removeVariable: (surveyId: string, variableId: string) =>
+    http.delete<void>(`/harmonizer/surveys/${surveyId}/variables/${variableId}`),
 
   uploadDataset: (payload: UploadDatasetPayload, file: File) => {
     const form = new FormData();

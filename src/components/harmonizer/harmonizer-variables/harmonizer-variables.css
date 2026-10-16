@@ -1,0 +1,114 @@
+.c-harmonizer-variables {
+  --field-bg: var(--bg, #fff);
+  --field-border: var(--border, #e4e4e7);
+  --field-color: var(--ink, #18181b);
+  --field-focus-border: var(--state-focus, #005dff);
+  --field-focus-shadow: var(--state-focus, #005dff);
+
+  display: block;
+  margin: 0;
+}
+
+.c-harmonizer-variables__body {
+  padding-block: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .c-harmonizer-variables__body {
+    padding-block: 2.5rem;
+  }
+}
+
+.c-harmonizer-variables__rules,
+.c-harmonizer-variables__note {
+  max-width: 48rem;
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-variables__note {
+  margin-top: 1rem;
+}
+
+.c-harmonizer-variables__error {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--error, #b00020);
+}
+
+.c-harmonizer-variables__table td {
+  vertical-align: top;
+}
+
+.c-harmonizer-variables__table td:last-child {
+  width: 1%;
+}
+
+.c-harmonizer-variables__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-harmonizer-variables__usages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.c-harmonizer-variables__usages > li {
+  margin: 0;
+}
+
+.c-harmonizer-variables__usages > li + li {
+  margin-top: 0.25rem;
+}
+
+.c-harmonizer-variables__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.c-harmonizer-variables__separator {
+  color: var(--text-secondary, var(--color-secondary-7));
+  user-select: none;
+}
+
+.c-harmonizer-variables__rename {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin: 0;
+  min-width: 14rem;
+}
+
+.c-harmonizer-variables__rename > input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  padding: 7px 12px;
+  font-family: var(--typography-code, monospace);
+  font-size: 1rem;
+  color: var(--field-color);
+  background-color: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+}
+
+.c-harmonizer-variables__rename > input:focus {
+  outline: none;
+  border-color: var(--field-focus-border);
+  box-shadow: 0 0 8px var(--field-focus-shadow);
+}
+
+.c-harmonizer-variables__rename-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}

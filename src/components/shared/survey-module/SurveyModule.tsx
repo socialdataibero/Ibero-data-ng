@@ -45,6 +45,12 @@ export function SurveyModule({
           <span className="survey-module__link-separator" aria-hidden="true">
             |
           </span>
+          <Link to={`/harmonizer/surveys/${survey.id}/variables`} className="hyperlink">
+            Variables
+          </Link>
+          <span className="survey-module__link-separator" aria-hidden="true">
+            |
+          </span>
           <Link to="/harmonizer/upload" className="hyperlink">
             Subir CSV
             <span className="pictogram-file-upload" aria-hidden="true" />

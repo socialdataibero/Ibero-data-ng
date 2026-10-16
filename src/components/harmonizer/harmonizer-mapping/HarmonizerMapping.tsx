@@ -186,10 +186,12 @@ export function HarmonizerMapping() {
                                 />
                                 {rowErrors.has(index) ? (
                                   <p id={`new-${row.column.name}-error`} className="c-harmonizer-mapping__error" role="alert">
-                                    Escribe el nombre canónico o cambia la selección.
+                                    {rowErrors.get(index)}
                                   </p>
                                 ) : (
-                                  <p className="form-help">Escribe el nombre canónico a crear.</p>
+                                  <p className="form-help">
+                                    Letras sin acento, números y _; empieza con letra.
+                                  </p>
                                 )}
                               </>
                             ) : null}
