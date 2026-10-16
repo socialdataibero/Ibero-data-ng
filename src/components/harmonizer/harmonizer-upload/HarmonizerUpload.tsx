@@ -50,7 +50,7 @@ export function HarmonizerUpload() {
                 onChange={(e) => setDatasetName(e.target.value)}
                 name="datasetName"
                 placeholder="Ej: ENIGH 2024"
-                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.datasetName}
                 aria-describedby={
                   fieldErrors.datasetName
@@ -81,7 +81,7 @@ export function HarmonizerUpload() {
                   setDatasetYear(e.target.value === '' ? '' : Number(e.target.value))
                 }
                 name="datasetYear"
-                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.datasetYear}
                 aria-describedby={fieldErrors.datasetYear ? 'dataset-year-error' : undefined}
               />
@@ -118,7 +118,7 @@ export function HarmonizerUpload() {
                   value={newSurveyName}
                   onChange={(e) => setNewSurveyName(e.target.value)}
                   name="newSurveyName"
-                  required
+                  aria-required="true"
                   aria-invalid={!!fieldErrors.newSurveyName}
                   aria-describedby={fieldErrors.newSurveyName ? 'new-survey-error' : undefined}
                 />
@@ -137,7 +137,7 @@ export function HarmonizerUpload() {
                 type="file"
                 accept=".csv,text/csv"
                 onChange={onFileSelected}
-                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.file}
                 aria-describedby={fieldErrors.file ? 'dataset-file-error' : undefined}
               />

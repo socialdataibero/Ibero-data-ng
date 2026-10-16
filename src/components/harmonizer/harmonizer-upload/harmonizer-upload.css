@@ -102,6 +102,7 @@
 
 .c-harmonizer-upload__field > .form-help {
   margin: 0.25rem 0 0;
+  color: var(--text-secondary, var(--color-secondary-7));
 }
 
 .c-harmonizer-upload__error {
