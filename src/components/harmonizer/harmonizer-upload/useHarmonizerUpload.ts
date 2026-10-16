@@ -136,7 +136,9 @@ export function useHarmonizerUpload() {
           }
           if (
             err instanceof ApiError &&
-            (err.body?.code === 'csv_empty' || err.body?.code === 'csv_no_rows')
+            (err.body?.code === 'csv_empty' ||
+              err.body?.code === 'csv_no_rows' ||
+              err.body?.code === 'csv_invalid')
           ) {
             setErrorFile(err.message);
             return;
