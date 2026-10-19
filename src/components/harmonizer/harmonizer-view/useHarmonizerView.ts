@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import type {
   DatasetHarmonizedView,
   ExportFormat,
-  HarmonizedRow,
   SurveyHarmonizedView,
 } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
@@ -34,19 +33,35 @@ export const SURVEY_ORIGIN_COLUMNS: Record<string, { label: string; title: strin
   },
 };
 const SURVEY_ORIGIN_KEYS = Object.keys(SURVEY_ORIGIN_COLUMNS);
-export const MAX_VISIBLE_ROWS = 500;
+
+// Filas por página (SDI-93). El servidor admite hasta 500.
+export const PAGE_SIZES = [50, 100, 500];
+const DEFAULT_PAGE_SIZE = 100;
+
+function pageSizeFrom(value: string | null): number {
+  const size = Number(value);
+  return PAGE_SIZES.includes(size) ? size : DEFAULT_PAGE_SIZE;
+}
 
 export function useHarmonizerView() {
   const { datasetId, surveyId } = useParams<{ datasetId?: string; surveyId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [datasetView, setDatasetView] = useState<DatasetHarmonizedView | null>(null);
-  const [baseSurveyView, setBaseSurveyView] = useState<SurveyHarmonizedView | null>(null);
+  const [surveyView, setSurveyView] = useState<SurveyHarmonizedView | null>(null);
+  // `loading` es la primera carga (esqueleto); `refreshing`, un cambio de página o de
+  // variables con la tabla ya en pantalla.
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const loadedFor = useRef<string | null>(null);
 
-  const selectedFromUrl = searchParams.getAll('variables');
-  const [selectedVariables, setSelectedVariables] = useState<string[]>(selectedFromUrl);
+  const [selectedVariables, setSelectedVariables] = useState<string[]>(() =>
+    searchParams.getAll('variables'),
+  );
+  const selectionKey = selectedVariables.join('\u0000');
+  const [pageSize, setPageSizeState] = useState(() => pageSizeFrom(searchParams.get('limit')));
+  const [page, setPage] = useState(1);
 
   const [downloading, setDownloading] = useState<ExportFormat | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -60,66 +75,56 @@ export function useHarmonizerView() {
   const [attachError, setAttachError] = useState<string | null>(null);
   const [attachedTo, setAttachedTo] = useState<Dataset | null>(null);
 
+  // El servidor manda solo la página pedida (SDI-93). Las variables elegidas también se
+  // aplican en el servidor, así que la tabla coincide con la descarga.
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
+    const target = datasetId ?? surveyId ?? null;
+    if (loadedFor.current === target) setRefreshing(true);
+    else setLoading(true);
+    setLoadError(null);
+    const request = { limit: pageSize, offset: (page - 1) * pageSize };
     (async () => {
-      setLoading(true);
-      setLoadError(null);
       try {
         if (datasetId) {
-          const view = await harmonizerService.getDatasetHarmonized(datasetId, controller.signal);
+          const view = await harmonizerService.getDatasetHarmonized(
+            datasetId,
+            request,
+            controller.signal,
+          );
           if (!active) return;
           setDatasetView(view);
-          setBaseSurveyView(null);
+          setSurveyView(null);
         } else if (surveyId) {
-          const view = await harmonizerService.getSurveyHarmonized(surveyId, selectedFromUrl, controller.signal);
+          const view = await harmonizerService.getSurveyHarmonized(
+            surveyId,
+            selectedVariables,
+            request,
+            controller.signal,
+          );
           if (!active) return;
-          setBaseSurveyView(view);
+          setSurveyView(view);
           setDatasetView(null);
-          setSelectedVariables(selectedFromUrl.length > 0 ? selectedFromUrl : view.selected);
         }
+        loadedFor.current = target;
       } catch (err) {
         if (!active) return;
         setLoadError(errorMessage(err, 'No se pudo cargar la vista armonizada.'));
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     })();
     return () => {
       active = false;
       controller.abort();
     };
+    // `selectionKey` representa a `selectedVariables`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [datasetId, surveyId]);
-
-  const surveyView = useMemo(() => {
-    if (!baseSurveyView) return null;
-    // Siempre en el orden de la lista de variables, como en la descarga (H-14).
-    const selected =
-      selectedVariables.length === 0
-        ? baseSurveyView.availableVariables
-        : baseSurveyView.availableVariables.filter((v) => selectedVariables.includes(v));
-    const headers = selected;
-    const rows = baseSurveyView.rows.map((row) => {
-      const next: HarmonizedRow = {
-        _dataset: row._dataset,
-        _year: row._year,
-        _row: row._row,
-      };
-      for (const header of headers) {
-        next[header] = row[header] ?? null;
-      }
-      return next;
-    });
-    return {
-      ...baseSurveyView,
-      headers,
-      selected,
-      selectedCount: selected.length,
-      rows,
-    };
-  }, [baseSurveyView, selectedVariables]);
+  }, [datasetId, surveyId, page, pageSize, selectionKey]);
 
   const headers = useMemo(() => {
     if (datasetView) return datasetView.headers;
@@ -128,7 +133,32 @@ export function useHarmonizerView() {
   }, [datasetView, surveyView]);
 
   const rows = datasetView?.rows ?? surveyView?.rows ?? [];
-  const visibleRows = rows.slice(0, MAX_VISIBLE_ROWS);
+  const total = datasetView?.total ?? surveyView?.total ?? 0;
+  const offset = datasetView?.offset ?? surveyView?.offset ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const firstRow = rows.length > 0 ? offset + 1 : 0;
+  const lastRow = offset + rows.length;
+
+  const goToPage = useCallback(
+    (target: number) => setPage(Math.min(Math.max(1, target), totalPages)),
+    [totalPages],
+  );
+
+  const setPageSize = useCallback(
+    (size: number) => {
+      setPageSizeState(size);
+      setPage(1);
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.set('limit', String(size));
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const title = datasetView
     ? `${datasetView.dataset.name} (${datasetView.dataset.year})`
@@ -142,16 +172,17 @@ export function useHarmonizerView() {
 
   const toggleVariable = useCallback(
     (variable: string) => {
-      if (!baseSurveyView) return;
+      if (!surveyView) return;
       const current =
         selectedVariables.length === 0
-          ? [...baseSurveyView.availableVariables]
+          ? [...surveyView.availableVariables]
           : [...selectedVariables];
       // Al volver a marcar una variable, regresa a su lugar en vez de irse al final (H-14).
       const next = current.includes(variable)
         ? current.filter((v) => v !== variable)
-        : baseSurveyView.availableVariables.filter((v) => v === variable || current.includes(v));
+        : surveyView.availableVariables.filter((v) => v === variable || current.includes(v));
       setSelectedVariables(next);
+      setPage(1);
       setSearchParams(
         (prev) => {
           const params = new URLSearchParams(prev);
@@ -162,7 +193,7 @@ export function useHarmonizerView() {
         { replace: true },
       );
     },
-    [baseSurveyView, selectedVariables, setSearchParams],
+    [surveyView, selectedVariables, setSearchParams],
   );
 
   const download = useCallback(
@@ -269,13 +300,21 @@ export function useHarmonizerView() {
     datasetView,
     surveyView,
     loading,
+    refreshing,
     loadError,
     downloading,
     downloadError,
     headers,
     originCount: surveyView ? SURVEY_ORIGIN_KEYS.length : 0,
     rows,
-    visibleRows,
+    total,
+    firstRow,
+    lastRow,
+    page,
+    totalPages,
+    goToPage,
+    pageSize,
+    setPageSize,
     title,
     isSelected,
     toggleVariable,
@@ -294,6 +333,5 @@ export function useHarmonizerView() {
     selectAttachTarget: setAttachTarget,
     confirmAttach,
     crumbs,
-    maxVisibleRows: MAX_VISIBLE_ROWS,
   };
 }

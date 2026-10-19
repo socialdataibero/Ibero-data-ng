@@ -66,3 +66,10 @@
   cursor: default;
   pointer-events: none;
 }
+
+.c-paginator .paginator__gap {
+  display: inline-flex;
+  padding: 0.25rem 0.2rem;
+  line-height: 1.25;
+  color: var(--text-secondary);
+}

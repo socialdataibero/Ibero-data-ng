@@ -105,18 +105,28 @@ export interface MappingChoice {
 /** `null` es un valor faltante: celda vacía o código de no especificado. */
 export type HarmonizedRow = Record<string, string | number | null>;
 
-export interface DatasetHarmonizedView {
+/** One page of a harmonized view (SDI-93). `offset` counts rows, starting at 0. */
+export interface ViewPage {
+  limit: number;
+  offset: number;
+}
+
+export interface DatasetHarmonizedView extends ViewPage {
   dataset: HarmonizerDataset;
   headers: string[];
   rows: HarmonizedRow[];
+  /** Rows of the whole view; `rows` holds only the requested page. */
+  total: number;
   availableVariables: string[];
   selectedCount: number;
 }
 
-export interface SurveyHarmonizedView {
+export interface SurveyHarmonizedView extends ViewPage {
   survey: { id: string; name: string };
   headers: string[];
   rows: HarmonizedRow[];
+  /** Rows of the whole view; `rows` holds only the requested page. */
+  total: number;
   availableVariables: string[];
   selected: string[];
   selectedCount: number;

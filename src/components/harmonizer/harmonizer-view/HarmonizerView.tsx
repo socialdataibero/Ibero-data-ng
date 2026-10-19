@@ -2,9 +2,12 @@ import { Button } from 'sectei-library';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
+import { Paginator } from '../../shared/paginator/Paginator';
 import { HarmonizerViewContentSkeleton } from './HarmonizerViewSkeleton';
-import { SURVEY_ORIGIN_COLUMNS, useHarmonizerView } from './useHarmonizerView';
+import { PAGE_SIZES, SURVEY_ORIGIN_COLUMNS, useHarmonizerView } from './useHarmonizerView';
 import './harmonizer-view.css';
+
+const formatCount = (n: number) => n.toLocaleString('es-MX');
 
 function originClass(index: number, originCount: number): string | undefined {
   if (index >= originCount) return undefined;
@@ -19,13 +22,21 @@ export function HarmonizerView() {
     datasetView,
     surveyView,
     loading,
+    refreshing,
     loadError,
     downloading,
     downloadError,
     headers,
     originCount,
     rows,
-    visibleRows,
+    total,
+    firstRow,
+    lastRow,
+    page,
+    totalPages,
+    goToPage,
+    pageSize,
+    setPageSize,
     title,
     isSelected,
     toggleVariable,
@@ -44,7 +55,6 @@ export function HarmonizerView() {
     selectAttachTarget,
     confirmAttach,
     crumbs,
-    maxVisibleRows,
   } = useHarmonizerView();
 
   const selectedCount = surveyView?.selectedCount ?? datasetView?.selectedCount ?? 0;
@@ -139,7 +149,7 @@ export function HarmonizerView() {
                   {availableCount > 0 ? ` de ${availableCount}` : ''}
                 </StatusBadge>
               )}
-              <StatusBadge variant="neutral">Filas: {rows.length}</StatusBadge>
+              <StatusBadge variant="neutral">Filas: {formatCount(total)}</StatusBadge>
             </div>
 
             {/* H-18: la vista solo muestra columnas mapeadas; aclarar que las demás no se pierden. */}
@@ -298,7 +308,32 @@ export function HarmonizerView() {
                     Edición.
                   </p>
                 ) : null}
-                <div className="container-table">
+                <div className="c-harmonizer-view__page-bar">
+                  <p className="c-harmonizer-view__range" aria-live="polite">
+                    {total === 0
+                      ? 'Sin filas.'
+                      : `Filas ${formatCount(firstRow)}–${formatCount(lastRow)} de ${formatCount(total)}`}
+                    {refreshing ? ' · Cargando…' : ''}
+                  </p>
+                  <div className="c-harmonizer-view__page-size">
+                    <label htmlFor="page-size">Filas por página</label>
+                    <select
+                      id="page-size"
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                    >
+                      {PAGE_SIZES.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div
+                  className={`container-table${refreshing ? ' c-harmonizer-view__table--refreshing' : ''}`}
+                  aria-busy={refreshing}
+                >
                   <table className="table-condensed">
                     <thead>
                       {originCount > 0 ? (
@@ -333,7 +368,7 @@ export function HarmonizerView() {
                       </tr>
                     </thead>
                     <tbody>
-                      {visibleRows.map((row, rowIndex) => (
+                      {rows.map((row, rowIndex) => (
                         <tr key={rowIndex}>
                           {headers.map((header, i) => (
                             <td key={header} className={originClass(i, originCount)}>
@@ -349,12 +384,7 @@ export function HarmonizerView() {
                     </tbody>
                   </table>
                 </div>
-                {rows.length > maxVisibleRows ? (
-                  <p className="text-color-secondary">
-                    Mostrando las primeras {maxVisibleRows} de {rows.length} filas. Descarga el
-                    archivo para verlas todas.
-                  </p>
-                ) : null}
+                <Paginator page={page} totalPages={totalPages} onChange={goToPage} />
               </>
             )}
           </>

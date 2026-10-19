@@ -23,6 +23,40 @@
   justify-content: flex-end;
 }
 
+.c-harmonizer-view__page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.c-harmonizer-view__range {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.c-harmonizer-view__page-size {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-harmonizer-view__page-size label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.c-harmonizer-view__page-size select {
+  width: auto;
+  margin: 0;
+}
+
+.c-harmonizer-view__table--refreshing {
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
 .c-harmonizer-view__summary {
   display: flex;
   flex-wrap: wrap;

@@ -10,6 +10,7 @@ import type {
   RenamedColumn,
   CanonicalVariable,
   SurveyCanonicalVariables,
+  ViewPage,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -38,6 +39,14 @@ function variablesQuery(variables?: string[]): string {
   if (!variables?.length) return '';
   const params = new URLSearchParams();
   for (const v of variables) params.append('variables', v);
+  return `?${params.toString()}`;
+}
+
+function pageQuery(variables: string[] | undefined, { limit, offset }: ViewPage): string {
+  const params = new URLSearchParams();
+  for (const v of variables ?? []) params.append('variables', v);
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
   return `?${params.toString()}`;
 }
 
@@ -112,12 +121,20 @@ export const harmonizerService = {
       columns,
     }),
 
-  getDatasetHarmonized: (datasetId: string, signal?: AbortSignal) =>
-    http.get<DatasetHarmonizedView>(`/harmonizer/datasets/${datasetId}/harmonized`, signal),
+  getDatasetHarmonized: (datasetId: string, page: ViewPage, signal?: AbortSignal) =>
+    http.get<DatasetHarmonizedView>(
+      `/harmonizer/datasets/${datasetId}/harmonized${pageQuery(undefined, page)}`,
+      signal,
+    ),
 
-  getSurveyHarmonized: (surveyId: string, variables?: string[], signal?: AbortSignal) =>
+  getSurveyHarmonized: (
+    surveyId: string,
+    variables: string[] | undefined,
+    page: ViewPage,
+    signal?: AbortSignal,
+  ) =>
     http.get<SurveyHarmonizedView>(
-      `/harmonizer/surveys/${surveyId}/harmonized${variablesQuery(variables)}`,
+      `/harmonizer/surveys/${surveyId}/harmonized${pageQuery(variables, page)}`,
       signal,
     ),
 
