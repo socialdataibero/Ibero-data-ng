@@ -224,8 +224,8 @@ export function DatasetDetail() {
         </section>
 
         {selectedResourceId ? (
-          <section className="c-dataset-detail__section" aria-labelledby="analysis-title">
-            <h2 id="analysis-title" className="c-dataset-detail__subtitle">
+          <section className="c-dataset-detail__section" aria-labelledby="analysis-section-title">
+            <h2 id="analysis-section-title" className="c-dataset-detail__subtitle">
               Análisis por pasos
             </h2>
             <AnalysisBuilder

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type FormEvent, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type FormEvent, type MouseEvent, type ReactNode } from 'react';
 import { Button } from 'sectei-library';
 import './confirm-dialog.css';
 
@@ -26,6 +26,9 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // A page can hold several dialogs (e.g. delete survey / delete edition), so ids must be unique.
+  const titleId = useId();
+  const messageId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -57,16 +60,16 @@ export function ConfirmDialog({
     <dialog
       ref={dialogRef}
       className="modal confirm-dialog"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-message"
+      aria-labelledby={titleId}
+      aria-describedby={messageId}
       onCancel={handleCancel}
       onClick={handleClickDialog}
     >
       <div className="modal-container confirm-dialog__container">
-        <h2 id="confirm-dialog-title" className="confirm-dialog__title">
+        <h2 id={titleId} className="confirm-dialog__title">
           {title}
         </h2>
-        <div id="confirm-dialog-message" className="confirm-dialog__message">
+        <div id={messageId} className="confirm-dialog__message">
           {message}
         </div>
         <div className="confirm-dialog__actions">
