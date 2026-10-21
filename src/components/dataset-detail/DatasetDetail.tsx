@@ -4,6 +4,7 @@ import { Button } from 'sectei-library';
 import { AnalysisBuilder } from '../analysis-builder/AnalysisBuilder';
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { PageHeaderSkeleton } from '../shared/page-header/PageHeaderSkeleton';
+import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
 import { DatasetResourcesSkeleton } from './DatasetDetailSkeleton';
 import { useDatasetDetail } from './useDatasetDetail';
 import './dataset-detail.css';
@@ -21,6 +22,7 @@ export function DatasetDetail() {
     organizationId,
     datasetId,
     dataset,
+    datasetNotFound,
     resources,
     loadingResources,
     uploading,
@@ -43,6 +45,8 @@ export function DatasetDetail() {
     { label: 'Datasets', href: `/organizations/${organizationId}` },
     { label: dataset?.title ?? 'Dataset' },
   ];
+
+  if (datasetNotFound) return <DatasetNotFound />;
 
   return (
     <div className="c-dataset-detail">

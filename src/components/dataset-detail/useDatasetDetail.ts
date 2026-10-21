@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'rea
 import { useParams } from 'react-router-dom';
 import { resourcesService } from '../../core/services/resources.service';
 import { datasetsService } from '../../core/services/datasets.service';
-import { errorMessage } from '../../core/api/http';
+import { errorMessage, isNotFound } from '../../core/api/http';
 import type { Resource } from '../../core/models/resource.model';
 import type { Dataset } from '../../core/models/dataset.model';
 import type { Analysis } from '../../core/models/analysis.model';
@@ -11,6 +11,8 @@ export function useDatasetDetail() {
   const { organizationId = '', datasetId = '' } = useParams();
 
   const [dataset, setDataset] = useState<Dataset | null>(null);
+  // The server answers 404 both for a missing dataset and for a private one the user cannot see.
+  const [datasetNotFound, setDatasetNotFound] = useState(false);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loadingResources, setLoadingResources] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -32,6 +34,9 @@ export function useDatasetDetail() {
       const list = await resourcesService.list(organizationId, datasetId);
       setResources(list);
       setSelectedResourceId((current) => current || (list.length > 0 ? list[0].id : ''));
+    } catch (err) {
+      if (!isNotFound(err)) throw err;
+      setDatasetNotFound(true);
     } finally {
       setLoadingResources(false);
     }
@@ -39,7 +44,14 @@ export function useDatasetDetail() {
 
   useEffect(() => {
     void reloadResources();
-    void datasetsService.get(organizationId, datasetId).then(setDataset);
+    setDatasetNotFound(false);
+    void datasetsService
+      .get(organizationId, datasetId)
+      .then(setDataset)
+      .catch((err: unknown) => {
+        if (!isNotFound(err)) throw err;
+        setDatasetNotFound(true);
+      });
   }, [reloadResources, organizationId, datasetId]);
 
   const onFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -87,6 +99,7 @@ export function useDatasetDetail() {
     organizationId,
     datasetId,
     dataset,
+    datasetNotFound,
     resources,
     loadingResources,
     uploading,
