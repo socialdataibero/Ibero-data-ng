@@ -226,6 +226,7 @@ export function useAnalysisBuilder({
   const addStep = () => {
     setSteps((previous) => [...previous, { op: newOp, params: { ...DEFAULT_PARAMS[newOp] } }]);
     setPreviewResult(null);
+    setSavedAnalysis(null);
   };
 
   const removeStep = (index: number) => {

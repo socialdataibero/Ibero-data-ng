@@ -565,12 +565,14 @@ export function AnalysisBuilder({
             </>
           ) : null}
 
-          {b.savedAnalysis ? (
-            <p className="c-analysis-builder__ok">
-              Análisis “{b.savedAnalysis.title}” guardado en la carpeta “{b.savedAnalysis.folder}”.
-            </p>
-          ) : null}
         </>
+      ) : null}
+
+      {/* Outside the steps block: saving clears the steps, and the message must still show. */}
+      {b.savedAnalysis ? (
+        <p className="c-analysis-builder__ok" role="status">
+          Análisis “{b.savedAnalysis.title}” guardado en la carpeta “{b.savedAnalysis.folder}”.
+        </p>
       ) : null}
 
       <div className="c-analysis-builder__saved">
