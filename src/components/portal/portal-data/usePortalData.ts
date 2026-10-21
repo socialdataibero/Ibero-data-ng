@@ -49,7 +49,7 @@ function packageToCard(pkg: CatalogPackage, index: number): PortalDataResultItem
     source: organization.title || organization.name || 'Sin organización',
     year: yearOf(pkg) ?? undefined,
     institutions: pkg.notes ? pkg.notes.slice(0, 60) : undefined,
-    href: `/datos/vista-datos?id=${encodeURIComponent(pkg.name)}`,
+    href: `/data/view?id=${encodeURIComponent(pkg.name)}`,
   };
 }
 

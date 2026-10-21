@@ -33,7 +33,7 @@ export default function PortalData() {
         onSearch={(text) => setQuery(String(text ?? ''))}
         breadcrumbs={[
           { label: 'Inicio', href: '/' },
-          { label: 'Datos', href: orgFilter ? '/datos' : undefined },
+          { label: 'Datos', href: orgFilter ? '/data' : undefined },
           ...(orgFilter ? [{ label: orgFilterLabel ?? orgFilter }] : []),
         ]}
       />

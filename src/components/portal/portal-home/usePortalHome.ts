@@ -40,7 +40,7 @@ export function usePortalHome() {
           sourcesLabel: title,
           buttonText: 'Ir a los datos',
           variant: 'link-inner',
-          href: `/datos?org=${encodeURIComponent(organization.name)}`,
+          href: `/data?org=${encodeURIComponent(organization.name)}`,
         };
       }),
     [organizations, counts],

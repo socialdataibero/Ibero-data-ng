@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './core/guards/RequireAuth';
+import { LegacyRedirect } from './core/routing/LegacyRedirect';
 import { AppShell } from './components/shared/app-shell/AppShell';
 import { PortalShell } from './components/shared/portal/portal-shell/PortalShell';
 import { useInternalLinkNavigation } from './core/hooks/useInternalLinkNavigation';
@@ -111,11 +112,17 @@ export function AppRoutes() {
       <Routes>
         <Route element={<PortalShell />}>
           {lazyRoute('/', <PortalHome />, <PortalHomeSkeleton />)}
-          {lazyRoute('/datos', <PortalData />, <PortalDataSkeleton />)}
-          {lazyRoute('/temas', <PortalTopics />, <PortalTopicsSkeleton />)}
-          {lazyRoute('/vistagraficas', <PortalChartsView />, <PortalChartsViewSkeleton />)}
-          {lazyRoute('/datos/vista-datos', <PortalChartsView />, <PortalChartsViewSkeleton />)}
+          {lazyRoute('/data', <PortalData />, <PortalDataSkeleton />)}
+          {lazyRoute('/topics', <PortalTopics />, <PortalTopicsSkeleton />)}
+          {lazyRoute('/charts', <PortalChartsView />, <PortalChartsViewSkeleton />)}
+          {lazyRoute('/data/view', <PortalChartsView />, <PortalChartsViewSkeleton />)}
         </Route>
+
+        {/* Old Spanish portal URLs, already shared since the portal went live. */}
+        <Route path="/datos" element={<LegacyRedirect to="/data" />} />
+        <Route path="/temas" element={<LegacyRedirect to="/topics" />} />
+        <Route path="/vistagraficas" element={<LegacyRedirect to="/charts" />} />
+        <Route path="/datos/vista-datos" element={<LegacyRedirect to="/data/view" />} />
 
         <Route path="/login" element={<Login />} />
 

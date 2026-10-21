@@ -56,7 +56,7 @@ export default function PortalChartsView() {
         lastUpdated={longDate(pkg.metadata_modified)}
         breadcrumbs={[
           { label: 'Inicio', href: '/' },
-          { label: 'Datos', href: '/datos' },
+          { label: 'Datos', href: '/data' },
           { label: title },
         ]}
       />

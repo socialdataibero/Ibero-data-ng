@@ -56,7 +56,7 @@ export default function PortalHome() {
             intro="¿No sabes por dónde empezar?"
             summary={topicsSummary}
             buttonText={loading ? '' : 'Ver todos los temas'}
-            href="/temas"
+            href="/topics"
             cards={topicCards}
             loading={loading}
           />
@@ -75,7 +75,7 @@ export default function PortalHome() {
             title="Conoce las fuentes de datos"
             intro="Los datos que puedes consultar en esta plataforma provienen de diferentes fuente de datos como censos, encuestas, entre otras."
             buttonText="Ver fuentes de datos"
-            href="/temas"
+            href="/topics"
           />
         </div>
       </main>

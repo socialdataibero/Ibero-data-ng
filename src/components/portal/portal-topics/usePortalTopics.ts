@@ -30,7 +30,7 @@ function organizationToTopic(
     sourcesLabel: title,
     buttonText: 'Ir a los datos',
     variant: 'link-inner',
-    href: `/datos?org=${encodeURIComponent(name)}`,
+    href: `/data?org=${encodeURIComponent(name)}`,
   };
 }
 
