@@ -1,6 +1,5 @@
 import { Outlet, Link } from 'react-router-dom';
 import { MainNav } from 'sectei-library';
-import { AccessibilityMenu } from '../../accessibility-menu/AccessibilityMenu';
 import logoCdmx from '../../../../assets/logo-cdmx-2024.svg';
 import { BuildInfo } from '../../build-info/BuildInfo';
 import { usePortalShell } from './usePortalShell';
@@ -14,7 +13,6 @@ export function PortalShell() {
       <a className="go-content-main" href="#main-content">
         Ir a contenido principal
       </a>
-      <AccessibilityMenu />
 
       <MainNav
         navInfo={`Sección: <b>${activeSection}</b>`}
