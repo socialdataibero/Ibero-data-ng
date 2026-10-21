@@ -5,7 +5,7 @@ import { CRUMBS, useProfile } from './useProfile';
 import './profile.css';
 
 export function Profile() {
-  const { currentUser, formValues } = useProfile();
+  const { currentUser, save } = useProfile();
 
   if (!currentUser) return <ProfileSkeleton />;
 
@@ -13,7 +13,7 @@ export function Profile() {
     <div className="c-profile">
       <PageHeader
         title="Configuración de perfil"
-        intro="Actualiza tus datos personales, imagen y contraseña de acceso a la plataforma."
+        intro="Actualiza tu nombre y tu contraseña de acceso a la plataforma."
         crumbs={CRUMBS}
       />
 
@@ -21,7 +21,7 @@ export function Profile() {
         className="container width-fixed c-profile__section"
         aria-label="Formulario de perfil"
       >
-        <ProfileForm initialValues={formValues} />
+        <ProfileForm fullName={currentUser.fullName} email={currentUser.email} onUpdate={save} />
       </section>
     </div>
   );

@@ -18,6 +18,9 @@ const MESSAGES: Record<string, string> = {
   'surveyId must be a string.': 'surveyId debe ser texto.',
   'surveyId must not be empty.': 'surveyId no puede quedar vacío.',
   'newSurvey must be a string.': 'newSurvey debe ser texto.',
+  'fullName must be a string.': 'El nombre debe ser texto.',
+  'fullName must be at least 2 characters long.': 'El nombre debe tener al menos 2 caracteres.',
+  'newPassword must be at least 8 characters long.': 'La contraseña debe tener al menos 8 caracteres.',
 };
 
 const ENCODING_ONE_OF = /^encoding must be one of: (.*)\.$/;

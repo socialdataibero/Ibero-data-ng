@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { useAuth } from '../../core/auth/useAuth';
 import type { Crumb } from '../shared/page-header/PageHeader';
-import type { ProfileFormValues } from './ProfileForm';
+import type { ProfileFormSubmitData } from './ProfileForm';
 
 export const CRUMBS: Crumb[] = [
   { label: 'Inicio', href: '/dashboard' },
@@ -9,20 +8,12 @@ export const CRUMBS: Crumb[] = [
 ];
 
 export function useProfile() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateFullName, changePassword } = useAuth();
 
-  const formValues = useMemo<ProfileFormValues>(() => {
-    if (!currentUser) return {};
-    const username = currentUser.email.includes('@')
-      ? currentUser.email.split('@')[0]
-      : currentUser.email;
-    return {
-      username,
-      fullName: currentUser.fullName,
-      email: currentUser.email,
-      imageUrl: '',
-    };
-  }, [currentUser]);
+  async function save({ fullName, previousPassword, password }: ProfileFormSubmitData) {
+    if (currentUser && fullName !== currentUser.fullName) await updateFullName(fullName);
+    if (password) await changePassword(previousPassword, password);
+  }
 
-  return { currentUser, formValues };
+  return { currentUser, save };
 }

@@ -1,27 +1,18 @@
-import { useId, useRef, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { Button } from 'sectei-library';
-import { isValidEmail } from '../../core/utils/validation';
+import { ApiError, errorMessage } from '../../core/api/http';
 import './profile-form.css';
 
-export interface ProfileFormValues {
-  username?: string;
-  fullName?: string;
-  email?: string;
-  imageUrl?: string;
-}
-
-export interface ProfileFormSubmitData extends ProfileFormValues {
-  imageMode: 'upload' | 'link';
-  fileName: string;
+export interface ProfileFormSubmitData {
+  fullName: string;
   previousPassword: string;
   password: string;
-  passwordConfirm: string;
 }
 
 export interface ProfileFormProps {
-  initialValues?: ProfileFormValues;
-  onUpdate?: (data: ProfileFormSubmitData) => void;
-  onClear?: () => void;
+  fullName: string;
+  email: string;
+  onUpdate: (data: ProfileFormSubmitData) => Promise<void>;
   className?: string;
 }
 
@@ -80,22 +71,10 @@ function PasswordField({
   );
 }
 
-export function ProfileForm({
-  initialValues = {},
-  onUpdate,
-  onClear,
-  className = '',
-}: ProfileFormProps) {
+export function ProfileForm({ fullName: savedFullName, email, onUpdate, className = '' }: ProfileFormProps) {
   const baseId = useId();
-  const fileRef = useRef<HTMLInputElement>(null);
 
-  const [username] = useState(initialValues.username ?? '');
-  const [fullName, setFullName] = useState(initialValues.fullName ?? '');
-  const [email, setEmail] = useState(initialValues.email ?? '');
-  const [imageMode, setImageMode] = useState<'upload' | 'link'>('upload');
-  const [imageUrl, setImageUrl] = useState(initialValues.imageUrl ?? '');
-  const [fileName, setFileName] = useState('');
-
+  const [fullName, setFullName] = useState(savedFullName);
   const [previousPassword, setPreviousPassword] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -103,36 +82,42 @@ export function ProfileForm({
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const [errorEmail, setErrorEmail] = useState('');
-  const [errorImageUrl, setErrorImageUrl] = useState('');
+  const [errorFullName, setErrorFullName] = useState('');
   const [errorPreviousPassword, setErrorPreviousPassword] = useState('');
   const [errorPassword, setErrorPassword] = useState('');
   const [errorPasswordConfirm, setErrorPasswordConfirm] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   const ids = {
-    username: `${baseId}-username`,
     fullName: `${baseId}-full-name`,
     email: `${baseId}-email`,
-    imageUrl: `${baseId}-image-url`,
-    file: `${baseId}-file`,
     previousPassword: `${baseId}-pass-prev`,
     password: `${baseId}-pass`,
     passwordConfirm: `${baseId}-pass-confirm`,
   };
 
+  function clearMessages() {
+    setErrorFullName('');
+    setErrorPreviousPassword('');
+    setErrorPassword('');
+    setErrorPasswordConfirm('');
+    setSaved('');
+    setSaveError('');
+  }
+
+  function clearPasswords() {
+    setPreviousPassword('');
+    setPassword('');
+    setPasswordConfirm('');
+  }
+
   function validate(): boolean {
     let ok = true;
 
-    if (!email.trim()) {
-      setErrorEmail('El correo electrónico es obligatorio.');
-      ok = false;
-    } else if (!isValidEmail(email.trim())) {
-      setErrorEmail('Ingresa un correo electrónico válido.');
-      ok = false;
-    }
-
-    if (imageMode === 'link' && imageUrl.trim() && !/^https?:\/\/\S+$/i.test(imageUrl.trim())) {
-      setErrorImageUrl('Ingresa una URL válida (http:// o https://).');
+    if (fullName.trim().length < 2) {
+      setErrorFullName('El nombre debe tener al menos 2 caracteres.');
       ok = false;
     }
 
@@ -161,44 +146,44 @@ export function ProfileForm({
     return ok;
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setErrorEmail('');
-    setErrorImageUrl('');
-    setErrorPreviousPassword('');
-    setErrorPassword('');
-    setErrorPasswordConfirm('');
-
+    clearMessages();
     if (!validate()) return;
 
-    onUpdate?.({
-      username,
-      fullName,
-      email,
-      imageMode,
-      imageUrl: imageMode === 'link' ? imageUrl : '',
-      fileName: imageMode === 'upload' ? fileName : '',
-      previousPassword,
-      password,
-      passwordConfirm,
-    });
+    const nameChanged = fullName.trim() !== savedFullName;
+    if (!nameChanged && !password) {
+      setSaved('No hay cambios que guardar.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onUpdate({ fullName: fullName.trim(), previousPassword, password });
+      setFullName(fullName.trim());
+      clearPasswords();
+      setSaved(
+        nameChanged && password
+          ? 'Nombre y contraseña actualizados.'
+          : password
+            ? 'Contraseña actualizada.'
+            : 'Nombre actualizado.',
+      );
+    } catch (err) {
+      if (err instanceof ApiError && err.body?.code === 'wrong_current_password') {
+        setErrorPreviousPassword('La contraseña anterior no es correcta.');
+      } else {
+        setSaveError(errorMessage(err, 'No se pudo actualizar el perfil. Intenta de nuevo.'));
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleClear() {
-    setFullName('');
-    setEmail(initialValues.email ?? '');
-    setImageUrl('');
-    setFileName('');
-    setPreviousPassword('');
-    setPassword('');
-    setPasswordConfirm('');
-    if (fileRef.current) fileRef.current.value = '';
-    setErrorEmail('');
-    setErrorImageUrl('');
-    setErrorPreviousPassword('');
-    setErrorPassword('');
-    setErrorPasswordConfirm('');
-    onClear?.();
+    setFullName(savedFullName);
+    clearPasswords();
+    clearMessages();
   }
 
   return (
@@ -212,150 +197,34 @@ export function ProfileForm({
           <legend className="profile-form__title">Cambie sus detalles</legend>
 
           <div className="profile-form__field">
-            <label htmlFor={ids.username}>Nombre de usuario</label>
-            <input
-              id={ids.username}
-              name="username"
-              type="text"
-              value={username}
-              readOnly
-              disabled
-              aria-readonly="true"
-            />
-            <p className="form-help">El nombre de usuario no se puede modificar.</p>
-          </div>
-
-          <div className="profile-form__field">
-            <label htmlFor={ids.fullName}>Nombre completo</label>
+            <label htmlFor={ids.fullName}>
+              Nombre completo
+              <span className="form-required">(Obligatorio)</span>
+            </label>
             <input
               id={ids.fullName}
               name="fullName"
               type="text"
+              required
+              aria-required="true"
+              autoComplete="name"
               placeholder="ej. Joe Bloggs"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              aria-invalid={!!errorFullName}
+              aria-describedby={errorFullName ? `${ids.fullName}-error` : undefined}
             />
-          </div>
-
-          <div className="profile-form__field">
-            <label htmlFor={ids.email}>
-              Dirección de correo electrónico
-              <span className="form-required">(Obligatorio)</span>
-            </label>
-            <input
-              id={ids.email}
-              name="email"
-              type="email"
-              required
-              aria-required="true"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={!!errorEmail}
-              aria-describedby={errorEmail ? `${ids.email}-error` : undefined}
-            />
-            {errorEmail ? (
-              <p id={`${ids.email}-error`} className="profile-form__error" role="alert">
-                {errorEmail}
+            {errorFullName ? (
+              <p id={`${ids.fullName}-error`} className="profile-form__error" role="alert">
+                {errorFullName}
               </p>
             ) : null}
           </div>
 
           <div className="profile-form__field">
-            <div className="profile-form__image-header">
-              <span className="profile-form__label" id={`${baseId}-image`}>
-                Imagen del perfil
-              </span>
-              <div
-                className="profile-form__image-actions"
-                role="group"
-                aria-labelledby={`${baseId}-image`}
-              >
-                <Button
-                  type="button"
-                  variant="bare-secondary"
-                  size="small"
-                  icon="pictogram-file-upload"
-                  className={
-                    imageMode === 'upload'
-                      ? 'profile-form__mode-btn is-active'
-                      : 'profile-form__mode-btn'
-                  }
-                  aria-pressed={imageMode === 'upload'}
-                  onClick={() => setImageMode('upload')}
-                >
-                  Subir
-                </Button>
-                <Button
-                  type="button"
-                  variant="bare-secondary"
-                  size="small"
-                  icon="pictogram-link-external"
-                  className={
-                    imageMode === 'link'
-                      ? 'profile-form__mode-btn is-active'
-                      : 'profile-form__mode-btn'
-                  }
-                  aria-pressed={imageMode === 'link'}
-                  onClick={() => setImageMode('link')}
-                >
-                  Enlace
-                </Button>
-              </div>
-            </div>
-
-            <input
-              ref={fileRef}
-              id={ids.file}
-              name="imageFile"
-              type="file"
-              accept="image/*"
-              className="profile-form__file-input"
-              aria-label="Archivo de imagen del perfil"
-              tabIndex={-1}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setFileName(file?.name ?? '');
-              }}
-            />
-
-            {imageMode === 'upload' ? (
-              <>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  icon="pictogram-file-upload"
-                  aria-controls={ids.file}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {fileName ? 'Cambiar imagen' : 'Elegir imagen'}
-                </Button>
-                <p className="form-help">
-                  {fileName || 'Selecciona una imagen desde tu dispositivo.'}
-                </p>
-              </>
-            ) : (
-              <>
-                <label htmlFor={ids.imageUrl}>URL de la imagen</label>
-                <input
-                  id={ids.imageUrl}
-                  name="imageUrl"
-                  type="url"
-                  placeholder="https://…"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  aria-invalid={!!errorImageUrl}
-                  aria-describedby={errorImageUrl ? `${ids.imageUrl}-error` : undefined}
-                />
-                {errorImageUrl ? (
-                  <p id={`${ids.imageUrl}-error`} className="profile-form__error" role="alert">
-                    {errorImageUrl}
-                  </p>
-                ) : (
-                  <p className="form-help">Pega la dirección de una imagen pública.</p>
-                )}
-              </>
-            )}
+            <label htmlFor={ids.email}>Dirección de correo electrónico</label>
+            <input id={ids.email} name="email" type="email" value={email} readOnly disabled />
+            <p className="form-help">El correo electrónico no se puede modificar.</p>
           </div>
         </fieldset>
 
@@ -393,12 +262,20 @@ export function ProfileForm({
       </div>
 
       <div className="profile-form__footer">
+        {saveError ? (
+          <p className="profile-form__error" role="alert">
+            {saveError}
+          </p>
+        ) : null}
+        <p className="profile-form__status" role="status">
+          {saved}
+        </p>
         <div className="profile-form__actions">
-          <Button type="button" variant="secondary" onClick={handleClear}>
+          <Button type="button" variant="secondary" onClick={handleClear} disabled={saving}>
             Borrar
           </Button>
-          <Button type="submit" variant="primary">
-            Actualizar perfil
+          <Button type="submit" variant="primary" disabled={saving}>
+            {saving ? 'Guardando…' : 'Actualizar perfil'}
           </Button>
         </div>
       </div>
