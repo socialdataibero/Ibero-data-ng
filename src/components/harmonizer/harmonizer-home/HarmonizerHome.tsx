@@ -82,13 +82,13 @@ export function HarmonizerHome() {
         </h2>
 
         {deleteError ? (
-          <p className="c-harmonizer-home__empty-text" role="alert">
+          <p className="c-harmonizer-home__error" role="alert">
             {deleteError}
           </p>
         ) : null}
 
         {downloadError ? (
-          <p className="c-harmonizer-home__empty-text" role="alert">
+          <p className="c-harmonizer-home__error" role="alert">
             {downloadError}
           </p>
         ) : null}

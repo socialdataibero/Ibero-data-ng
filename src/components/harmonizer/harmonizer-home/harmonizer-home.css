@@ -71,3 +71,9 @@
   max-width: 26rem;
   color: var(--text-secondary, var(--color-secondary-7));
 }
+
+/* Error de una acción (borrar, descargar): la lista sigue visible debajo (SDI-100). */
+.c-harmonizer-home__error {
+  margin: 0 0 1rem;
+  color: var(--error, #b00020);
+}
