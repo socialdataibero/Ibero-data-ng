@@ -5,6 +5,7 @@ import cardMotif1 from '../../../assets/card-motif-1.png';
 import cardMotif2 from '../../../assets/card-motif-2.png';
 import cardMotif3 from '../../../assets/card-motif-3.png';
 import type { PortalTopicCard } from '../portal-topics-section/PortalTopicsSection';
+import { countLabel } from '../../../core/utils/count-label';
 
 const IMAGES = [cardMotif1, cardMotif2, cardMotif3];
 const PREVIEW_COUNT = 3;
@@ -34,8 +35,8 @@ export function usePortalHome() {
           id: organization.id,
           imageSrc: IMAGES[index % IMAGES.length],
           title,
-          sources: count.sources,
-          charts: count.charts,
+          sources: countLabel(count.sources, 'fuente', 'fuentes'),
+          charts: countLabel(count.charts, 'gráfica', 'gráficas'),
           description: organization.description || 'Sin descripción registrada en el catálogo.',
           sourcesLabel: title,
           buttonText: 'Ir a los datos',

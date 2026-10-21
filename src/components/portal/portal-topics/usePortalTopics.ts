@@ -6,6 +6,7 @@ import cardMotif2 from '../../../assets/card-motif-2.png';
 import cardMotif3 from '../../../assets/card-motif-3.png';
 import type { PortalCatalogItem } from '../portal-catalog-section/PortalCatalogSection';
 import { SORT_AZ } from '../portal-catalog-section/usePortalCatalogSection';
+import { countLabel } from '../../../core/utils/count-label';
 
 const IMAGES = [cardMotif1, cardMotif2, cardMotif3];
 const PAGE_SIZE = 10;
@@ -24,8 +25,8 @@ function organizationToTopic(
     name: title,
     title,
     imageSrc: IMAGES[index % IMAGES.length],
-    sources: count.sources,
-    charts: count.charts,
+    sources: countLabel(count.sources, 'fuente', 'fuentes'),
+    charts: countLabel(count.charts, 'gráfica', 'gráficas'),
     description: organization.description || 'Sin descripción registrada en el catálogo.',
     sourcesLabel: title,
     buttonText: 'Ir a los datos',
