@@ -42,6 +42,7 @@ const CODE_MESSAGES: Record<string, string> = {
   sort_direction_not_allowed: 'La dirección de orden elegida no está permitida.',
   percentage_reference_not_found: 'El porcentaje debe referirse a una agregación del análisis.',
   resource_not_found: 'El recurso ya no existe en este dataset.',
+  public_analysis_not_found: 'Ese análisis no existe o ya no es público.',
   analysis_not_found: 'El análisis ya no existe.',
   analysis_slug_taken: 'Ese slug ya está en uso; prueba con otro.',
   analysis_result_not_ready: 'Este análisis todavía no tiene un resultado listo.',

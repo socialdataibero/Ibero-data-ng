@@ -6,6 +6,7 @@ import { describeSteps } from '../../../core/utils/portal-recipe';
 import { usePortalRequest } from '../../../core/hooks/usePortalRequest';
 import type { PortalChartsHeaderTab } from '../../shared/portal/portal-charts-header/PortalChartsHeader';
 import type { PortalModalTab } from '../../shared/portal/portal-modal/PortalModal';
+import { publicErrorMessage } from '../../../core/api/http';
 
 const PERIOD_COLUMN = /^(a(n|ñ)i?o|year|periodo|per(i|í)odo)$/i;
 const MAX_TABS = 8;
@@ -162,7 +163,7 @@ export function usePortalChartsView() {
       const url = await portalCatalogService.openInVizCanvas(pkg.name);
       window.open(url, '_blank', 'noopener');
     } catch (err) {
-      setVizCanvasError(err instanceof Error ? err.message : 'No se pudo abrir en VizCanvas.');
+      setVizCanvasError(publicErrorMessage(err, 'No se pudo abrir en VizCanvas.'));
     } finally {
       setOpeningVizCanvas(false);
     }

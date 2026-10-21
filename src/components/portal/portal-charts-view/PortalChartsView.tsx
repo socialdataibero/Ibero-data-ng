@@ -4,6 +4,7 @@ import { PortalChartsHeader } from '../../shared/portal/portal-charts-header/Por
 import { PortalModal } from '../../shared/portal/portal-modal/PortalModal';
 import { PortalChartsViewSkeleton } from './PortalChartsViewSkeleton';
 import { usePortalChartsView } from './usePortalChartsView';
+import { publicErrorMessage } from '../../../core/api/http';
 
 export default function PortalChartsView() {
   const {
@@ -39,7 +40,9 @@ export default function PortalChartsView() {
       <main id="main-content">
         <section className="container width-fixed" style={{ paddingBlock: '3rem' }}>
           <p role="alert" className="text-color-secondary">
-            {error ? `No se pudieron cargar los datos: ${error.message}` : 'No se encontró el conjunto solicitado en el catálogo.'}
+            {error
+              ? publicErrorMessage(error, 'No se pudieron cargar los datos. Intenta de nuevo más tarde.')
+              : 'No se encontró el conjunto solicitado en el catálogo.'}
           </p>
         </section>
       </main>

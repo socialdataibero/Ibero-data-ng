@@ -3,6 +3,7 @@ import { PageHeader } from '../../shared/page-header/PageHeader';
 import { PortalCatalogSection } from '../portal-catalog-section/PortalCatalogSection';
 import { usePortalTopics } from './usePortalTopics';
 import './portal-topics.css';
+import { publicErrorMessage } from '../../../core/api/http';
 
 export default function PortalTopics() {
   const {
@@ -30,7 +31,7 @@ export default function PortalTopics() {
       {error ? (
         <section className="container width-fixed" style={{ paddingBlock: '2rem' }}>
           <p role="alert" className="text-color-secondary">
-            No se pudieron cargar los temas: {error.message}
+            {publicErrorMessage(error, 'No se pudieron cargar los temas. Intenta de nuevo más tarde.')}
           </p>
         </section>
       ) : (

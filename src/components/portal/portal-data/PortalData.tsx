@@ -2,6 +2,7 @@ import { Icon } from '../../shared/icon/Icon';
 import { PortalSearchHeader } from '../portal-search-header/PortalSearchHeader';
 import { PortalDataResultsSection } from '../portal-data-results-section/PortalDataResultsSection';
 import { usePortalData } from './usePortalData';
+import { publicErrorMessage } from '../../../core/api/http';
 
 export default function PortalData() {
   const {
@@ -52,7 +53,7 @@ export default function PortalData() {
       {error ? (
         <section className="container width-fixed" style={{ paddingBlock: '2rem' }}>
           <p role="alert" className="text-color-secondary">
-            No se pudo consultar el catálogo: {error.message}
+            {publicErrorMessage(error, 'No se pudo consultar el catálogo. Intenta de nuevo más tarde.')}
           </p>
         </section>
       ) : (

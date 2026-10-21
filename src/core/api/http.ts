@@ -30,6 +30,11 @@ export function isNotFound(err: unknown): boolean {
   return err instanceof ApiError && err.status === 404;
 }
 
+/** Spanish text for an error on a public page: never the raw server or network message. */
+export function publicErrorMessage(err: unknown, fallback: string): string {
+  return (err instanceof ApiError ? translateApiError(err.body) : null) ?? fallback;
+}
+
 export function errorMessage(err: unknown, fallback: string): string {
   if (!(err instanceof ApiError)) return fallback;
   return translateApiError(err.body) ?? err.body?.message ?? fallback;
