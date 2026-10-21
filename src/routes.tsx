@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './core/guards/RequireAuth';
+import { RequireSysadmin } from './core/guards/RequireSysadmin';
 import { LegacyRedirect } from './core/routing/LegacyRedirect';
 import { AppShell } from './components/shared/app-shell/AppShell';
 import { PortalShell } from './components/shared/portal/portal-shell/PortalShell';
@@ -131,11 +132,13 @@ export function AppRoutes() {
             {lazyRoute('/dashboard', <Home />, <HomeSkeleton />)}
             {lazyRoute('/datasets', <DatasetsList />, <DatasetsListSkeleton />)}
             {lazyRoute('/organizations', <OrganizationsList />, <OrganizationsListSkeleton />)}
-            {lazyRoute(
-              '/organizations/new',
-              <OrganizationCreate />,
-              <OrganizationCreateSkeleton />,
-            )}
+            <Route element={<RequireSysadmin redirectTo="/organizations" />}>
+              {lazyRoute(
+                '/organizations/new',
+                <OrganizationCreate />,
+                <OrganizationCreateSkeleton />,
+              )}
+            </Route>
             {lazyRoute(
               '/organizations/:organizationId',
               <OrganizationDetail />,

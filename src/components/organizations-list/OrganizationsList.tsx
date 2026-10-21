@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { Button, SearchField } from 'sectei-library';
+import { useAuth } from '../../core/auth/useAuth';
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { Paginator } from '../shared/paginator/Paginator';
 import { Filters } from '../shared/filters/Filters';
@@ -12,6 +13,7 @@ import './organizations-list.css';
 
 export function OrganizationsList() {
   const sortId = useId();
+  const { currentUser } = useAuth();
   const {
     loading,
     sortOrder,
@@ -34,9 +36,11 @@ export function OrganizationsList() {
         intro="Organizaciones que publican y administran datasets en la plataforma."
         crumbs={CRUMBS}
         action={
-          <Button type="button" variant="primary" icon="pictogram-add" href="/organizations/new">
-            Agregar organización
-          </Button>
+          currentUser?.isSysadmin ? (
+            <Button type="button" variant="primary" icon="pictogram-add" href="/organizations/new">
+              Agregar organización
+            </Button>
+          ) : undefined
         }
       />
 
