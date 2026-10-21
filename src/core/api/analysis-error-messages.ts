@@ -52,6 +52,14 @@ const CODE_MESSAGES: Record<string, string> = {
   invalid_parquet: 'El resultado de VizCanvas no es un archivo Parquet válido.',
 };
 
+// Same labels as OP_LABELS in the analysis builder, for the steps that run row by row.
+const ROW_STEP_LABELS: Record<string, string> = {
+  group_by: 'Agrupar por',
+  filter: 'Filtrar filas',
+  aggregate: 'Calcular',
+  compute: 'Crear columna',
+};
+
 const DUCKDB_REASON_MESSAGES: Record<string, string> = {
   incompatible_types: 'El análisis combina columnas o valores de tipos que no son compatibles. Revisa los filtros, cruces y operaciones.',
   syntax_error: 'La consulta SQL tiene un error de sintaxis.',
@@ -75,6 +83,16 @@ function duckDbMessage(body: ApiErrorBody): string {
 
 /** Spanish text for an analysis error, or null when the code is not an analysis one. */
 export function analysisErrorText(body: ApiErrorBody): string | null {
+  if (body.code === 'aggregate_result_not_allowed') {
+    const step = ROW_STEP_LABELS[param(body, 'op')] ?? param(body, 'op');
+    return `«${param(body, 'column')}» es el resultado de «Calcular» y no se puede usar en «${step}». Elige una columna del archivo o una hecha con «Crear columna».`;
+  }
+  if (body.code === 'star_requires_count') {
+    return `«* (todas las filas)» solo funciona con COUNT en «Calcular», no con ${param(body, 'func')}. Elige una columna.`;
+  }
+  if (body.code === 'sort_column_not_grouped') {
+    return `No se puede ordenar por «${param(body, 'column')}»: cuando el análisis agrupa o calcula, solo se puede ordenar por una columna de «Agrupar por» o por un resultado de «Calcular» o «Convertir a porcentaje».`;
+  }
   if (body.code === 'unknown_columns') {
     return `Estas columnas no existen en los recursos: ${param(body, 'columns')}.`;
   }

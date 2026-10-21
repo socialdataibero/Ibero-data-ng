@@ -114,7 +114,7 @@ export function AnalysisBuilder({
       case 'group_by':
         return (
           <div className="c-analysis-builder__chips" role="group" aria-label="Columnas de agrupación">
-            {b.availableColumns.map((col) => (
+            {b.rowColumns.map((col) => (
               <button
                 key={col}
                 type="button"
@@ -150,8 +150,9 @@ export function AnalysisBuilder({
               aria-label="Columna a agregar"
             >
               <option value="">columna…</option>
-              <option value="*">* (todas las filas)</option>
-              {b.availableColumns.map((col) => (
+              {/* COUNT is the only function that works over whole rows. */}
+              {step.params['func'] === 'COUNT' ? <option value="*">* (todas las filas)</option> : null}
+              {b.rowColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
                 </option>
@@ -184,7 +185,7 @@ export function AnalysisBuilder({
               aria-label="Columna A"
             >
               <option value="">columna A…</option>
-              {b.availableColumns.map((col) => (
+              {b.rowColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
                 </option>
@@ -197,7 +198,7 @@ export function AnalysisBuilder({
               aria-label="Columna B"
             >
               <option value="">columna B (o número)…</option>
-              {b.availableColumns.map((col) => (
+              {b.rowColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
                 </option>
@@ -255,7 +256,7 @@ export function AnalysisBuilder({
               aria-label="Columna a filtrar"
             >
               <option value="">columna…</option>
-              {b.availableColumns.map((col) => (
+              {b.rowColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
                 </option>
@@ -291,14 +292,9 @@ export function AnalysisBuilder({
               aria-label="Columna a ordenar"
             >
               <option value="">columna…</option>
-              {b.availableColumns.map((col) => (
+              {b.sortColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
-                </option>
-              ))}
-              {b.aggregateAliases.map((alias) => (
-                <option key={`alias-${alias}`} value={alias}>
-                  {alias}
                 </option>
               ))}
             </select>

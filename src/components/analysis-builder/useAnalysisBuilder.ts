@@ -31,6 +31,11 @@ export const OP_LABELS: Record<OpName, string> = {
   limit: 'Limitar filas (top N)',
 };
 
+/** The trimmed result name of a compute, aggregate or percentage step ('' while unnamed). */
+function resultName(step: Step): string {
+  return typeof step.params['as'] === 'string' ? step.params['as'].trim() : '';
+}
+
 export const OP_DESCRIPTIONS: Record<OpName, string> = {
   join: 'Cruza este dataset con otro resource por una columna en común (ej: hogares + personas por folio). El otro resource debe ser del mismo dataset.',
   group_by: 'Agrupa las filas por una o más columnas. Úsalo con cálculos para resumir por grupo.',
@@ -167,16 +172,15 @@ export function useAnalysisBuilder({
     [datasetResources],
   );
 
-  const availableColumns = useMemo<string[]>(() => {
+  // Columns that exist on every row: the file, joined resources and "Crear columna" results.
+  // Group by, filter, aggregate and compute run row by row, so only these work there.
+  const rowColumns = useMemo<string[]>(() => {
     const base = (resourceColumns ?? []).map((c) => c.name);
     const derived: string[] = [];
     const joined: string[] = [];
     for (const step of steps) {
-      if (step.op === 'compute' && typeof step.params['as'] === 'string') {
-        derived.push(step.params['as']);
-      }
-      if (step.op === 'aggregate' && typeof step.params['as'] === 'string') {
-        derived.push(step.params['as']);
+      if (step.op === 'compute' && resultName(step)) {
+        derived.push(resultName(step));
       }
       if (step.op === 'join' && typeof step.params['resourceId'] === 'string') {
         joined.push(...columnsForResource(step.params['resourceId']));
@@ -186,12 +190,18 @@ export function useAnalysisBuilder({
   }, [resourceColumns, steps, columnsForResource]);
 
   const aggregateAliases = useMemo<string[]>(
-    () =>
-      steps
-        .filter((s) => s.op === 'aggregate' && typeof s.params['as'] === 'string')
-        .map((s) => s.params['as'] as string),
+    () => steps.filter((s) => s.op === 'aggregate' && resultName(s)).map(resultName),
     [steps],
   );
+
+  // Once the analysis groups or aggregates, its rows are groups: sort can only use the
+  // grouped columns and the aggregate and percentage results.
+  const sortColumns = useMemo<string[]>(() => {
+    const groupBy = steps.flatMap((s) => (s.op === 'group_by' ? ((s.params['columns'] as string[]) ?? []) : []));
+    if (groupBy.length === 0 && aggregateAliases.length === 0) return rowColumns;
+    const percentages = steps.filter((s) => s.op === 'percentage' && resultName(s)).map(resultName);
+    return [...new Set([...groupBy, ...aggregateAliases, ...percentages])];
+  }, [steps, rowColumns, aggregateAliases]);
 
   const setParam = useCallback((index: number, key: string, value: unknown) => {
     setSteps((previous) =>
@@ -421,7 +431,8 @@ export function useAnalysisBuilder({
     isGroupByColumnSelected,
     otherResources,
     columnsForResource,
-    availableColumns,
+    rowColumns,
+    sortColumns,
     aggregateAliases,
     previewing,
     previewError,
