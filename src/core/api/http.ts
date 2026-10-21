@@ -1,4 +1,6 @@
 import { environment } from '../../environments/environment';
+import type { ApiErrorBody } from './api-error-body';
+import { translateApiError, translateValidationDetail } from './error-messages';
 
 const TOKEN_KEY = 'ibero_access_token';
 
@@ -17,7 +19,7 @@ export function clearToken(): void {
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    readonly body: { message?: string; code?: string | null; details?: string[] } | null,
+    readonly body: ApiErrorBody | null,
   ) {
     super(body?.message ?? `Error ${status}`);
     this.name = 'ApiError';
@@ -29,7 +31,8 @@ export function isNotFound(err: unknown): boolean {
 }
 
 export function errorMessage(err: unknown, fallback: string): string {
-  return err instanceof ApiError && err.body?.message ? err.body.message : fallback;
+  if (!(err instanceof ApiError)) return fallback;
+  return translateApiError(err.body) ?? err.body?.message ?? fallback;
 }
 
 /**
@@ -44,7 +47,7 @@ export function fieldErrors(err: unknown, fields: string[]): Record<string, stri
   const messages = err.body?.details ?? (err.body?.message ? [err.body.message] : []);
   for (const detail of messages) {
     const field = fields.find((f) => detail.startsWith(`${f} `));
-    if (field && !result[field]) result[field] = detail;
+    if (field && !result[field]) result[field] = translateValidationDetail(detail);
   }
   return result;
 }
@@ -74,9 +77,9 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    let responseBody: { message?: string } | null = null;
+    let responseBody: ApiErrorBody | null = null;
     try {
-      responseBody = (await res.json()) as { message?: string };
+      responseBody = (await res.json()) as ApiErrorBody;
     } catch {}
     throw new ApiError(res.status, responseBody);
   }
@@ -99,9 +102,9 @@ export async function downloadBlob(path: string): Promise<DownloadedFile> {
   const res = await fetch(`${environment.apiUrl}${path}`, { headers });
 
   if (!res.ok) {
-    let responseBody: { message?: string } | null = null;
+    let responseBody: ApiErrorBody | null = null;
     try {
-      responseBody = (await res.json()) as { message?: string };
+      responseBody = (await res.json()) as ApiErrorBody;
     } catch {}
     throw new ApiError(res.status, responseBody);
   }

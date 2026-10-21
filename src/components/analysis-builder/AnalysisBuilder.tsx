@@ -8,6 +8,7 @@ import {
   AGG_FUNCS,
   JOIN_TYPES,
   OPERATORS,
+  OP_DESCRIPTIONS,
   OP_LABELS,
   useAnalysisBuilder,
 } from './useAnalysisBuilder';
@@ -380,7 +381,7 @@ export function AnalysisBuilder({
         </div>
       </div>
       {b.opCatalog && b.newOp ? (
-        <p className="c-analysis-builder__hint">{b.opCatalog[b.newOp].description}</p>
+        <p className="c-analysis-builder__hint">{OP_DESCRIPTIONS[b.newOp]}</p>
       ) : null}
 
       {b.editingAnalysisId ? (

@@ -145,7 +145,7 @@ export function useHarmonizerUpload() {
               err.body?.code === 'dbf_not_utf8' ||
               err.body?.code === 'dbf_no_rows')
           ) {
-            setErrorFile(err.message);
+            setErrorFile(errorMessage(err, 'No se pudo leer el archivo.'));
             return;
           }
           const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey', 'encoding']);

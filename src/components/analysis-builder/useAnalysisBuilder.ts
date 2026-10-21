@@ -31,6 +31,18 @@ export const OP_LABELS: Record<OpName, string> = {
   limit: 'Limitar filas (top N)',
 };
 
+export const OP_DESCRIPTIONS: Record<OpName, string> = {
+  join: 'Cruza este dataset con otro resource por una columna en común (ej: hogares + personas por folio). El otro resource debe ser del mismo dataset.',
+  group_by: 'Agrupa las filas por una o más columnas. Úsalo con cálculos para resumir por grupo.',
+  aggregate: 'Calcula un valor por grupo: suma, promedio, conteo, mínimo, máximo o mediana.',
+  compute:
+    'Crea una columna nueva multiplicando dos columnas (o una columna por un número). Útil para aplicar el factor de expansión de una encuesta.',
+  percentage: 'Convierte un cálculo en su porcentaje del total.',
+  filter: 'Conserva solo las filas que cumplen una condición (antes de agrupar).',
+  sort: 'Ordena el resultado por una columna, ascendente o descendente.',
+  limit: 'Devuelve solo las primeras N filas (top N).',
+};
+
 export const AGG_FUNCS = ['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'MEDIAN'];
 export const OPERATORS = ['=', '!=', '<', '<=', '>', '>='];
 export const JOIN_TYPES = ['inner', 'left'];
