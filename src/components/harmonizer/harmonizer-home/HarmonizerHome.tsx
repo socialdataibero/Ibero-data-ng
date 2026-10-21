@@ -61,7 +61,7 @@ export function HarmonizerHome() {
               icon="pictogram-file-upload"
               href="/harmonizer/upload"
             >
-              Subir CSV
+              Subir archivo
             </Button>
           </div>
         }
@@ -106,14 +106,15 @@ export function HarmonizerHome() {
             </div>
             <p className="c-harmonizer-home__empty-title">Todavía no hay encuestas</p>
             <p className="c-harmonizer-home__empty-text">
-              Crea una encuesta o sube un CSV para empezar a armonizar variables entre ediciones.
+              Crea una encuesta o sube un archivo CSV o DBF para empezar a armonizar variables entre
+              ediciones.
             </p>
             <div className="c-harmonizer-home__header-actions">
               <Button type="button" variant="secondary" href="/harmonizer/new-survey">
                 Nueva encuesta
               </Button>
               <Button type="button" variant="primary" href="/harmonizer/upload">
-                Subir CSV
+                Subir archivo
               </Button>
             </div>
           </div>
@@ -139,7 +140,7 @@ export function HarmonizerHome() {
         <p className="text-color-secondary c-harmonizer-home__footnote">
           ¿Necesitas otra edición?{' '}
           <Link to="/harmonizer/upload" className="hyperlink">
-            Sube un CSV
+            Sube un archivo
           </Link>{' '}
           o{' '}
           <Link to="/harmonizer/new-survey" className="hyperlink">

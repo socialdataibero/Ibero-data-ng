@@ -4,6 +4,7 @@ import {
   NEW_OPTION,
   type HarmonizerSurvey,
   type MappingRouteState,
+  type UploadEncoding,
 } from '../../../core/models/harmonizer.model';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
@@ -13,7 +14,7 @@ import type { Crumb } from '../../shared/page-header/PageHeader';
 export const CRUMBS: Crumb[] = [
   { label: 'Inicio', href: '/dashboard' },
   { label: 'Armonizador', href: '/harmonizer' },
-  { label: 'Subir CSV' },
+  { label: 'Subir archivo' },
 ];
 
 export function useHarmonizerUpload() {
@@ -25,6 +26,7 @@ export function useHarmonizerUpload() {
   const [uploadSurveyId, setUploadSurveyId] = useState(NEW_OPTION);
   const [newSurveyName, setNewSurveyName] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [encoding, setEncoding] = useState<UploadEncoding>('auto');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +58,9 @@ export function useHarmonizerUpload() {
     return uploadSurveyId !== NEW_OPTION || newSurveyName.trim() !== '';
   }, [file, datasetName, datasetYear, uploadSurveyId, newSurveyName]);
 
+  // El servidor elige el lector por la extensión; la codificación solo aplica a DBF.
+  const isDbf = !!file && /\.dbf$/i.test(file.name);
+
   const onFileSelected = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] ?? null);
   }, []);
@@ -79,7 +84,7 @@ export function useHarmonizerUpload() {
     }
 
     if (!file) {
-      setErrorFile('Selecciona un archivo CSV.');
+      setErrorFile('Selecciona un archivo CSV o DBF.');
       ok = false;
     }
 
@@ -101,16 +106,17 @@ export function useHarmonizerUpload() {
 
       void (async () => {
         try {
-          const { datasetId, renamedColumns } = await harmonizerService.uploadDataset(
+          const { datasetId, renamedColumns, source } = await harmonizerService.uploadDataset(
             {
               name: datasetName.trim(),
               year: Number(datasetYear),
               surveyId: uploadSurveyId,
               newSurvey: uploadSurveyId === NEW_OPTION ? newSurveyName.trim() : undefined,
+              encoding: isDbf ? encoding : undefined,
             },
             file,
           );
-          const state: MappingRouteState = { renamedColumns };
+          const state: MappingRouteState = { renamedColumns, source };
           void navigate(`/harmonizer/datasets/${datasetId}/mapping`, { state });
         } catch (err) {
           if (err instanceof ApiError && err.body?.code === 'survey_name_taken') {
@@ -133,15 +139,20 @@ export function useHarmonizerUpload() {
             (err.body?.code === 'csv_not_utf8' ||
               err.body?.code === 'csv_empty' ||
               err.body?.code === 'csv_no_rows' ||
-              err.body?.code === 'csv_invalid')
+              err.body?.code === 'csv_invalid' ||
+              err.body?.code === 'dbf_invalid' ||
+              err.body?.code === 'dbf_field_unsupported' ||
+              err.body?.code === 'dbf_not_utf8' ||
+              err.body?.code === 'dbf_no_rows')
           ) {
             setErrorFile(err.message);
             return;
           }
-          const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey']);
+          const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey', 'encoding']);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);
           if (matched.newSurvey) setErrorNewSurveyName(matched.newSurvey);
+          if (matched.encoding) setErrorFile(matched.encoding);
 
           if (Object.keys(matched).length === 0) {
             setError(errorMessage(err, 'No se pudo subir el archivo.'));
@@ -151,7 +162,18 @@ export function useHarmonizerUpload() {
         }
       })();
     },
-    [validate, file, datasetYear, uploadSurveyId, newSurveyName, datasetName, surveys, navigate],
+    [
+      validate,
+      file,
+      datasetYear,
+      uploadSurveyId,
+      newSurveyName,
+      datasetName,
+      isDbf,
+      encoding,
+      surveys,
+      navigate,
+    ],
   );
 
   return {
@@ -165,6 +187,9 @@ export function useHarmonizerUpload() {
     newSurveyName,
     setNewSurveyName,
     onFileSelected,
+    isDbf,
+    encoding,
+    setEncoding,
     uploading,
     error,
     fieldErrors: {

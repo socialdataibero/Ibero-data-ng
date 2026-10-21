@@ -33,9 +33,33 @@ export interface RenamedColumn {
   renamed: string;
 }
 
+/** Codificación de un DBF al subirlo; `auto` la detecta el servidor. */
+export type UploadEncoding = 'auto' | 'windows-1252' | 'cp850' | 'cp437' | 'utf-8';
+
+export const UPLOAD_ENCODING_LABEL: Record<UploadEncoding, string> = {
+  auto: 'Detectar automáticamente',
+  'windows-1252': 'Windows-1252 / Latin-1 (Windows)',
+  cp850: 'CP850 (MS-DOS, Europa occidental)',
+  cp437: 'CP437 (MS-DOS, Estados Unidos)',
+  'utf-8': 'UTF-8',
+};
+
+/** Cómo leyó el servidor el archivo subido. Solo llega en la respuesta de la subida. */
+export type UploadSource =
+  | { format: 'csv' }
+  | {
+      format: 'dbf';
+      encoding: Exclude<UploadEncoding, 'auto'>;
+      /** Elegida al subir, indicada en el encabezado del DBF o deducida del texto. */
+      encodingSource: 'user' | 'header' | 'content';
+      /** Registros marcados como borrados en el DBF, que no se cargaron. */
+      deletedRecords: number;
+    };
+
 /** Estado de navegación de la subida a la pantalla de mapeo. */
 export interface MappingRouteState {
   renamedColumns?: RenamedColumn[];
+  source?: UploadSource;
 }
 
 /** Tipo de una variable en el Parquet exportado. El CSV siempre es texto. */

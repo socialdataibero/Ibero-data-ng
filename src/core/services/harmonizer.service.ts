@@ -8,6 +8,8 @@ import type {
   SurveyHarmonizedView,
   ExportFormat,
   RenamedColumn,
+  UploadEncoding,
+  UploadSource,
   CanonicalVariable,
   SurveyCanonicalVariables,
   ViewPage,
@@ -18,6 +20,8 @@ export interface UploadDatasetPayload {
   year: number;
   surveyId: string;
   newSurvey?: string;
+  /** Solo para DBF. */
+  encoding?: UploadEncoding;
 }
 
 export interface UpdateSurveyPayload {
@@ -105,11 +109,13 @@ export const harmonizerService = {
     form.append('year', String(payload.year));
     form.append('surveyId', payload.surveyId);
     if (payload.newSurvey) form.append('newSurvey', payload.newSurvey);
+    if (payload.encoding) form.append('encoding', payload.encoding);
     form.append('file', file);
     return http.post<{
       datasetId: string;
       dataset: HarmonizerDataset;
       renamedColumns: RenamedColumn[];
+      source: UploadSource;
     }>('/harmonizer/upload', form);
   },
 

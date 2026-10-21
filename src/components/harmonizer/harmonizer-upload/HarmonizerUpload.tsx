@@ -1,4 +1,5 @@
 import { Button } from 'sectei-library';
+import { UPLOAD_ENCODING_LABEL, type UploadEncoding } from '../../../core/models/harmonizer.model';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { CRUMBS, useHarmonizerUpload } from './useHarmonizerUpload';
 import './harmonizer-upload.css';
@@ -15,6 +16,9 @@ export function HarmonizerUpload() {
     newSurveyName,
     setNewSurveyName,
     onFileSelected,
+    isDbf,
+    encoding,
+    setEncoding,
     uploading,
     error,
     fieldErrors,
@@ -26,8 +30,8 @@ export function HarmonizerUpload() {
   return (
     <div className="c-harmonizer-upload">
       <PageHeader
-        title="Subir CSV"
-        intro="Sube una edición (CSV) a una encuesta existente o crea una encuesta nueva al mismo tiempo."
+        title="Subir archivo"
+        intro="Sube una edición (CSV o DBF) a una encuesta existente o crea una encuesta nueva al mismo tiempo."
         crumbs={CRUMBS}
         action={
           <Button type="button" variant="secondary" icon="pictogram-arrow-left" href="/harmonizer">
@@ -131,11 +135,11 @@ export function HarmonizerUpload() {
             ) : null}
 
             <div className="c-harmonizer-upload__field">
-              <label htmlFor="dataset-file">Archivo CSV *</label>
+              <label htmlFor="dataset-file">Archivo CSV o DBF *</label>
               <input
                 id="dataset-file"
                 type="file"
-                accept=".csv,text/csv"
+                accept=".csv,text/csv,.dbf"
                 onChange={onFileSelected}
                 aria-required="true"
                 aria-invalid={!!fieldErrors.file}
@@ -151,6 +155,31 @@ export function HarmonizerUpload() {
                 </p>
               ) : null}
             </div>
+
+            {isDbf ? (
+              <div className="c-harmonizer-upload__field">
+                <label htmlFor="dataset-encoding">Codificación del DBF</label>
+                <select
+                  id="dataset-encoding"
+                  value={encoding}
+                  onChange={(e) => setEncoding(e.target.value as UploadEncoding)}
+                  name="encoding"
+                  aria-describedby="dataset-encoding-help"
+                >
+                  {(Object.keys(UPLOAD_ENCODING_LABEL) as UploadEncoding[]).map((value) => (
+                    <option key={value} value={value}>
+                      {UPLOAD_ENCODING_LABEL[value]}
+                    </option>
+                  ))}
+                </select>
+                <p id="dataset-encoding-help" className="form-help">
+                  Define cómo se leen los acentos y la ñ. «Detectar automáticamente» usa la que
+                  indica el archivo o, si no la indica, la deduce del texto. Si después ves letras
+                  raras (por ejemplo «Ca¤itas» o «CaÃ±itas»), elimina la edición y súbela de nuevo
+                  eligiendo otra.
+                </p>
+              </div>
+            ) : null}
 
             {error ? <p className="c-harmonizer-upload__error">{error}</p> : null}
 

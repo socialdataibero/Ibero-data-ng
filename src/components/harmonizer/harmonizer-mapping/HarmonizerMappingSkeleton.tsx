@@ -21,7 +21,7 @@ export function HarmonizerMappingContentSkeleton() {
         <table className="table-condensed">
           <thead>
             <tr>
-              <th scope="col">Columna del CSV</th>
+              <th scope="col">Columna del archivo</th>
               <th scope="col">Variable canónica</th>
               <th scope="col">Sugerencia</th>
             </tr>

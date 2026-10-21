@@ -38,7 +38,7 @@ export const SIDE_MENU_ITEMS: SideMenuItem[] = [
       },
       {
         id: 'harmonizer-upload',
-        label: 'Subir CSV',
+        label: 'Subir archivo',
         href: '/harmonizer/upload',
         pictogram: 'pictogram-file-upload',
       },

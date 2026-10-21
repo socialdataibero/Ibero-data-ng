@@ -56,7 +56,7 @@ export function SurveyModule({
             |
           </span>
           <Link to="/harmonizer/upload" className="hyperlink">
-            Subir CSV
+            Subir archivo
             <span className="pictogram-file-upload" aria-hidden="true" />
           </Link>
           <span className="survey-module__link-separator" aria-hidden="true">

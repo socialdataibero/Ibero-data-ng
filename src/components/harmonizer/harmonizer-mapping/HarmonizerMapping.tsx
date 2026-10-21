@@ -5,13 +5,14 @@ import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
-import type { ValueType } from '../../../core/models/harmonizer.model';
+import { UPLOAD_ENCODING_LABEL, type ValueType } from '../../../core/models/harmonizer.model';
 import './harmonizer-mapping.css';
 
 export function HarmonizerMapping() {
   const {
     dataset,
     renamedColumns,
+    uploadSource,
     canonicalVariables,
     rows,
     loading,
@@ -52,7 +53,7 @@ export function HarmonizerMapping() {
               <strong>{dataset.surveyName}</strong>
             </>
           ) : (
-            'Asocia cada columna del CSV a una variable canónica.'
+            'Asocia cada columna del archivo a una variable canónica.'
           )
         }
         crumbs={crumbs}
@@ -76,8 +77,8 @@ export function HarmonizerMapping() {
         {!loading && !loadError ? (
           <>
             <p className="text-color-secondary">
-              Para cada columna del CSV elige la variable canónica a la que corresponde, crea una
-              nueva, o déjala sin mapear. Las sugerencias vienen del <em>histórico</em> (misma
+              Para cada columna del archivo elige la variable canónica a la que corresponde, crea
+              una nueva, o déjala sin mapear. Las sugerencias vienen del <em>histórico</em> (misma
               columna mapeada en otra edición de esta encuesta) o del <em>nombre</em>. Nada se
               guarda hasta pulsar «Guardar mapeo».
             </p>
@@ -96,6 +97,28 @@ export function HarmonizerMapping() {
               algún valor no es número, el guardado lo indica para que lo marques como no
               especificado o elijas Texto.
             </p>
+
+            {uploadSource?.format === 'dbf' ? (
+              <div className="c-harmonizer-mapping__notice" role="status">
+                <p>
+                  El archivo DBF se leyó con la codificación{' '}
+                  <strong>{UPLOAD_ENCODING_LABEL[uploadSource.encoding]}</strong>
+                  {uploadSource.encodingSource === 'user'
+                    ? ', la que elegiste al subirlo.'
+                    : uploadSource.encodingSource === 'header'
+                      ? ', la que indica el propio archivo.'
+                      : ', deducida del texto del archivo.'}{' '}
+                  Si en los nombres o valores ves letras raras en lugar de acentos o ñ, elimina esta
+                  edición y súbela de nuevo eligiendo otra codificación.
+                </p>
+                {uploadSource.deletedRecords > 0 ? (
+                  <p>
+                    Se omitieron {uploadSource.deletedRecords.toLocaleString('es-MX')} registros
+                    marcados como borrados en el DBF.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {renamedColumns.length > 0 ? (
               <div className="c-harmonizer-mapping__notice" role="status">
@@ -134,7 +157,7 @@ export function HarmonizerMapping() {
                 <table className="table-condensed">
                   <thead>
                     <tr>
-                      <th scope="col">Columna del CSV</th>
+                      <th scope="col">Columna del archivo</th>
                       <th scope="col">Variable canónica</th>
                       <th scope="col">Tipo</th>
                       <th scope="col">No especificado</th>

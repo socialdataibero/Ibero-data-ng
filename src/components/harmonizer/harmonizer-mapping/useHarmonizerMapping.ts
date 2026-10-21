@@ -93,7 +93,9 @@ export function useHarmonizerMapping() {
   const { datasetId = '' } = useParams<{ datasetId: string }>();
   const navigate = useNavigate();
   // Solo llega justo después de subir el archivo (H-10).
-  const renamedColumns = (useLocation().state as MappingRouteState | null)?.renamedColumns ?? [];
+  const routeState = useLocation().state as MappingRouteState | null;
+  const renamedColumns = routeState?.renamedColumns ?? [];
+  const uploadSource = routeState?.source ?? null;
 
   const [dataset, setDataset] = useState<HarmonizerDataset | null>(null);
   const [canonicalVariables, setCanonicalVariables] = useState<CanonicalVariable[]>([]);
@@ -326,6 +328,7 @@ export function useHarmonizerMapping() {
     datasetId,
     dataset,
     renamedColumns,
+    uploadSource,
     canonicalVariables,
     rows,
     loading,

@@ -37,7 +37,7 @@ export function HarmonizerNewSurvey() {
         intro={
           isEdit
             ? 'Cambia el nombre o la descripción de la encuesta. Sus ediciones y mapeos no se modifican.'
-            : 'Crea una encuesta para agrupar ediciones (CSV) y armonizar sus variables.'
+            : 'Crea una encuesta para agrupar ediciones (CSV o DBF) y armonizar sus variables.'
         }
         crumbs={crumbs}
         action={
