@@ -9,7 +9,7 @@ import { usePortalHome } from './usePortalHome';
 import './portal-home.css';
 
 export default function PortalHome() {
-  const { topicCards, loading, totalDatasets, totalOrganizations } = usePortalHome();
+  const { search, topicCards, loading, totalDatasets, totalOrganizations } = usePortalHome();
 
   const searchSummary = loading
     ? 'Nuestra plataforma cuenta con datos listos para consultar, analizar y visualizar.'
@@ -47,6 +47,7 @@ export default function PortalHome() {
             intro="Busca por tema o fuente de datos."
             summary={searchSummary}
             searchLabel='Buscar "empleo", "educación"…'
+            onSearch={(text) => search(String(text ?? ''))}
           />
         </div>
 

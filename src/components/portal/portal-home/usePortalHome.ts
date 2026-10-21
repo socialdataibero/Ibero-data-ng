@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { portalCatalogService } from '../../../core/services/portal-catalog.service';
 import { usePortalRequest } from '../../../core/hooks/usePortalRequest';
 import cardMotif1 from '../../../assets/card-motif-1.png';
@@ -11,6 +12,14 @@ const IMAGES = [cardMotif1, cardMotif2, cardMotif3];
 const PREVIEW_COUNT = 3;
 
 export function usePortalHome() {
+  const navigate = useNavigate();
+  const search = useCallback(
+    (text: string) => {
+      const q = text.trim();
+      void navigate(q ? `/data?q=${encodeURIComponent(q)}` : '/data');
+    },
+    [navigate],
+  );
   const { data, loading } = usePortalRequest(
     ({ signal }) =>
       Promise.all([
@@ -48,6 +57,7 @@ export function usePortalHome() {
   );
 
   return {
+    search,
     topicCards,
     loading,
     totalDatasets,
