@@ -5,7 +5,11 @@ import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
-import { UPLOAD_ENCODING_LABEL, type ValueType } from '../../../core/models/harmonizer.model';
+import {
+  UPLOAD_ENCODING_LABEL,
+  type ColumnValues,
+  type ValueType,
+} from '../../../core/models/harmonizer.model';
 import './harmonizer-mapping.css';
 
 export function HarmonizerMapping() {
@@ -169,6 +173,7 @@ export function HarmonizerMapping() {
                       <tr key={row.column.name}>
                         <td>
                           <code className="c-harmonizer-mapping__code">{row.column.name}</code>
+                          <ColumnValuesSummary values={row.column.values} />
                         </td>
                         <td>
                           <div className="c-harmonizer-mapping__field">
@@ -322,5 +327,49 @@ export function HarmonizerMapping() {
         onCancel={cancelLeave}
       />
     </div>
+  );
+}
+
+const MAX_VALUE_LENGTH = 40;
+
+function ColumnValuesSummary({ values }: { values: ColumnValues }) {
+  const { top, distinct, distinctCapped, empty } = values;
+  const meta = [
+    distinctCapped
+      ? `más de ${distinct.toLocaleString('es-MX')} valores distintos`
+      : `${distinct.toLocaleString('es-MX')} ${distinct === 1 ? 'valor distinto' : 'valores distintos'}`,
+    empty > 0 ? `${empty.toLocaleString('es-MX')} ${empty === 1 ? 'vacía' : 'vacías'}` : null,
+  ].filter(Boolean);
+
+  if (top.length === 0) {
+    return (
+      <p className="form-help c-harmonizer-mapping__values-meta">
+        Sin valores: todas las celdas están vacías.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <ul className="c-harmonizer-mapping__values" aria-label="Valores más frecuentes">
+        {top.map(({ value, count }) => {
+          const cut = value.length > MAX_VALUE_LENGTH;
+          return (
+            <li key={value}>
+              <code title={cut ? value : undefined}>
+                {cut ? `${value.slice(0, MAX_VALUE_LENGTH)}…` : value}
+              </code>{' '}
+              <span className="text-color-secondary">({count.toLocaleString('es-MX')})</span>
+            </li>
+          );
+        })}
+        {distinctCapped || distinct > top.length ? (
+          <li aria-hidden="true" className="text-color-secondary">
+            …
+          </li>
+        ) : null}
+      </ul>
+      <p className="form-help c-harmonizer-mapping__values-meta">{meta.join(' · ')}</p>
+    </>
   );
 }

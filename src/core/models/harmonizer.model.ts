@@ -99,6 +99,17 @@ export interface SurveyCanonicalVariables {
 
 export type SuggestionSource = 'history' | 'name';
 
+/** Resumen de los valores de una columna en su edición, tal como vienen en el archivo. */
+export interface ColumnValues {
+  /** Hasta 5, del más frecuente al menos frecuente. */
+  top: { value: string; count: number }[];
+  distinct: number;
+  /** Hay más valores distintos que `distinct` (el servidor deja de contar en 1,000). */
+  distinctCapped: boolean;
+  /** Celdas vacías o solo con espacios. */
+  empty: number;
+}
+
 export interface MappingColumn {
   name: string;
   selectedCanonicalId: string | null;
@@ -107,6 +118,7 @@ export interface MappingColumn {
   missingCodes: string[];
   /** Tipo que sugieren los valores de esta edición. */
   inferredType: ValueType;
+  values: ColumnValues;
 }
 
 export interface MappingInfo {

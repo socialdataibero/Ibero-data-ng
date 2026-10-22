@@ -61,6 +61,34 @@ body[data-theme='dark'] .c-harmonizer-mapping__notice {
   font-size: 0.9em;
 }
 
+.c-harmonizer-mapping__values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  min-width: 11rem;
+  max-width: 18rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.c-harmonizer-mapping__values li {
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+}
+
+.c-harmonizer-mapping__values code {
+  font-family: var(--typography-code, var(--font-mono));
+  overflow-wrap: anywhere;
+}
+
+.c-harmonizer-mapping__values-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+}
+
 .c-harmonizer-mapping__error {
   margin: 0;
   font-size: 0.875rem;
