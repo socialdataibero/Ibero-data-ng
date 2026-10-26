@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from 'sectei-library';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { MappingStatusBadge } from '../../shared/mapping-status-badge/MappingStatusBadge';
@@ -7,6 +9,7 @@ import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
 import {
   UPLOAD_ENCODING_LABEL,
+  type CodebookCategory,
   type ColumnValues,
   type ValueType,
 } from '../../../core/models/harmonizer.model';
@@ -39,12 +42,42 @@ export function HarmonizerMapping() {
     typeStatus,
     valueTypeLabel,
     clearAll,
+    mapAllByName,
+    completeWithCodebook,
+    codebook,
+    codebooks,
+    codebookChoice,
+    chooseCodebook,
+    tableChoice,
+    setTableChoice,
+    applyCodebook,
+    attachingCodebook,
+    codebookError,
+    otherEditions,
+    copySource,
+    setCopySource,
+    copyFromEdition,
+    copying,
+    exportMappingCsv,
+    importMappingCsv,
+    bulkNotice,
+    bulkError,
+    filter,
+    setFilter,
+    onlyUnmapped,
+    setOnlyUnmapped,
+    visibleRows,
     save,
     crumbs,
     newOption,
     canonicalPrefix,
     suggestionLabel,
   } = useHarmonizerMapping();
+
+  const chosenCodebook = codebooks.find((c) => c.id === codebookChoice);
+  const codebookChanged =
+    codebookChoice !== (codebook?.id ?? '') || (codebookChoice !== '' && tableChoice !== (codebook?.table ?? ''));
+  const filtering = filter.trim() !== '' || onlyUnmapped;
 
   return (
     <div className="c-harmonizer-mapping">
@@ -83,8 +116,10 @@ export function HarmonizerMapping() {
             <p className="text-color-secondary">
               Para cada columna del archivo elige la variable canónica a la que corresponde, crea
               una nueva, o déjala sin mapear. Las sugerencias vienen del <em>histórico</em> (misma
-              columna mapeada en otra edición de esta encuesta) o del <em>nombre</em>. Nada se
-              guarda hasta pulsar «Guardar mapeo».
+              columna mapeada en otra edición de esta encuesta), del <em>nombre</em> o, con
+              diccionario, de la <em>descripción</em> (una columna que cambió de nombre entre años,
+              como <code>PARENT</code> y <code>PARENTESCO</code>). Nada se guarda hasta pulsar
+              «Guardar mapeo».
             </p>
             <p className="text-color-secondary">
               En <em>No especificado</em> escribe, separados por comas, los códigos que en esta
@@ -151,9 +186,186 @@ export function HarmonizerMapping() {
                   Filas cargadas: {dataset.rowCount.toLocaleString('es-MX')}
                 </StatusBadge>
               ) : null}
-              <Button type="button" variant="secondary" size="small" onClick={clearAll}>
-                Desmapear todas
-              </Button>
+            </div>
+
+            <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-codebook-title">
+              <h2 id="mapping-codebook-title" className="c-harmonizer-mapping__tools-title">
+                Diccionario de variables
+              </h2>
+              <p className="text-color-secondary c-harmonizer-mapping__tools-help">
+                Un diccionario (descriptor del INEGI o plantilla CSV) dice qué significa cada columna y
+                cada código. Con él se muestran las etiquetas junto a los valores y se puede completar el
+                mapeo de todas las columnas de una vez.{' '}
+                {dataset ? (
+                  <Link to={`/harmonizer/surveys/${dataset.surveyId}/codebooks`} className="hyperlink">
+                    Subir o ver diccionarios
+                  </Link>
+                ) : null}
+              </p>
+              {codebooks.length === 0 ? (
+                <p className="text-color-secondary">Esta encuesta todavía no tiene diccionarios.</p>
+              ) : (
+                <div className="c-harmonizer-mapping__tools-row">
+                  <div className="c-harmonizer-mapping__tool">
+                    <label htmlFor="mapping-codebook">Diccionario</label>
+                    <select
+                      id="mapping-codebook"
+                      value={codebookChoice}
+                      onChange={(e) => chooseCodebook(e.target.value)}
+                    >
+                      <option value="">— sin diccionario —</option>
+                      {codebooks.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {chosenCodebook && chosenCodebook.tables.length > 1 ? (
+                    <div className="c-harmonizer-mapping__tool">
+                      <label htmlFor="mapping-codebook-table">Tabla</label>
+                      <select
+                        id="mapping-codebook-table"
+                        value={tableChoice}
+                        onChange={(e) => setTableChoice(e.target.value)}
+                      >
+                        <option value="">Elegir automáticamente</option>
+                        {chosenCodebook.tables.map((t) => (
+                          <option key={t} value={t}>
+                            {t || '(sin tabla)'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="small"
+                    onClick={applyCodebook}
+                    disabled={attachingCodebook || !codebookChanged}
+                  >
+                    {attachingCodebook ? 'Aplicando…' : codebookChoice ? 'Usar este diccionario' : 'Quitar diccionario'}
+                  </Button>
+                </div>
+              )}
+              {codebook ? (
+                <p className="c-harmonizer-mapping__tools-status">
+                  Usa <strong>{codebook.name}</strong>
+                  {codebook.table ? (
+                    <>
+                      , tabla <strong>{codebook.table}</strong>
+                    </>
+                  ) : null}
+                  : describe {codebook.matchedColumns.toLocaleString('es-MX')} de{' '}
+                  {rows.length.toLocaleString('es-MX')} columnas.
+                </p>
+              ) : null}
+              {codebookError ? (
+                <p className="c-harmonizer-mapping__error" role="alert">
+                  {codebookError}
+                </p>
+              ) : null}
+            </section>
+
+            <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-bulk-title">
+              <h2 id="mapping-bulk-title" className="c-harmonizer-mapping__tools-title">
+                Mapear varias columnas a la vez
+              </h2>
+              <div className="c-harmonizer-mapping__tools-row">
+                {codebook ? (
+                  <Button type="button" variant="primary" size="small" onClick={completeWithCodebook}>
+                    Completar con el diccionario
+                  </Button>
+                ) : null}
+                <Button type="button" variant="secondary" size="small" onClick={mapAllByName}>
+                  Mapear todas por nombre
+                </Button>
+                <Button type="button" variant="secondary" size="small" onClick={clearAll}>
+                  Desmapear todas
+                </Button>
+              </div>
+              {otherEditions.length > 0 ? (
+                <div className="c-harmonizer-mapping__tools-row">
+                  <div className="c-harmonizer-mapping__tool">
+                    <label htmlFor="mapping-copy">Copiar el mapeo guardado de</label>
+                    <select id="mapping-copy" value={copySource} onChange={(e) => setCopySource(e.target.value)}>
+                      <option value="">— elige una edición —</option>
+                      {otherEditions.map((e) => (
+                        <option key={e.id} value={e.id} disabled={e.mappedColumns === 0}>
+                          {e.name} ({e.year}) · {e.mappedColumns} mapeadas
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="small"
+                    onClick={copyFromEdition}
+                    disabled={!copySource || copying}
+                  >
+                    {copying ? 'Copiando…' : 'Copiar'}
+                  </Button>
+                </div>
+              ) : null}
+              <div className="c-harmonizer-mapping__tools-row">
+                <Button type="button" variant="secondary" size="small" onClick={exportMappingCsv}>
+                  Exportar mapeo (CSV)
+                </Button>
+                <label className="c-harmonizer-mapping__file-button">
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="a11y-sr-only"
+                    onChange={importMappingCsv}
+                  />
+                  <span aria-hidden="true">Importar mapeo (CSV)</span>
+                  <span className="a11y-sr-only">Importar mapeo desde un archivo CSV</span>
+                </label>
+              </div>
+              <p className="form-help c-harmonizer-mapping__tools-help">
+                El CSV tiene las columnas <code>columna, variable, tipo, no_especificado</code>: exporta
+                el mapeo, edítalo en una hoja de cálculo y vuelve a importarlo. Ninguna de estas
+                acciones guarda: revisa la tabla y pulsa «Guardar mapeo».
+              </p>
+              {bulkNotice ? (
+                <p className="c-harmonizer-mapping__bulk-notice" role="status">
+                  {bulkNotice}
+                </p>
+              ) : null}
+              {bulkError ? (
+                <p className="c-harmonizer-mapping__error" role="alert">
+                  {bulkError}
+                </p>
+              ) : null}
+            </section>
+
+            <div className="c-harmonizer-mapping__filter">
+              <div className="c-harmonizer-mapping__tool">
+                <label htmlFor="mapping-filter">Buscar columna</label>
+                <input
+                  id="mapping-filter"
+                  type="search"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Nombre, descripción o variable"
+                />
+              </div>
+              <div className="c-harmonizer-mapping__check">
+                <input
+                  id="mapping-only-unmapped"
+                  type="checkbox"
+                  checked={onlyUnmapped}
+                  onChange={(e) => setOnlyUnmapped(e.target.checked)}
+                />
+                <label htmlFor="mapping-only-unmapped">Solo sin mapear</label>
+              </div>
+              <p className="text-color-secondary c-harmonizer-mapping__filter-count" aria-live="polite">
+                {filtering
+                  ? `Mostrando ${visibleRows.length.toLocaleString('es-MX')} de ${rows.length.toLocaleString('es-MX')} columnas`
+                  : `${rows.length.toLocaleString('es-MX')} columnas`}
+              </p>
             </div>
 
             <form onSubmit={save} noValidate>
@@ -169,121 +381,165 @@ export function HarmonizerMapping() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, index) => (
-                      <tr key={row.column.name}>
-                        <td>
-                          <code className="c-harmonizer-mapping__code">{row.column.name}</code>
-                          <ColumnValuesSummary values={row.column.values} />
-                        </td>
-                        <td>
-                          <div className="c-harmonizer-mapping__field">
-                            <label className="a11y-sr-only" htmlFor={`choice-${row.column.name}`}>
-                              Variable canónica para {row.column.name}
-                            </label>
-                            <select
-                              id={`choice-${row.column.name}`}
-                              value={row.choice}
-                              onChange={(e) => setChoice(index, e.target.value)}
-                              name={`choice-${row.column.name}`}
-                            >
-                              <option value="">— sin mapear —</option>
-                              {canonicalVariables.map((cv) => (
-                                <option key={cv.id} value={`${canonicalPrefix}${cv.id}`}>
-                                  {cv.name}
-                                </option>
-                              ))}
-                              <option value={newOption}>Crear nueva…</option>
-                            </select>
-                            {row.choice === newOption ? (
-                              <>
-                                <label
-                                  className="a11y-sr-only"
-                                  htmlFor={`new-${row.column.name}`}
-                                >
-                                  Nombre canónico nuevo para {row.column.name}
-                                </label>
-                                <input
-                                  id={`new-${row.column.name}`}
-                                  type="text"
-                                  value={row.newName}
-                                  onChange={(e) => setNewName(index, e.target.value)}
-                                  name={`new-${row.column.name}`}
-                                  placeholder="nombre canónico (ej. edad)"
-                                  aria-invalid={rowErrors.has(index)}
-                                  aria-describedby={rowErrors.has(index) ? `new-${row.column.name}-error` : undefined}
-                                />
-                                {rowErrors.has(index) ? (
-                                  <p id={`new-${row.column.name}-error`} className="c-harmonizer-mapping__error" role="alert">
-                                    {rowErrors.get(index)}
-                                  </p>
-                                ) : (
-                                  <p className="form-help">
-                                    Letras sin acento, números y _; empieza con letra.
-                                  </p>
-                                )}
-                              </>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="c-harmonizer-mapping__field c-harmonizer-mapping__field--type">
-                            <label className="a11y-sr-only" htmlFor={`type-${row.column.name}`}>
-                              Tipo de {row.column.name}
-                            </label>
-                            <select
-                              id={`type-${row.column.name}`}
-                              value={row.dataType}
-                              onChange={(e) => setDataType(index, e.target.value as ValueType)}
-                              name={`type-${row.column.name}`}
-                              disabled={row.choice === ''}
-                              aria-describedby={row.choice === '' ? undefined : `type-${row.column.name}-hint`}
-                            >
-                              {(Object.keys(valueTypeLabel) as ValueType[]).map((type) => (
-                                <option key={type} value={type}>
-                                  {valueTypeLabel[type]}
-                                </option>
-                              ))}
-                            </select>
-                            {row.choice !== '' ? (
-                              <p
-                                id={`type-${row.column.name}-hint`}
-                                className={`form-help c-harmonizer-mapping__type-hint c-harmonizer-mapping__type-hint--${typeStatus(row)}`}
-                              >
-                                {typeHint(row)}
-                              </p>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td>
-                          <label className="a11y-sr-only" htmlFor={`missing-${row.column.name}`}>
-                            Códigos de no especificado para {row.column.name}
-                          </label>
-                          <input
-                            id={`missing-${row.column.name}`}
-                            type="text"
-                            value={row.missingCodes}
-                            onChange={(e) => setMissingCodes(index, e.target.value)}
-                            name={`missing-${row.column.name}`}
-                            placeholder="ej. 9, 99"
-                            disabled={row.choice === ''}
-                          />
-                        </td>
-                        <td>
-                          {row.column.suggestionSource ? (
-                            <StatusBadge
-                              variant={
-                                row.column.suggestionSource === 'history' ? 'success' : 'neutral'
-                              }
-                            >
-                              {suggestionLabel[row.column.suggestionSource]}:{' '}
-                              {row.column.suggested}
-                            </StatusBadge>
-                          ) : row.column.selectedCanonicalId ? (
-                            <span className="text-color-secondary">guardado</span>
-                          ) : null}
+                    {visibleRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-color-secondary">
+                          Ninguna columna coincide con el filtro.
                         </td>
                       </tr>
-                    ))}
+                    ) : null}
+                    {visibleRows.map(({ row, index }, position) => {
+                      const section = row.column.codebook?.section ?? null;
+                      const previousSection =
+                        position > 0 ? (visibleRows[position - 1].row.column.codebook?.section ?? null) : null;
+                      const startsSection =
+                        codebook !== null &&
+                        section !== null &&
+                        (position === 0 || section !== previousSection);
+                      return (
+                        <Fragment key={row.column.name}>
+                          {startsSection ? (
+                            <tr className="c-harmonizer-mapping__section">
+                              <th scope="colgroup" colSpan={5}>
+                                {section}
+                              </th>
+                            </tr>
+                          ) : null}
+                          <tr>
+                            <td>
+                              <code className="c-harmonizer-mapping__code">{row.column.name}</code>
+                              {row.column.codebook?.label ? (
+                                <p
+                                  className="c-harmonizer-mapping__label"
+                                  title={row.column.codebook.question ?? undefined}
+                                >
+                                  {row.column.codebook.label}
+                                </p>
+                              ) : null}
+                              <ColumnValuesSummary
+                                values={row.column.values}
+                                categories={row.column.codebook?.categories ?? []}
+                              />
+                            </td>
+                            <td>
+                              <div className="c-harmonizer-mapping__field">
+                                <label className="a11y-sr-only" htmlFor={`choice-${row.column.name}`}>
+                                  Variable canónica para {row.column.name}
+                                </label>
+                                <select
+                                  id={`choice-${row.column.name}`}
+                                  value={row.choice}
+                                  onChange={(e) => setChoice(index, e.target.value)}
+                                  name={`choice-${row.column.name}`}
+                                >
+                                  <option value="">— sin mapear —</option>
+                                  {canonicalVariables.map((cv) => (
+                                    <option key={cv.id} value={`${canonicalPrefix}${cv.id}`}>
+                                      {cv.name}
+                                    </option>
+                                  ))}
+                                  <option value={newOption}>Crear nueva…</option>
+                                </select>
+                                {row.choice === newOption ? (
+                                  <>
+                                    <label
+                                      className="a11y-sr-only"
+                                      htmlFor={`new-${row.column.name}`}
+                                    >
+                                      Nombre canónico nuevo para {row.column.name}
+                                    </label>
+                                    <input
+                                      id={`new-${row.column.name}`}
+                                      type="text"
+                                      value={row.newName}
+                                      onChange={(e) => setNewName(index, e.target.value)}
+                                      name={`new-${row.column.name}`}
+                                      placeholder="nombre canónico (ej. edad)"
+                                      aria-invalid={rowErrors.has(index)}
+                                      aria-describedby={rowErrors.has(index) ? `new-${row.column.name}-error` : undefined}
+                                    />
+                                    {rowErrors.has(index) ? (
+                                      <p id={`new-${row.column.name}-error`} className="c-harmonizer-mapping__error" role="alert">
+                                        {rowErrors.get(index)}
+                                      </p>
+                                    ) : (
+                                      <p className="form-help">
+                                        Letras sin acento, números y _; empieza con letra.
+                                      </p>
+                                    )}
+                                  </>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="c-harmonizer-mapping__field c-harmonizer-mapping__field--type">
+                                <label className="a11y-sr-only" htmlFor={`type-${row.column.name}`}>
+                                  Tipo de {row.column.name}
+                                </label>
+                                <select
+                                  id={`type-${row.column.name}`}
+                                  value={row.dataType}
+                                  onChange={(e) => setDataType(index, e.target.value as ValueType)}
+                                  name={`type-${row.column.name}`}
+                                  disabled={row.choice === ''}
+                                  aria-describedby={row.choice === '' ? undefined : `type-${row.column.name}-hint`}
+                                >
+                                  {(Object.keys(valueTypeLabel) as ValueType[]).map((type) => (
+                                    <option key={type} value={type}>
+                                      {valueTypeLabel[type]}
+                                    </option>
+                                  ))}
+                                </select>
+                                {row.choice !== '' ? (
+                                  <p
+                                    id={`type-${row.column.name}-hint`}
+                                    className={`form-help c-harmonizer-mapping__type-hint c-harmonizer-mapping__type-hint--${typeStatus(row)}`}
+                                  >
+                                    {typeHint(row)}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td>
+                              <label className="a11y-sr-only" htmlFor={`missing-${row.column.name}`}>
+                                Códigos de no especificado para {row.column.name}
+                              </label>
+                              <input
+                                id={`missing-${row.column.name}`}
+                                type="text"
+                                value={row.missingCodes}
+                                onChange={(e) => setMissingCodes(index, e.target.value)}
+                                name={`missing-${row.column.name}`}
+                                placeholder="ej. 9, 99"
+                                disabled={row.choice === ''}
+                                aria-describedby={
+                                  row.column.codebook?.missingCodes.length ? `missing-${row.column.name}-hint` : undefined
+                                }
+                              />
+                              {row.column.codebook?.missingCodes.length ? (
+                                <p id={`missing-${row.column.name}-hint`} className="form-help c-harmonizer-mapping__type-hint">
+                                  Diccionario: {row.column.codebook.missingCodes.join(', ')}
+                                </p>
+                              ) : null}
+                            </td>
+                            <td>
+                              {row.column.suggestionSource ? (
+                                <StatusBadge
+                                  variant={
+                                    row.column.suggestionSource === 'history' ? 'success' : 'neutral'
+                                  }
+                                >
+                                  {suggestionLabel[row.column.suggestionSource]}:{' '}
+                                  {row.column.suggested}
+                                </StatusBadge>
+                              ) : row.column.selectedCanonicalId ? (
+                                <span className="text-color-secondary">guardado</span>
+                              ) : null}
+                            </td>
+                          </tr>
+                        </Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -332,7 +588,23 @@ export function HarmonizerMapping() {
 
 const MAX_VALUE_LENGTH = 40;
 
-function ColumnValuesSummary({ values }: { values: ColumnValues }) {
+/** Etiqueta de un valor según el diccionario, comparando códigos numéricos sin ceros a la izquierda. */
+function valueLabel(categories: CodebookCategory[], value: string): string | null {
+  const key = (v: string) => (/^\d+$/.test(v) ? v.replace(/^0+(?=\d)/, '') : v);
+  return (
+    categories.find(
+      (c) => (c.kind === 'value' || c.kind === 'missing') && c.code !== '' && key(c.code) === key(value),
+    )?.label ?? null
+  );
+}
+
+function ColumnValuesSummary({
+  values,
+  categories,
+}: {
+  values: ColumnValues;
+  categories: CodebookCategory[];
+}) {
   const { top, distinct, distinctCapped, empty } = values;
   const meta = [
     distinctCapped
@@ -354,11 +626,13 @@ function ColumnValuesSummary({ values }: { values: ColumnValues }) {
       <ul className="c-harmonizer-mapping__values" aria-label="Valores más frecuentes">
         {top.map(({ value, count }) => {
           const cut = value.length > MAX_VALUE_LENGTH;
+          const label = valueLabel(categories, value);
           return (
             <li key={value}>
               <code title={cut ? value : undefined}>
                 {cut ? `${value.slice(0, MAX_VALUE_LENGTH)}…` : value}
-              </code>{' '}
+              </code>
+              {label ? <span className="c-harmonizer-mapping__value-label"> {label}</span> : null}{' '}
               <span className="text-color-secondary">({count.toLocaleString('es-MX')})</span>
             </li>
           );

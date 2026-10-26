@@ -15,6 +15,8 @@ import { HarmonizerMappingSkeleton } from './components/harmonizer/harmonizer-ma
 import { HarmonizerHomeSkeleton } from './components/harmonizer/harmonizer-home/HarmonizerHomeSkeleton';
 import { HarmonizerViewSkeleton } from './components/harmonizer/harmonizer-view/HarmonizerViewSkeleton';
 import { HarmonizerVariablesSkeleton } from './components/harmonizer/harmonizer-variables/HarmonizerVariablesSkeleton';
+import { HarmonizerVariableSkeleton } from './components/harmonizer/harmonizer-variable/HarmonizerVariableSkeleton';
+import { HarmonizerCodebooksSkeleton } from './components/harmonizer/harmonizer-codebooks/HarmonizerCodebooksSkeleton';
 import { HomeSkeleton } from './components/home/HomeSkeleton';
 import { DatasetsListSkeleton } from './components/datasets-list/DatasetsListSkeleton';
 import { OrganizationsListSkeleton } from './components/organizations-list/OrganizationsListSkeleton';
@@ -88,6 +90,16 @@ const HarmonizerView = lazy(() =>
 const HarmonizerVariables = lazy(() =>
   import('./components/harmonizer/harmonizer-variables/HarmonizerVariables').then((m) => ({
     default: m.HarmonizerVariables,
+  })),
+);
+const HarmonizerVariable = lazy(() =>
+  import('./components/harmonizer/harmonizer-variable/HarmonizerVariable').then((m) => ({
+    default: m.HarmonizerVariable,
+  })),
+);
+const HarmonizerCodebooks = lazy(() =>
+  import('./components/harmonizer/harmonizer-codebooks/HarmonizerCodebooks').then((m) => ({
+    default: m.HarmonizerCodebooks,
   })),
 );
 
@@ -181,6 +193,16 @@ export function AppRoutes() {
               '/harmonizer/surveys/:surveyId/variables',
               <HarmonizerVariables />,
               <HarmonizerVariablesSkeleton />,
+            )}
+            {lazyRoute(
+              '/harmonizer/surveys/:surveyId/variables/:variableId',
+              <HarmonizerVariable />,
+              <HarmonizerVariableSkeleton />,
+            )}
+            {lazyRoute(
+              '/harmonizer/surveys/:surveyId/codebooks',
+              <HarmonizerCodebooks />,
+              <HarmonizerCodebooksSkeleton />,
             )}
             {lazyRoute(
               '/harmonizer/surveys/:surveyId/harmonized',

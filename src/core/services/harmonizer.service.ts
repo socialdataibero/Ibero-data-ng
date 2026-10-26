@@ -13,6 +13,13 @@ import type {
   CanonicalVariable,
   SurveyCanonicalVariables,
   ViewPage,
+  CodebookList,
+  CodebookSummary,
+  CodebookDetail,
+  DatasetCodebook,
+  SavedMapping,
+  VariableComparison,
+  SaveRecodingPayload,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -117,6 +124,52 @@ export const harmonizerService = {
       renamedColumns: RenamedColumn[];
       source: UploadSource;
     }>('/harmonizer/upload', form);
+  },
+
+  listCodebooks: (surveyId: string, signal?: AbortSignal) =>
+    http.get<CodebookList>(`/harmonizer/surveys/${surveyId}/codebooks`, signal),
+
+  getCodebook: (codebookId: string, signal?: AbortSignal) =>
+    http.get<CodebookDetail>(`/harmonizer/codebooks/${codebookId}`, signal),
+
+  createCodebook: (surveyId: string, name: string, file: File) => {
+    const form = new FormData();
+    form.append('name', name);
+    form.append('file', file);
+    return http.post<CodebookSummary>(`/harmonizer/surveys/${surveyId}/codebooks`, form);
+  },
+
+  removeCodebook: (codebookId: string) => http.delete<void>(`/harmonizer/codebooks/${codebookId}`),
+
+  /** Asocia un diccionario a la edición (`null` lo quita). Sin `table`, el servidor elige la tabla. */
+  setDatasetCodebook: (datasetId: string, codebookId: string | null, table?: string) =>
+    http.put<DatasetCodebook>(`/harmonizer/datasets/${datasetId}/codebook`, { codebookId, table }),
+
+  getSavedMapping: (datasetId: string, signal?: AbortSignal) =>
+    http.get<SavedMapping>(`/harmonizer/datasets/${datasetId}/mapping/saved`, signal),
+
+  getVariableComparison: (surveyId: string, variableId: string, signal?: AbortSignal) =>
+    http.get<VariableComparison>(
+      `/harmonizer/surveys/${surveyId}/variables/${variableId}/comparison`,
+      signal,
+    ),
+
+  reviewVariable: (surveyId: string, variableId: string) =>
+    http.post<VariableComparison>(`/harmonizer/surveys/${surveyId}/variables/${variableId}/review`, {}),
+
+  clearVariableReview: (surveyId: string, variableId: string) =>
+    http.delete<void>(`/harmonizer/surveys/${surveyId}/variables/${variableId}/review`),
+
+  saveRecoding: (surveyId: string, variableId: string, payload: SaveRecodingPayload) =>
+    http.put<VariableComparison>(
+      `/harmonizer/surveys/${surveyId}/variables/${variableId}/recoding`,
+      payload,
+    ),
+
+  /** Catálogo de categorías de las variables de la encuesta (CSV: variable, descripción, código, etiqueta). */
+  downloadCatalog: async (surveyId: string): Promise<void> => {
+    const { blob, filename } = await downloadBlob(`/harmonizer/surveys/${surveyId}/catalog.csv`);
+    triggerDownload(blob, filename ?? 'catalogo.csv');
   },
 
   getMapping: (datasetId: string, signal?: AbortSignal) =>

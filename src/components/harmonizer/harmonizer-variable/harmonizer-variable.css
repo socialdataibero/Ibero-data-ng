@@ -1,0 +1,98 @@
+.c-harmonizer-variable {
+  display: block;
+  margin: 0;
+}
+
+.c-harmonizer-variable__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-block: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .c-harmonizer-variable__body {
+    padding-block: 2.5rem;
+  }
+}
+
+.c-harmonizer-variable__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 8px;
+}
+
+.c-harmonizer-variable__panel p {
+  max-width: 52rem;
+  margin: 0;
+}
+
+.c-harmonizer-variable__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.c-harmonizer-variable__subtitle {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.c-harmonizer-variable__issues {
+  max-width: 52rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.c-harmonizer-variable__issues li + li {
+  margin-top: 0.35rem;
+}
+
+.c-harmonizer-variable__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-variable__table td,
+.c-harmonizer-variable__table th {
+  vertical-align: top;
+}
+
+.c-harmonizer-variable__cell {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.c-harmonizer-variable__cell + .c-harmonizer-variable__cell {
+  margin-top: 0.2rem;
+}
+
+.c-harmonizer-variable__missing-row th,
+.c-harmonizer-variable__missing-row td {
+  border-top: 2px solid var(--border, #e4e4e7);
+}
+
+.c-harmonizer-variable__catalog input,
+.c-harmonizer-variable__edition input,
+.c-harmonizer-variable__edition select {
+  width: 100%;
+  min-width: 8rem;
+}
+
+.c-harmonizer-variable__notice {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: var(--bg-secondary, #f4f4f5);
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-variable__error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--error, #b00020);
+}
