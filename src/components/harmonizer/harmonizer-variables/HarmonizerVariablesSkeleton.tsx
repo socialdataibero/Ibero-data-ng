@@ -9,7 +9,7 @@ export function HarmonizerVariablesSkeleton() {
       <PageHeaderSkeleton />
       <div className="container width-fixed c-harmonizer-variables__body">
         <SkeletonStatus label="Cargando variables…">
-          <TableSkeleton headers={['Nombre', 'Tipo', 'Mapeada en', 'Acciones']} rows={6} />
+          <TableSkeleton headers={['Nombre', 'Tipo', 'Mapeada en', 'Códigos entre ediciones', 'Acciones']} rows={6} />
         </SkeletonStatus>
       </div>
     </div>

@@ -22,6 +22,9 @@ export function useHarmonizerVariables() {
   const [editError, setEditError] = useState('');
   const [renaming, setRenaming] = useState(false);
 
+  const [downloadingCatalog, setDownloadingCatalog] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
   const [pendingDelete, setPendingDelete] = useState<SurveyCanonicalVariable | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -127,9 +130,32 @@ export function useHarmonizerVariables() {
     }
   };
 
+  const downloadCatalog = () => {
+    setDownloadingCatalog(true);
+    setCatalogError(null);
+    void (async () => {
+      try {
+        await harmonizerService.downloadCatalog(surveyId);
+      } catch (err) {
+        setCatalogError(errorMessage(err, 'No se pudo descargar el catálogo.'));
+      } finally {
+        setDownloadingCatalog(false);
+      }
+    })();
+  };
+
+  // Variables con códigos distintos entre ediciones que nadie ha revisado (SDI-50).
+  const warningCount = data?.items.filter((v) => v.comparison.status === 'warning').length ?? 0;
+  const hasCatalog = data?.items.some((v) => v.categories.length > 0) ?? false;
+
   return {
     surveyId,
     data,
+    warningCount,
+    hasCatalog,
+    downloadCatalog,
+    downloadingCatalog,
+    catalogError,
     loading,
     loadError,
     crumbs,
