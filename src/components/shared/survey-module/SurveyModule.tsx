@@ -55,6 +55,12 @@ export function SurveyModule({
           <span className="survey-module__link-separator" aria-hidden="true">
             |
           </span>
+          <Link to={`/harmonizer/surveys/${survey.id}/codebooks`} className="hyperlink">
+            Diccionarios
+          </Link>
+          <span className="survey-module__link-separator" aria-hidden="true">
+            |
+          </span>
           <Link to="/harmonizer/upload" className="hyperlink">
             Subir archivo
             <span className="pictogram-file-upload" aria-hidden="true" />
