@@ -70,6 +70,8 @@ function valueTypeMismatch(b: ApiErrorBody): string {
   switch (param(b, 'source')) {
     case 'other_edition':
       return `La variable "${param(b, 'variable')}" también se usa en la edición "${param(b, 'edition')}" (columna "${param(b, 'column')}"), que tiene valores que no son ${type}: ${values}. Márcalos como No especificado en esa edición o elige el tipo Texto.`;
+    case 'recoding':
+      return `La variable "${param(b, 'variable')}" está confirmada como ${type}, pero con esta recodificación la edición "${param(b, 'edition')}" (columna "${param(b, 'column')}") tendría valores que no lo son: ${values}. Recodifícalos a números o cambia el tipo de la variable a Texto en el mapeo.`;
     case 'confirmed_type':
       return `El tipo confirmado de la variable "${param(b, 'variable')}" pide ${type}, pero tiene valores que no lo son: ${values}. Revisa su mapeo o cambia su tipo a Texto.`;
     default:
@@ -92,8 +94,35 @@ function dbfFieldUnsupported(b: ApiErrorBody): string {
     : `La columna «${column}» es de tipo «${type}», que el armonizador no sabe leer. Solo se leen columnas de texto (C), número (N, F), fecha (D) y lógico (L). ${EXPORT_TO_CSV}`;
 }
 
+const CODEBOOK_PROBLEM: Record<string, (b: ApiErrorBody) => string> = {
+  unreadable: () => 'no se pudo leer el archivo',
+  no_dictionary: () =>
+    'ninguna hoja tiene la columna «Mnemónico» del descriptor del INEGI. Si no es un descriptor del INEGI, usa la plantilla CSV',
+  missing_variable_column: () => 'el CSV no tiene la columna «variable». Descarga la plantilla y úsala como base',
+  bad_type: (b) =>
+    `en la línea ${param(b, 'line')} el tipo «${param(b, 'value')}» no es válido; usa texto, entero o decimal`,
+  empty: () => 'el archivo no tiene variables',
+};
+
+function recodingInvalid(b: ApiErrorBody): string {
+  switch (param(b, 'problem')) {
+    case 'empty_code':
+      return 'Cada categoría del catálogo necesita un código.';
+    case 'duplicate_code':
+      return `El código «${param(b, 'code')}» aparece dos veces en el catálogo.`;
+    case 'duplicate_value':
+      return `El valor «${param(b, 'value')}» de la edición «${param(b, 'edition')}» tiene dos recodificaciones.`;
+    case 'target_not_in_catalog':
+      return `Edición «${param(b, 'edition')}»: el valor «${param(b, 'value')}» va a «${param(b, 'target')}», que no es un código del catálogo. Agrégalo al catálogo o elige otro.`;
+    case 'edition_not_mapped':
+      return 'Una de las ediciones ya no mapea esta variable. Recarga la página.';
+    default:
+      return 'La recodificación no es válida.';
+  }
+}
+
 const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
-  file_required: () => 'Falta el archivo CSV o DBF.',
+  file_required: () => 'Falta el archivo.',
   dataset_name_taken: (b) =>
     `La encuesta «${param(b, 'survey')}» ya tiene una edición llamada «${param(b, 'name')}». Usa otro nombre.`,
   csv_not_utf8: (b) =>
@@ -126,6 +155,21 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
       .join('; ')}. Asigna una variable distinta a cada una o deja alguna sin mapear.`;
   },
   value_type_mismatch: valueTypeMismatch,
+  codebook_name_required: () => 'Escribe un nombre para el diccionario.',
+  codebook_name_taken: (b) =>
+    `La encuesta «${param(b, 'survey')}» ya tiene un diccionario llamado «${param(b, 'name')}». Usa otro nombre.`,
+  codebook_format_unsupported: () =>
+    'El diccionario debe ser un libro de Excel (.xls o .xlsx) o un archivo CSV (.csv).',
+  codebook_invalid: (b) =>
+    `No se pudo leer el diccionario: ${CODEBOOK_PROBLEM[param(b, 'problem')]?.(b) ?? 'no es válido'}.`,
+  codebook_not_found: () => 'El diccionario no existe.',
+  codebook_table_not_found: (b) =>
+    `El diccionario no tiene la tabla «${param(b, 'table')}».`,
+  codebook_no_match: (b) =>
+    `Ninguna columna de la edición «${param(b, 'edition')}» aparece en el diccionario «${param(b, 'codebook')}»${b.params?.table ? ` (tabla «${param(b, 'table')}»)` : ''}. Revisa que sea el diccionario de este archivo.`,
+  recoding_invalid: recodingInvalid,
+  variable_has_no_differences: (b) =>
+    `La variable «${param(b, 'name')}» no tiene diferencias de códigos entre ediciones que revisar.`,
   export_format_not_supported: (b) => `Formato de exportación no admitido: «${param(b, 'format')}». Usa «csv» o «parquet».`,
   harmonized_view_empty: () => 'No hay variables mapeadas para exportar como Parquet. Mapea al menos una columna.',
 };

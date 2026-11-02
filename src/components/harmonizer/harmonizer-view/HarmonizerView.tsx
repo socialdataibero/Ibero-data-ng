@@ -19,6 +19,7 @@ function originClass(index: number, originCount: number): string | undefined {
 export function HarmonizerView() {
   const {
     datasetId,
+    surveyId,
     datasetView,
     surveyView,
     loading,
@@ -163,6 +164,32 @@ export function HarmonizerView() {
                 </Link>{' '}
                 para incluirlas.
               </p>
+            ) : null}
+
+            {/* SDI-50: al juntar años, avisar de variables cuyos códigos difieren entre ediciones. */}
+            {surveyView && surveyView.codeWarnings.length > 0 ? (
+              <div className="c-harmonizer-view__warning" role="status">
+                <p>
+                  {surveyView.codeWarnings.length === 1
+                    ? 'Una variable de esta vista tiene códigos distintos entre ediciones:'
+                    : `${surveyView.codeWarnings.length} variables de esta vista tienen códigos distintos entre ediciones:`}{' '}
+                  {surveyView.codeWarnings.map((w, i) => (
+                    <span key={w.id}>
+                      {i > 0 ? ', ' : ''}
+                      <Link to={`/harmonizer/surveys/${surveyId}/variables/${w.id}`} className="hyperlink">
+                        {w.name}
+                      </Link>{' '}
+                      ({w.issueCount} {w.issueCount === 1 ? 'diferencia' : 'diferencias'})
+                    </span>
+                  ))}
+                  .
+                </p>
+                <p>
+                  Contar o filtrar por un código puede mezclar categorías distintas de cada año.
+                  Revísalas: recodifícalas a códigos comunes o márcalas como revisadas si la diferencia
+                  es correcta.
+                </p>
+              </div>
             ) : null}
 
             {downloadError ? <p className="c-harmonizer-view__error">{downloadError}</p> : null}

@@ -120,3 +120,99 @@ body[data-theme='dark'] .c-harmonizer-mapping__notice {
 body[data-theme='dark'] .c-harmonizer-mapping__type-hint--changed {
   color: #fde68a;
 }
+
+.c-harmonizer-mapping__tools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 8px;
+}
+
+.c-harmonizer-mapping__tools-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.c-harmonizer-mapping__tools-help,
+.c-harmonizer-mapping__tools-status {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-mapping__tools-row,
+.c-harmonizer-mapping__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.c-harmonizer-mapping__tool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: min(16rem, 100%);
+}
+
+.c-harmonizer-mapping__tool label {
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-mapping__check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+}
+
+.c-harmonizer-mapping__filter-count {
+  margin: 0 0 0.6rem;
+  font-size: 0.875rem;
+}
+
+/* Etiqueta del input de archivo con el aspecto de un botón secundario pequeño. */
+.c-harmonizer-mapping__file-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.c-harmonizer-mapping__file-button:focus-within {
+  outline: 2px solid var(--state-focus, #005dff);
+  outline-offset: 2px;
+}
+
+.c-harmonizer-mapping__bulk-notice {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: var(--bg-secondary, #f4f4f5);
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-mapping__section th {
+  padding-top: 1rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--text-secondary, #52525b);
+}
+
+.c-harmonizer-mapping__label {
+  max-width: 18rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+}
+
+.c-harmonizer-mapping__value-label {
+  color: var(--text-secondary, #52525b);
+}

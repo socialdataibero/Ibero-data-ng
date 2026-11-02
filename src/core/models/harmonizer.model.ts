@@ -74,6 +74,8 @@ export const VALUE_TYPE_LABEL: Record<ValueType, string> = {
 export interface CanonicalVariable {
   id: string;
   name: string;
+  /** Viene del diccionario de la edición que la creó, si tenía. */
+  description?: string | null;
   /** Tipo confirmado al guardar un mapeo; `null` = sin confirmar. */
   dataType: ValueType | null;
 }
@@ -86,10 +88,19 @@ export interface CanonicalVariableUsage {
   column: string;
 }
 
+/**
+ * Códigos de una variable entre ediciones (SDI-50): `single` (una sola edición), `ok` (coinciden),
+ * `warning` (hay diferencias sin revisar) o `reviewed` (alguien marcó «Revisada, es correcto»).
+ */
+export type ComparisonStatus = 'single' | 'ok' | 'warning' | 'reviewed';
+
 export interface SurveyCanonicalVariable extends CanonicalVariable {
   /** `false` para nombres creados antes de las reglas: siguen funcionando, pero conviene renombrarlos. */
   nameValid: boolean;
   usages: CanonicalVariableUsage[];
+  /** Catálogo de categorías al que se recodifican las ediciones; vacío si no tiene. */
+  categories: CatalogCategory[];
+  comparison: { status: ComparisonStatus; issueCount: number };
 }
 
 export interface SurveyCanonicalVariables {
@@ -97,7 +108,30 @@ export interface SurveyCanonicalVariables {
   items: SurveyCanonicalVariable[];
 }
 
-export type SuggestionSource = 'history' | 'name';
+export type SuggestionSource = 'history' | 'name' | 'description';
+
+/** Tipo de categoría en un diccionario: código, «No especificado», «Blanco por pase», rango o catálogo externo. */
+export type CategoryKind = 'value' | 'missing' | 'blank' | 'range' | 'catalog';
+
+export interface CodebookCategory {
+  code: string;
+  label: string;
+  kind: CategoryKind;
+}
+
+/** Lo que dice el diccionario de la edición sobre una columna. */
+export interface ColumnCodebook {
+  name: string;
+  label: string | null;
+  question: string | null;
+  section: string | null;
+  declaredType: ValueType | null;
+  categories: CodebookCategory[];
+  /** Códigos de «No especificado» del diccionario, escritos como en los datos. */
+  missingCodes: string[];
+  /** Tipo que sugieren el diccionario y los valores. */
+  suggestedType: ValueType;
+}
 
 /** Resumen de los valores de una columna en su edición, tal como vienen en el archivo. */
 export interface ColumnValues {
@@ -119,12 +153,126 @@ export interface MappingColumn {
   /** Tipo que sugieren los valores de esta edición. */
   inferredType: ValueType;
   values: ColumnValues;
+  codebook: ColumnCodebook | null;
 }
 
 export interface MappingInfo {
   dataset: HarmonizerDataset;
   columns: MappingColumn[];
   canonicalVariables: CanonicalVariable[];
+  /** Diccionario asociado a la edición. */
+  codebook: { id: string; name: string; table: string | null; matchedColumns: number } | null;
+  /** Diccionarios de la encuesta, para elegir uno. */
+  codebooks: { id: string; name: string; tables: string[] }[];
+  /** Las demás ediciones de la encuesta, para copiar su mapeo. */
+  otherEditions: { id: string; name: string; year: number; mappedColumns: number }[];
+}
+
+/** Mapeo guardado de una edición, sin sus datos. */
+export interface SavedMapping {
+  dataset: HarmonizerDataset;
+  columns: { column: string; canonicalId: string; canonicalName: string; missingCodes: string[] }[];
+}
+
+export interface CodebookSummary {
+  id: string;
+  surveyId: string;
+  name: string;
+  fileName: string;
+  format: 'inegi' | 'csv';
+  createdAt: string;
+  tables: { name: string; variableCount: number }[];
+  datasets: { id: string; name: string; year: number; table: string | null }[];
+}
+
+export interface CodebookVariable {
+  name: string;
+  label: string | null;
+  question: string | null;
+  section: string | null;
+  declaredType: ValueType | null;
+  validRange: string | null;
+  length: number | null;
+  categories: CodebookCategory[];
+}
+
+export interface CodebookDetail extends Omit<CodebookSummary, 'tables'> {
+  tables: { name: string; variableCount: number; variables: CodebookVariable[] }[];
+}
+
+export interface CodebookList {
+  survey: { id: string; name: string };
+  items: CodebookSummary[];
+}
+
+/** Resultado de asociar un diccionario a una edición. */
+export interface DatasetCodebook {
+  codebook: {
+    id: string;
+    name: string;
+    table: string;
+    matchedColumns: number;
+    unmatchedColumns: string[];
+  } | null;
+}
+
+export interface CatalogCategory {
+  code: string;
+  label: string;
+}
+
+export interface ComparisonValue {
+  /** Valor en el archivo. */
+  value: string;
+  /** Código en la vista armonizada (recodificado o el mismo valor). */
+  code: string;
+  label: string | null;
+  /** Etiqueta del valor en el diccionario de su edición, antes de recodificar. */
+  sourceLabel: string | null;
+  count: number;
+  missing: boolean;
+  recoded: boolean;
+}
+
+export interface ComparisonEdition {
+  datasetId: string;
+  datasetName: string;
+  year: number;
+  column: string;
+  codebookLabel: string | null;
+  values: ComparisonValue[];
+  distinctCapped: boolean;
+  empty: number;
+}
+
+export type IssueKind = 'label_conflict' | 'code_conflict' | 'format' | 'only_in_some' | 'not_in_catalog';
+
+export interface ComparisonIssue {
+  kind: IssueKind;
+  subject: string;
+  editions: { datasetName: string; year: number; codes: string[]; label: string | null }[];
+}
+
+export interface VariableComparison {
+  variable: {
+    id: string;
+    name: string;
+    description: string | null;
+    dataType: ValueType | null;
+    categories: CatalogCategory[];
+    reviewedAt: string | null;
+    reviewedBy: string | null;
+  };
+  status: ComparisonStatus;
+  categorical: boolean;
+  editions: ComparisonEdition[];
+  issues: ComparisonIssue[];
+  suggestion: { categories: CatalogCategory[]; valueMaps: Record<string, Record<string, string>> };
+}
+
+export interface SaveRecodingPayload {
+  categories: { code: string; label: string }[];
+  editions: { datasetId: string; values: { from: string; to: string }[] }[];
 }
 
 export const NEW_OPTION = '__new__';
@@ -134,6 +282,7 @@ export interface MappingChoice {
   column: string;
   choice: string;
   newName?: string;
+  newDescription?: string;
   dataType?: ValueType;
   missingCodes?: string[];
 }
@@ -166,6 +315,8 @@ export interface SurveyHarmonizedView extends ViewPage {
   availableVariables: string[];
   selected: string[];
   selectedCount: number;
+  /** Variables de la vista con códigos distintos entre ediciones sin revisar (SDI-50). */
+  codeWarnings: { id: string; name: string; issueCount: number }[];
 }
 
 export type ExportFormat = 'csv' | 'parquet';

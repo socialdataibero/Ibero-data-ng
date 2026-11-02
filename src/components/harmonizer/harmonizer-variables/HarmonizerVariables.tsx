@@ -4,6 +4,7 @@ import { PageHeader } from '../../shared/page-header/PageHeader';
 import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { useHarmonizerVariables } from './useHarmonizerVariables';
+import type { ComparisonStatus } from '../../../core/models/harmonizer.model';
 import { HarmonizerVariablesSkeleton } from './HarmonizerVariablesSkeleton';
 import './harmonizer-variables.css';
 
@@ -28,6 +29,12 @@ export function HarmonizerVariables() {
     cancelRemove,
     confirmRemove,
     valueTypeLabel,
+    surveyId,
+    warningCount,
+    hasCatalog,
+    downloadCatalog,
+    downloadingCatalog,
+    catalogError,
   } = useHarmonizerVariables();
 
   if (loading) return <HarmonizerVariablesSkeleton />;
@@ -68,6 +75,46 @@ export function HarmonizerVariables() {
               <code>edad</code> y <code>EDAD</code> son la misma variable.
             </p>
 
+            <p className="text-color-secondary c-harmonizer-variables__rules">
+              <em>Códigos entre ediciones</em> compara los valores de cada variable entre las
+              ediciones que la usan, con las etiquetas de sus diccionarios: avisa cuando un mismo
+              código significa cosas distintas, cuando una misma categoría tiene otro código o
+              cuando un código solo aparece en algunos años. Entra a <em>Comparar</em> para ver el
+              detalle, recodificar a códigos comunes o marcarla como revisada.
+            </p>
+
+            {warningCount > 0 ? (
+              <p className="c-harmonizer-variables__warning" role="status">
+                {warningCount === 1
+                  ? 'Una variable tiene códigos distintos entre ediciones sin revisar.'
+                  : `${warningCount} variables tienen códigos distintos entre ediciones sin revisar.`}{' '}
+                Antes de comparar años con ellas, revisa qué significa cada código.
+              </p>
+            ) : null}
+
+            {hasCatalog ? (
+              <div className="c-harmonizer-variables__catalog">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="small"
+                  icon="pictogram-file-download"
+                  onClick={downloadCatalog}
+                  disabled={downloadingCatalog}
+                >
+                  {downloadingCatalog ? 'Descargando…' : 'Catálogo de categorías (CSV)'}
+                </Button>
+                <span className="text-color-secondary">
+                  Código y etiqueta de cada categoría de las variables recodificadas.
+                </span>
+              </div>
+            ) : null}
+            {catalogError ? (
+              <p className="c-harmonizer-variables__error" role="alert">
+                {catalogError}
+              </p>
+            ) : null}
+
             {deleteError ? (
               <p className="c-harmonizer-variables__error" role="alert">
                 {deleteError}
@@ -86,6 +133,7 @@ export function HarmonizerVariables() {
                       <th scope="col">Nombre</th>
                       <th scope="col">Tipo</th>
                       <th scope="col">Mapeada en</th>
+                      <th scope="col">Códigos entre ediciones</th>
                       <th scope="col">Acciones</th>
                     </tr>
                   </thead>
@@ -144,6 +192,11 @@ export function HarmonizerVariables() {
                             ) : (
                               <div className="c-harmonizer-variables__name">
                                 <code>{variable.name}</code>
+                                {variable.description ? (
+                                  <span className="text-color-secondary c-harmonizer-variables__description">
+                                    {variable.description}
+                                  </span>
+                                ) : null}
                                 {variable.nameValid ? null : (
                                   <StatusBadge
                                     variant="warning"
@@ -184,10 +237,30 @@ export function HarmonizerVariables() {
                             )}
                           </td>
                           <td>
+                            <ComparisonBadge
+                              status={variable.comparison.status}
+                              issueCount={variable.comparison.issueCount}
+                              recoded={variable.categories.length > 0}
+                            />
+                          </td>
+                          <td>
                             <nav
                               className="c-harmonizer-variables__actions"
                               aria-label={`Acciones de ${variable.name}`}
                             >
+                              <Link
+                                to={`/harmonizer/surveys/${surveyId}/variables/${variable.id}`}
+                                className="hyperlink"
+                                aria-label={`Comparar códigos de ${variable.name} entre ediciones`}
+                              >
+                                Comparar
+                              </Link>
+                              <span
+                                className="c-harmonizer-variables__separator"
+                                aria-hidden="true"
+                              >
+                                |
+                              </span>
                               <button
                                 type="button"
                                 className="hyperlink"
@@ -257,4 +330,31 @@ export function HarmonizerVariables() {
       />
     </div>
   );
+}
+
+function ComparisonBadge({
+  status,
+  issueCount,
+  recoded,
+}: {
+  status: ComparisonStatus;
+  issueCount: number;
+  recoded: boolean;
+}) {
+  const suffix = recoded ? ' · recodificada' : '';
+  switch (status) {
+    case 'warning':
+      return (
+        <StatusBadge variant="warning">
+          Revisar: {issueCount} {issueCount === 1 ? 'diferencia' : 'diferencias'}
+          {suffix}
+        </StatusBadge>
+      );
+    case 'reviewed':
+      return <StatusBadge variant="success">Revisada{suffix}</StatusBadge>;
+    case 'ok':
+      return <StatusBadge variant="success">Coinciden{suffix}</StatusBadge>;
+    default:
+      return <span className="text-color-secondary">Una sola edición{suffix}</span>;
+  }
 }

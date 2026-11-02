@@ -1,0 +1,121 @@
+.c-harmonizer-codebooks {
+  --field-bg: var(--bg, #fff);
+  --field-border: var(--border, #e4e4e7);
+  --field-color: var(--ink, #18181b);
+
+  display: block;
+  margin: 0;
+}
+
+.c-harmonizer-codebooks__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-block: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .c-harmonizer-codebooks__body {
+    padding-block: 2.5rem;
+  }
+}
+
+.c-harmonizer-codebooks__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #e4e4e7);
+  border-radius: 8px;
+}
+
+.c-harmonizer-codebooks__panel > p {
+  max-width: 52rem;
+  margin: 0;
+}
+
+.c-harmonizer-codebooks__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.c-harmonizer-codebooks__subtitle {
+  margin: 1rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.c-harmonizer-codebooks__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 0;
+}
+
+.c-harmonizer-codebooks__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: min(18rem, 100%);
+}
+
+.c-harmonizer-codebooks__field p {
+  margin: 0;
+}
+
+.c-harmonizer-codebooks__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-self: flex-end;
+}
+
+.c-harmonizer-codebooks__table td {
+  vertical-align: top;
+}
+
+.c-harmonizer-codebooks__meta {
+  font-size: 0.8rem;
+}
+
+.c-harmonizer-codebooks__list,
+.c-harmonizer-codebooks__categories {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-codebooks__categories {
+  max-width: 24rem;
+}
+
+.c-harmonizer-codebooks__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.c-harmonizer-codebooks__separator {
+  color: var(--text-secondary, var(--color-secondary-7));
+  user-select: none;
+}
+
+.c-harmonizer-codebooks__note {
+  max-width: 48rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.c-harmonizer-codebooks__error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--error, #b00020);
+}
+
+.c-harmonizer-codebooks__success {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--success, #166534);
+}
