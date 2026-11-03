@@ -107,11 +107,6 @@ export function Home() {
                 </Link>
               </div>
 
-              <div
-                className="c-home__recent-divider c-home__recent-divider--header"
-                aria-hidden="true"
-              />
-
               <div className="c-home__recent-header-side">
                 <h2 id="inicio-orgs-recientes" className="c-home__subtitle m-t-0 m-b-0">
                   Organizaciones recientes
@@ -156,8 +151,6 @@ export function Home() {
                           />
                         ) : null}
                       </div>
-
-                      <div className="c-home__recent-divider" aria-hidden="true" />
 
                       <div className="c-home__recent-cell">
                         {organization ? (

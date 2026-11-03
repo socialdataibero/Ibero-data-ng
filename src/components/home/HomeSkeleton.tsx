@@ -16,7 +16,6 @@ export function HomeRecentSkeleton() {
         <div className="c-home__recent-header-side">
           <Skeleton width="16rem" height="1.5rem" />
         </div>
-        <div className="c-home__recent-divider c-home__recent-divider--header" />
         <div className="c-home__recent-header-side">
           <Skeleton width="14rem" height="1.5rem" />
         </div>
@@ -28,7 +27,6 @@ export function HomeRecentSkeleton() {
             <div className="c-home__recent-cell">
               <HorizontalCardSkeleton compact />
             </div>
-            <div className="c-home__recent-divider" aria-hidden="true" />
             <div className="c-home__recent-cell">
               <OrganizationCardSkeleton layout="horizontal" compact />
             </div>
