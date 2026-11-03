@@ -192,3 +192,14 @@ body[data-theme='dark'] .c-dataset-detail__note--alert {
   border-color: #92680a;
   color: #fde68a;
 }
+
+.c-dataset-detail__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Without actions PageHeader centers its text; center the chips with it. */
+.text-centered .c-dataset-detail__header-meta {
+  align-items: center;
+}

@@ -22,6 +22,8 @@ export function DatasetDetail() {
   const {
     organizationId,
     datasetId,
+    canEdit,
+    canDelete,
     dataset,
     datasetNotFound,
     resources,
@@ -86,15 +88,19 @@ export function DatasetDetail() {
           }
           crumbs={crumbs}
           action={
-            !dataset.supersededBy ? (
-              <Button
-                type="button"
-                variant="secondary"
-                icon="pictogram-add"
-                href={`/organizations/${organizationId}/datasets/new?revisionOf=${dataset.id}`}
-              >
-                Crear revisión
-              </Button>
+            canEdit ? (
+              <div className="c-dataset-detail__header-actions" role="group" aria-label="Acciones">
+                {!dataset.supersededBy ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    icon="pictogram-add"
+                    href={`/organizations/${organizationId}/datasets/new?revisionOf=${dataset.id}`}
+                  >
+                    Crear revisión
+                  </Button>
+                ) : null}
+              </div>
             ) : null
           }
         />
@@ -153,40 +159,42 @@ export function DatasetDetail() {
           </section>
         ) : null}
 
-        <section className="c-dataset-detail__section" aria-labelledby="upload-title">
-          <h2 id="upload-title" className="c-dataset-detail__subtitle">
-            Subir archivo Parquet
-          </h2>
-          <input
-            ref={fileRef}
-            id={fileInputId}
-            type="file"
-            accept=".parquet"
-            className="c-dataset-detail__file-input"
-            aria-label="Archivo Parquet"
-            disabled={uploading}
-            onChange={onFileSelected}
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            icon="pictogram-file-upload"
-            disabled={uploading}
-            onClick={() => fileRef.current?.click()}
-          >
-            {uploading ? 'Subiendo…' : 'Seleccionar archivo'}
-          </Button>
-          <p className="c-dataset-detail__help">
-            Sube un archivo <code>.parquet</code> como recurso de este conjunto de datos.{' '}
-            ¿Necesitas unificar columnas de varias ediciones de una encuesta primero?{' '}
-            <Link to="/harmonizer" className="hyperlink">
-              Usa el Armonizador
-            </Link>{' '}
-            y desde ahí podrás adjuntar el resultado directamente a este o cualquier otro conjunto
-            de datos.
-          </p>
-          {uploadError ? <p className="c-dataset-detail__error">{uploadError}</p> : null}
-        </section>
+        {canEdit ? (
+          <section className="c-dataset-detail__section" aria-labelledby="upload-title">
+            <h2 id="upload-title" className="c-dataset-detail__subtitle">
+              Subir archivo Parquet
+            </h2>
+            <input
+              ref={fileRef}
+              id={fileInputId}
+              type="file"
+              accept=".parquet"
+              className="c-dataset-detail__file-input"
+              aria-label="Archivo Parquet"
+              disabled={uploading}
+              onChange={onFileSelected}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              icon="pictogram-file-upload"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+            >
+              {uploading ? 'Subiendo…' : 'Seleccionar archivo'}
+            </Button>
+            <p className="c-dataset-detail__help">
+              Sube un archivo <code>.parquet</code> como recurso de este conjunto de datos.{' '}
+              ¿Necesitas unificar columnas de varias ediciones de una encuesta primero?{' '}
+              <Link to="/harmonizer" className="hyperlink">
+                Usa el Armonizador
+              </Link>{' '}
+              y desde ahí podrás adjuntar el resultado directamente a este o cualquier otro conjunto
+              de datos.
+            </p>
+            {uploadError ? <p className="c-dataset-detail__error">{uploadError}</p> : null}
+          </section>
+        ) : null}
 
         <section className="c-dataset-detail__section" aria-labelledby="resources-title">
           <h2 id="resources-title" className="c-dataset-detail__subtitle">
@@ -227,9 +235,7 @@ export function DatasetDetail() {
                 Abre este archivo en vistrace en una pestaña nueva. Desde ahí, “Guardar en Ibero
                 Data” lo publica como análisis de este conjunto de datos con su receta completa.
               </p>
-              {vistraceError ? (
-                <p className="c-dataset-detail__error">{vistraceError}</p>
-              ) : null}
+              {vistraceError ? <p className="c-dataset-detail__error">{vistraceError}</p> : null}
             </>
           )}
         </section>
@@ -246,6 +252,8 @@ export function DatasetDetail() {
               resourceColumns={selectedResource?.columns ?? null}
               datasetResources={resources}
               editingAnalysis={editingAnalysis}
+              canEdit={canEdit}
+              canDelete={canDelete}
               onRequestEditResource={onRequestEditResource}
               onEditingConsumed={() => setEditingAnalysis(null)}
             />

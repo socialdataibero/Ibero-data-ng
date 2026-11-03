@@ -6,9 +6,11 @@ import { errorMessage, isNotFound } from '../../core/api/http';
 import type { Resource } from '../../core/models/resource.model';
 import type { Dataset } from '../../core/models/dataset.model';
 import type { Analysis } from '../../core/models/analysis.model';
+import { useOrganizationRole } from '../../core/hooks/useOrganizationRole';
 
 export function useDatasetDetail() {
   const { organizationId = '', datasetId = '' } = useParams();
+  const { canEdit, canDelete } = useOrganizationRole(organizationId);
 
   const [dataset, setDataset] = useState<Dataset | null>(null);
   // The server answers 404 both for a missing dataset and for a private one the user cannot see.
@@ -106,6 +108,8 @@ export function useDatasetDetail() {
   };
 
   return {
+    canEdit,
+    canDelete,
     organizationId,
     datasetId,
     dataset,

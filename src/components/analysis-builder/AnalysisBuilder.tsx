@@ -24,6 +24,10 @@ interface Props {
   editingAnalysis?: Analysis | null;
   onRequestEditResource?: (analysis: Analysis) => void;
   onEditingConsumed?: () => void;
+  /** ADMIN or EDITOR of the organization (or sysadmin): may save and edit analyses (SDI-134). */
+  canEdit?: boolean;
+  /** ADMIN of the organization (or sysadmin): may delete analyses. */
+  canDelete?: boolean;
 }
 
 export function AnalysisBuilder({
@@ -35,6 +39,8 @@ export function AnalysisBuilder({
   editingAnalysis = null,
   onRequestEditResource,
   onEditingConsumed,
+  canEdit = false,
+  canDelete = false,
 }: Props) {
   const b = useAnalysisBuilder({
     organizationId,
@@ -113,7 +119,11 @@ export function AnalysisBuilder({
 
       case 'group_by':
         return (
-          <div className="c-analysis-builder__chips" role="group" aria-label="Columnas de agrupación">
+          <div
+            className="c-analysis-builder__chips"
+            role="group"
+            aria-label="Columnas de agrupación"
+          >
             {b.rowColumns.map((col) => (
               <button
                 key={col}
@@ -151,7 +161,9 @@ export function AnalysisBuilder({
             >
               <option value="">columna…</option>
               {/* COUNT is the only function that works over whole rows. */}
-              {step.params['func'] === 'COUNT' ? <option value="*">* (todas las filas)</option> : null}
+              {step.params['func'] === 'COUNT' ? (
+                <option value="*">* (todas las filas)</option>
+              ) : null}
               {b.rowColumns.map((col) => (
                 <option key={col} value={col}>
                   {col}
@@ -448,7 +460,7 @@ export function AnalysisBuilder({
               </div>
 
               <div className="c-analysis-builder__save">
-                {!b.showSaveForm ? (
+                {!canEdit ? null : !b.showSaveForm ? (
                   <Button
                     type="button"
                     variant="primary"
@@ -473,7 +485,11 @@ export function AnalysisBuilder({
                           aria-describedby={b.formErrors.title ? 'analysis-title-error' : undefined}
                         />
                         {b.formErrors.title ? (
-                          <p id="analysis-title-error" className="c-analysis-builder__error" role="alert">
+                          <p
+                            id="analysis-title-error"
+                            className="c-analysis-builder__error"
+                            role="alert"
+                          >
                             {b.formErrors.title}
                           </p>
                         ) : null}
@@ -491,7 +507,11 @@ export function AnalysisBuilder({
                           aria-describedby={b.formErrors.slug ? 'analysis-slug-error' : undefined}
                         />
                         {b.formErrors.slug ? (
-                          <p id="analysis-slug-error" className="c-analysis-builder__error" role="alert">
+                          <p
+                            id="analysis-slug-error"
+                            className="c-analysis-builder__error"
+                            role="alert"
+                          >
                             {b.formErrors.slug}
                           </p>
                         ) : null}
@@ -506,10 +526,16 @@ export function AnalysisBuilder({
                           onChange={(e) => f.setFolder(e.target.value)}
                           name="folder"
                           aria-invalid={!!b.formErrors.folder}
-                          aria-describedby={b.formErrors.folder ? 'analysis-folder-error' : undefined}
+                          aria-describedby={
+                            b.formErrors.folder ? 'analysis-folder-error' : undefined
+                          }
                         />
                         {b.formErrors.folder ? (
-                          <p id="analysis-folder-error" className="c-analysis-builder__error" role="alert">
+                          <p
+                            id="analysis-folder-error"
+                            className="c-analysis-builder__error"
+                            role="alert"
+                          >
                             {b.formErrors.folder}
                           </p>
                         ) : null}
@@ -564,7 +590,6 @@ export function AnalysisBuilder({
               </div>
             </>
           ) : null}
-
         </>
       ) : null}
 
@@ -610,7 +635,7 @@ export function AnalysisBuilder({
                     </span>
                   </button>
                   <div className="c-analysis-builder__item-actions">
-                    {analysis.origin !== 'VISTRACE' ? (
+                    {canEdit && analysis.origin !== 'VISTRACE' ? (
                       <Button
                         type="button"
                         variant="secondary"
@@ -630,20 +655,22 @@ export function AnalysisBuilder({
                       >
                         {b.openingVistraceId === analysis.id
                           ? 'Abriendo…'
-                          : analysis.origin === 'VISTRACE'
+                          : analysis.origin === 'VISTRACE' && canEdit
                             ? 'Editar en vistrace'
                             : 'vistrace'}
                       </Button>
                     ) : null}
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      icon="pictogram-delete"
-                      onClick={(e) => b.requestRemoveAnalysis(analysis, e as MouseEvent)}
-                      disabled={b.removingId === analysis.id}
-                    >
-                      {b.removingId === analysis.id ? 'Borrando…' : 'Borrar'}
-                    </Button>
+                    {canDelete ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        icon="pictogram-delete"
+                        onClick={(e) => b.requestRemoveAnalysis(analysis, e as MouseEvent)}
+                        disabled={b.removingId === analysis.id}
+                      >
+                        {b.removingId === analysis.id ? 'Borrando…' : 'Borrar'}
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
 
