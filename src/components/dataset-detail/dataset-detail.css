@@ -164,7 +164,8 @@
   line-height: 1.4;
 }
 
-.c-dataset-detail__file-input {
+/* input[type='file'] outranks Sisdai's file-input width: 100%, which otherwise widens the page. */
+input[type='file'].c-dataset-detail__file-input {
   position: absolute;
   width: 1px;
   height: 1px;

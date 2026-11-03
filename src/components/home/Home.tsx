@@ -83,7 +83,7 @@ export function Home() {
           <li>
             <AccessWidget
               title="Configuración de perfil"
-              description="Actualiza tus datos, imagen y contraseña."
+              description="Actualiza tu nombre y tu contraseña."
               meta="Datos de tu cuenta"
               href="/profile"
               pictogram="pictogram-person"

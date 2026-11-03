@@ -23,6 +23,14 @@ export interface PreviewResult {
 
 export type AnalysisStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
 
+/** What the UI shows for each status; the API values stay in English. */
+export const ANALYSIS_STATUS_LABEL: Record<AnalysisStatus, string> = {
+  PENDING: 'Pendiente',
+  RUNNING: 'En proceso',
+  DONE: 'Listo',
+  FAILED: 'Falló',
+};
+
 export type AnalysisOrigin = 'IBERO' | 'VISTRACE';
 
 export interface Analysis {

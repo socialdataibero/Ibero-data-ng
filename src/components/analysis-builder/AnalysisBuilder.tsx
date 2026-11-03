@@ -1,6 +1,6 @@
 import { Button } from 'sectei-library';
 import type { MouseEvent } from 'react';
-import type { Analysis, Step } from '../../core/models/analysis.model';
+import { ANALYSIS_STATUS_LABEL, type Analysis, type Step } from '../../core/models/analysis.model';
 import type { Resource, ResourceColumn } from '../../core/models/resource.model';
 import type { DatasetVisibility } from '../../core/models/dataset.model';
 import { ConfirmDialog } from '../shared/confirm-dialog/ConfirmDialog';
@@ -606,7 +606,7 @@ export function AnalysisBuilder({
                     <span
                       className={`c-analysis-builder__status c-analysis-builder__status--${analysis.status.toLowerCase()}`}
                     >
-                      {analysis.status}
+                      {ANALYSIS_STATUS_LABEL[analysis.status]}
                     </span>
                   </button>
                   <div className="c-analysis-builder__item-actions">
