@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 import { downloadCsv } from '../../../core/utils/csv';
@@ -24,6 +25,7 @@ const TEMPLATE: string[][] = [
 
 export function useHarmonizerCodebooks() {
   const { surveyId = '' } = useParams();
+  const { canEdit, readOnlyMessage } = useHarmonizerAccess({ surveyId });
   const [data, setData] = useState<CodebookList | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -87,6 +89,7 @@ export function useHarmonizerCodebooks() {
   const submit = useCallback(
     (event: FormEvent) => {
       event.preventDefault();
+      if (!canEdit || uploading) return;
       const errors: { name?: string; file?: string } = {};
       if (name.trim() === '') errors.name = 'Escribe un nombre para el diccionario.';
       if (!file) errors.file = 'Elige el archivo del diccionario.';
@@ -113,7 +116,7 @@ export function useHarmonizerCodebooks() {
         }
       })();
     },
-    [name, file, surveyId],
+    [canEdit, uploading, name, file, surveyId],
   );
 
   const toggleDetail = (codebook: CodebookSummary) => {
@@ -134,7 +137,7 @@ export function useHarmonizerCodebooks() {
   };
 
   const confirmRemove = async () => {
-    if (!pendingDelete) return;
+    if (!canEdit || !pendingDelete) return;
     const codebook = pendingDelete;
     setRemovingId(codebook.id);
     setDeleteError(null);
@@ -151,6 +154,8 @@ export function useHarmonizerCodebooks() {
   };
 
   return {
+    canEdit,
+    readOnlyMessage,
     surveyId,
     data,
     loading,
@@ -174,6 +179,7 @@ export function useHarmonizerCodebooks() {
     toggleDetail,
     pendingDelete,
     requestRemove: (codebook: CodebookSummary) => {
+      if (!canEdit) return;
       setDeleteError(null);
       setPendingDelete(codebook);
     },

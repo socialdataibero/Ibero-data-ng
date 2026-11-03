@@ -11,6 +11,10 @@ import './harmonizer-home.css';
 export function HarmonizerHome() {
   const {
     surveys,
+    isSurveyEditable,
+    canCreate,
+    organizations,
+    accessError,
     total,
     page,
     totalPages,
@@ -46,24 +50,26 @@ export function HarmonizerHome() {
         }
         crumbs={CRUMBS}
         action={
-          <div className="c-harmonizer-home__header-actions" role="group" aria-label="Acciones">
-            <Button
-              type="button"
-              variant="secondary"
-              icon="pictogram-add"
-              href="/harmonizer/new-survey"
-            >
-              Nueva encuesta
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              icon="pictogram-file-upload"
-              href="/harmonizer/upload"
-            >
-              Subir archivo
-            </Button>
-          </div>
+          canCreate ? (
+            <div className="c-harmonizer-home__header-actions" role="group" aria-label="Acciones">
+              <Button
+                type="button"
+                variant="secondary"
+                icon="pictogram-add"
+                href="/harmonizer/new-survey"
+              >
+                Nueva encuesta
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                icon="pictogram-file-upload"
+                href="/harmonizer/upload"
+              >
+                Subir archivo
+              </Button>
+            </div>
+          ) : undefined
         }
       />
 
@@ -80,6 +86,8 @@ export function HarmonizerHome() {
             </span>
           ) : null}
         </h2>
+
+        {accessError ? <p className="c-harmonizer-home__error" role="alert">{accessError}</p> : null}
 
         {deleteError ? (
           <p className="c-harmonizer-home__error" role="alert">
@@ -109,14 +117,16 @@ export function HarmonizerHome() {
               Crea una encuesta o sube un archivo CSV o DBF para empezar a armonizar variables entre
               ediciones.
             </p>
-            <div className="c-harmonizer-home__header-actions">
-              <Button type="button" variant="secondary" href="/harmonizer/new-survey">
-                Nueva encuesta
-              </Button>
-              <Button type="button" variant="primary" href="/harmonizer/upload">
-                Subir archivo
-              </Button>
-            </div>
+            {canCreate ? (
+              <div className="c-harmonizer-home__header-actions">
+                <Button type="button" variant="secondary" href="/harmonizer/new-survey">
+                  Nueva encuesta
+                </Button>
+                <Button type="button" variant="primary" href="/harmonizer/upload">
+                  Subir archivo
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="c-harmonizer-home__list">
@@ -124,6 +134,8 @@ export function HarmonizerHome() {
               <SurveyModule
                 key={survey.id}
                 survey={survey}
+                canEdit={isSurveyEditable(survey)}
+                organizationName={organizations.find((organization) => organization.id === survey.organizationId)?.name}
                 onDelete={requestRemoveSurvey}
                 deleting={removingId === survey.id}
                 onDeleteDataset={requestRemoveDataset}
@@ -137,17 +149,19 @@ export function HarmonizerHome() {
 
         <Paginator page={page} totalPages={totalPages} onChange={goTo} />
 
-        <p className="text-color-secondary c-harmonizer-home__footnote">
-          ¿Necesitas otra edición?{' '}
-          <Link to="/harmonizer/upload" className="hyperlink">
-            Sube un archivo
-          </Link>{' '}
-          o{' '}
-          <Link to="/harmonizer/new-survey" className="hyperlink">
-            crea una encuesta
-          </Link>
-          .
-        </p>
+        {canCreate ? (
+          <p className="text-color-secondary c-harmonizer-home__footnote">
+            ¿Necesitas otra edición?{' '}
+            <Link to="/harmonizer/upload" className="hyperlink">
+              Sube un archivo
+            </Link>{' '}
+            o{' '}
+            <Link to="/harmonizer/new-survey" className="hyperlink">
+              crea una encuesta
+            </Link>
+            .
+          </p>
+        ) : null}
       </section>
 
       <ConfirmDialog

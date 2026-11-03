@@ -17,6 +17,8 @@ import './harmonizer-mapping.css';
 
 export function HarmonizerMapping() {
   const {
+    canEdit,
+    readOnlyMessage,
     dataset,
     renamedColumns,
     uploadSource,
@@ -107,6 +109,7 @@ export function HarmonizerMapping() {
       />
 
       <div className="container width-fixed c-harmonizer-mapping__body">
+        {readOnlyMessage ? <p role="status">{readOnlyMessage}</p> : null}
         {loadError ? <p className="c-harmonizer-mapping__error">{loadError}</p> : null}
 
         {loading && !loadError ? <HarmonizerMappingContentSkeleton /> : null}
@@ -198,7 +201,7 @@ export function HarmonizerMapping() {
                 mapeo de todas las columnas de una vez.{' '}
                 {dataset ? (
                   <Link to={`/harmonizer/surveys/${dataset.surveyId}/codebooks`} className="hyperlink">
-                    Subir o ver diccionarios
+                    {canEdit ? 'Subir o ver diccionarios' : 'Ver diccionarios'}
                   </Link>
                 ) : null}
               </p>
@@ -209,6 +212,7 @@ export function HarmonizerMapping() {
                   <div className="c-harmonizer-mapping__tool">
                     <label htmlFor="mapping-codebook">Diccionario</label>
                     <select
+                      disabled={!canEdit}
                       id="mapping-codebook"
                       value={codebookChoice}
                       onChange={(e) => chooseCodebook(e.target.value)}
@@ -225,6 +229,7 @@ export function HarmonizerMapping() {
                     <div className="c-harmonizer-mapping__tool">
                       <label htmlFor="mapping-codebook-table">Tabla</label>
                       <select
+                        disabled={!canEdit}
                         id="mapping-codebook-table"
                         value={tableChoice}
                         onChange={(e) => setTableChoice(e.target.value)}
@@ -243,7 +248,7 @@ export function HarmonizerMapping() {
                     variant="secondary"
                     size="small"
                     onClick={applyCodebook}
-                    disabled={attachingCodebook || !codebookChanged}
+                    disabled={!canEdit || attachingCodebook || !codebookChanged}
                   >
                     {attachingCodebook ? 'Aplicando…' : codebookChoice ? 'Usar este diccionario' : 'Quitar diccionario'}
                   </Button>
@@ -268,78 +273,80 @@ export function HarmonizerMapping() {
               ) : null}
             </section>
 
-            <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-bulk-title">
-              <h2 id="mapping-bulk-title" className="c-harmonizer-mapping__tools-title">
-                Mapear varias columnas a la vez
-              </h2>
-              <div className="c-harmonizer-mapping__tools-row">
-                {codebook ? (
-                  <Button type="button" variant="primary" size="small" onClick={completeWithCodebook}>
-                    Completar con el diccionario
-                  </Button>
-                ) : null}
-                <Button type="button" variant="secondary" size="small" onClick={mapAllByName}>
-                  Mapear todas por nombre
-                </Button>
-                <Button type="button" variant="secondary" size="small" onClick={clearAll}>
-                  Desmapear todas
-                </Button>
-              </div>
-              {otherEditions.length > 0 ? (
+            {canEdit ? (
+              <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-bulk-title">
+                <h2 id="mapping-bulk-title" className="c-harmonizer-mapping__tools-title">
+                  Mapear varias columnas a la vez
+                </h2>
                 <div className="c-harmonizer-mapping__tools-row">
-                  <div className="c-harmonizer-mapping__tool">
-                    <label htmlFor="mapping-copy">Copiar el mapeo guardado de</label>
-                    <select id="mapping-copy" value={copySource} onChange={(e) => setCopySource(e.target.value)}>
-                      <option value="">— elige una edición —</option>
-                      {otherEditions.map((e) => (
-                        <option key={e.id} value={e.id} disabled={e.mappedColumns === 0}>
-                          {e.name} ({e.year}) · {e.mappedColumns} mapeadas
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="small"
-                    onClick={copyFromEdition}
-                    disabled={!copySource || copying}
-                  >
-                    {copying ? 'Copiando…' : 'Copiar'}
+                  {codebook ? (
+                    <Button type="button" variant="primary" size="small" onClick={completeWithCodebook}>
+                      Completar con el diccionario
+                    </Button>
+                  ) : null}
+                  <Button type="button" variant="secondary" size="small" onClick={mapAllByName}>
+                    Mapear todas por nombre
+                  </Button>
+                  <Button type="button" variant="secondary" size="small" onClick={clearAll}>
+                    Desmapear todas
                   </Button>
                 </div>
-              ) : null}
-              <div className="c-harmonizer-mapping__tools-row">
-                <Button type="button" variant="secondary" size="small" onClick={exportMappingCsv}>
-                  Exportar mapeo (CSV)
-                </Button>
-                <label className="c-harmonizer-mapping__file-button">
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="a11y-sr-only"
-                    onChange={importMappingCsv}
-                  />
-                  <span aria-hidden="true">Importar mapeo (CSV)</span>
-                  <span className="a11y-sr-only">Importar mapeo desde un archivo CSV</span>
-                </label>
-              </div>
-              <p className="form-help c-harmonizer-mapping__tools-help">
-                El CSV tiene las columnas <code>columna, variable, tipo, no_especificado</code>: exporta
-                el mapeo, edítalo en una hoja de cálculo y vuelve a importarlo. Ninguna de estas
-                acciones guarda: revisa la tabla y pulsa «Guardar mapeo».
-              </p>
-              {bulkNotice ? (
-                <p className="c-harmonizer-mapping__bulk-notice" role="status">
-                  {bulkNotice}
+                {otherEditions.length > 0 ? (
+                  <div className="c-harmonizer-mapping__tools-row">
+                    <div className="c-harmonizer-mapping__tool">
+                      <label htmlFor="mapping-copy">Copiar el mapeo guardado de</label>
+                      <select id="mapping-copy" value={copySource} onChange={(e) => setCopySource(e.target.value)}>
+                        <option value="">— elige una edición —</option>
+                        {otherEditions.map((e) => (
+                          <option key={e.id} value={e.id} disabled={e.mappedColumns === 0}>
+                            {e.name} ({e.year}) · {e.mappedColumns} mapeadas
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="small"
+                      onClick={copyFromEdition}
+                      disabled={!copySource || copying}
+                    >
+                      {copying ? 'Copiando…' : 'Copiar'}
+                    </Button>
+                  </div>
+                ) : null}
+                <div className="c-harmonizer-mapping__tools-row">
+                  <Button type="button" variant="secondary" size="small" onClick={exportMappingCsv}>
+                    Exportar mapeo (CSV)
+                  </Button>
+                  <label className="c-harmonizer-mapping__file-button">
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="a11y-sr-only"
+                      onChange={importMappingCsv}
+                    />
+                    <span aria-hidden="true">Importar mapeo (CSV)</span>
+                    <span className="a11y-sr-only">Importar mapeo desde un archivo CSV</span>
+                  </label>
+                </div>
+                <p className="form-help c-harmonizer-mapping__tools-help">
+                  El CSV tiene las columnas <code>columna, variable, tipo, no_especificado</code>: exporta
+                  el mapeo, edítalo en una hoja de cálculo y vuelve a importarlo. Ninguna de estas
+                  acciones guarda: revisa la tabla y pulsa «Guardar mapeo».
                 </p>
-              ) : null}
-              {bulkError ? (
-                <p className="c-harmonizer-mapping__error" role="alert">
-                  {bulkError}
-                </p>
-              ) : null}
-            </section>
+                {bulkNotice ? (
+                  <p className="c-harmonizer-mapping__bulk-notice" role="status">
+                    {bulkNotice}
+                  </p>
+                ) : null}
+                {bulkError ? (
+                  <p className="c-harmonizer-mapping__error" role="alert">
+                    {bulkError}
+                  </p>
+                ) : null}
+              </section>
+            ) : null}
 
             <div className="c-harmonizer-mapping__filter">
               <div className="c-harmonizer-mapping__tool">
@@ -427,6 +434,7 @@ export function HarmonizerMapping() {
                                   Variable canónica para {row.column.name}
                                 </label>
                                 <select
+                                  disabled={!canEdit}
                                   id={`choice-${row.column.name}`}
                                   value={row.choice}
                                   onChange={(e) => setChoice(index, e.target.value)}
@@ -449,6 +457,7 @@ export function HarmonizerMapping() {
                                       Nombre canónico nuevo para {row.column.name}
                                     </label>
                                     <input
+                                      disabled={!canEdit}
                                       id={`new-${row.column.name}`}
                                       type="text"
                                       value={row.newName}
@@ -481,7 +490,7 @@ export function HarmonizerMapping() {
                                   value={row.dataType}
                                   onChange={(e) => setDataType(index, e.target.value as ValueType)}
                                   name={`type-${row.column.name}`}
-                                  disabled={row.choice === ''}
+                                  disabled={!canEdit || row.choice === ''}
                                   aria-describedby={row.choice === '' ? undefined : `type-${row.column.name}-hint`}
                                 >
                                   {(Object.keys(valueTypeLabel) as ValueType[]).map((type) => (
@@ -511,7 +520,7 @@ export function HarmonizerMapping() {
                                 onChange={(e) => setMissingCodes(index, e.target.value)}
                                 name={`missing-${row.column.name}`}
                                 placeholder="ej. 9, 99"
-                                disabled={row.choice === ''}
+                                disabled={!canEdit || row.choice === ''}
                                 aria-describedby={
                                   row.column.codebook?.missingCodes.length ? `missing-${row.column.name}-hint` : undefined
                                 }
@@ -547,7 +556,7 @@ export function HarmonizerMapping() {
               {saveError ? <p className="c-harmonizer-mapping__error">{saveError}</p> : null}
 
               <div className="c-harmonizer-mapping__actions">
-                <Button type="submit" variant="primary" disabled={saving}>
+                <Button type="submit" variant="primary" disabled={!canEdit || saving}>
                   {saving ? 'Guardando…' : 'Guardar mapeo'}
                 </Button>
                 <Button

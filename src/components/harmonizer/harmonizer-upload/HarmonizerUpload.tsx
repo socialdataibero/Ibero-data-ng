@@ -7,6 +7,11 @@ import './harmonizer-upload.css';
 export function HarmonizerUpload() {
   const {
     surveys,
+    organizations,
+    organizationId,
+    setOrganizationId,
+    accessLoading,
+    accessError,
     datasetName,
     setDatasetName,
     datasetYear,
@@ -41,8 +46,10 @@ export function HarmonizerUpload() {
       />
 
       <div className="container width-fixed c-harmonizer-upload__body">
+        {accessLoading ? <p role="status">Cargando organizaciones…</p> : null}
+        {accessError ? <p className="c-harmonizer-upload__error" role="alert">{accessError}</p> : null}
         <form className="c-harmonizer-upload__form" onSubmit={submit} noValidate>
-          <fieldset className="c-harmonizer-upload__section">
+          <fieldset className="c-harmonizer-upload__section" disabled={uploading || accessLoading || !!accessError}>
             <legend className="c-harmonizer-upload__legend">Edición a subir</legend>
 
             <div className="c-harmonizer-upload__field">
@@ -112,6 +119,31 @@ export function HarmonizerUpload() {
                 ))}
               </select>
             </div>
+
+            {uploadSurveyId === newOption ? (
+              <div className="c-harmonizer-upload__field">
+                <label htmlFor="upload-organization">Organización *</label>
+                <select
+                  id="upload-organization"
+                  name="organizationId"
+                  value={organizationId}
+                  onChange={(event) => setOrganizationId(event.target.value)}
+                  required
+                  disabled={organizations.length === 0}
+                  aria-describedby={organizations.length === 0 ? 'upload-organization-help' : undefined}
+                >
+                  <option value="">Selecciona una organización</option>
+                  {organizations.map((organization) => (
+                    <option key={organization.id} value={organization.id}>{organization.name}</option>
+                  ))}
+                </select>
+                {!accessLoading && !accessError && organizations.length === 0 ? (
+                  <p id="upload-organization-help" role="status">
+                    Necesitas el rol Administrador o Editor en una organización para crear encuestas.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {uploadSurveyId === newOption ? (
               <div className="c-harmonizer-upload__field">

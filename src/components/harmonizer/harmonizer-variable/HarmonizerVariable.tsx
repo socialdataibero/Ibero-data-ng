@@ -48,6 +48,8 @@ const STATUS_TEXT: Record<ComparisonStatus, string> = {
 
 export function HarmonizerVariable() {
   const {
+    canEdit,
+    readOnlyMessage,
     surveyId,
     data,
     loading,
@@ -103,6 +105,7 @@ export function HarmonizerVariable() {
       />
 
       <div className="container width-fixed c-harmonizer-variable__body">
+        {readOnlyMessage ? <p role="status">{readOnlyMessage}</p> : null}
         {loadError ? (
           <p className="c-harmonizer-variable__error" role="alert">
             {loadError}
@@ -144,7 +147,7 @@ export function HarmonizerVariable() {
                 </ul>
               ) : null}
 
-              {data.status === 'warning' || data.status === 'reviewed' ? (
+              {canEdit && (data.status === 'warning' || data.status === 'reviewed') ? (
                 <div className="c-harmonizer-variable__actions">
                   {data.status === 'warning' ? (
                     <Button type="button" variant="secondary" onClick={() => review(true)} disabled={reviewing}>
@@ -188,7 +191,7 @@ export function HarmonizerVariable() {
                       <th scope="col">Código</th>
                       {data.editions.map((e) => (
                         <th key={e.datasetId} scope="col">
-                          <Link to={`/harmonizer/datasets/${e.datasetId}/mapping`} className="hyperlink">
+                          <Link to={`/harmonizer/datasets/${e.datasetId}/${canEdit ? 'mapping' : 'harmonized'}`} className="hyperlink">
                             {e.datasetName}
                           </Link>{' '}
                           <span className="text-color-secondary">
@@ -274,7 +277,7 @@ export function HarmonizerVariable() {
                 valores «sin recodificar» quedan como están en el archivo.
               </p>
               <div className="c-harmonizer-variable__actions">
-                <Button type="button" variant="secondary" size="small" onClick={applySuggestion}>
+                <Button type="button" variant="secondary" size="small" onClick={applySuggestion} disabled={!canEdit}>
                   Usar la propuesta
                 </Button>
                 <span className="text-color-secondary">
@@ -309,6 +312,7 @@ export function HarmonizerVariable() {
                               Código de la categoría {index + 1}
                             </label>
                             <input
+                              disabled={!canEdit}
                               id={`catalog-code-${index}`}
                               type="text"
                               value={category.code}
@@ -320,6 +324,7 @@ export function HarmonizerVariable() {
                               Etiqueta de la categoría {index + 1}
                             </label>
                             <input
+                              disabled={!canEdit}
                               id={`catalog-label-${index}`}
                               type="text"
                               value={category.label}
@@ -328,6 +333,7 @@ export function HarmonizerVariable() {
                           </td>
                           <td>
                             <button
+                              disabled={!canEdit}
                               type="button"
                               className="hyperlink"
                               onClick={() => removeCategory(index)}
@@ -343,7 +349,7 @@ export function HarmonizerVariable() {
                 </div>
               )}
               <div className="c-harmonizer-variable__actions">
-                <Button type="button" variant="secondary" size="small" onClick={addCategory}>
+                <Button type="button" variant="secondary" size="small" onClick={addCategory} disabled={!canEdit}>
                   Agregar categoría
                 </Button>
               </div>
@@ -385,6 +391,7 @@ export function HarmonizerVariable() {
                                     </label>
                                     {catalogCodes.length > 0 ? (
                                       <select
+                                        disabled={!canEdit}
                                         id={id}
                                         value={target}
                                         onChange={(e) => setTarget(edition.datasetId, v.value, e.target.value)}
@@ -404,6 +411,7 @@ export function HarmonizerVariable() {
                                       </select>
                                     ) : (
                                       <input
+                                        disabled={!canEdit}
                                         id={id}
                                         type="text"
                                         value={target}
@@ -434,14 +442,14 @@ export function HarmonizerVariable() {
                 </p>
               ) : null}
               <div className="c-harmonizer-variable__actions">
-                <Button type="button" variant="primary" onClick={save} disabled={saving || !dirty}>
+                <Button type="button" variant="primary" onClick={save} disabled={!canEdit || saving || !dirty}>
                   {saving ? 'Guardando…' : 'Guardar recodificación'}
                 </Button>
-                <Button type="button" variant="secondary" onClick={discard} disabled={saving || !dirty}>
+                <Button type="button" variant="secondary" onClick={discard} disabled={!canEdit || saving || !dirty}>
                   Descartar cambios
                 </Button>
                 {data.variable.categories.length > 0 || data.editions.some((e) => e.values.some((v) => v.recoded)) ? (
-                  <Button type="button" variant="secondary" onClick={clearRecoding} disabled={saving}>
+                  <Button type="button" variant="secondary" onClick={clearRecoding} disabled={!canEdit || saving}>
                     Quitar recodificación
                   </Button>
                 ) : null}

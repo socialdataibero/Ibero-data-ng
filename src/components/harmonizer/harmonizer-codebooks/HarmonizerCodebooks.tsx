@@ -34,6 +34,8 @@ function CategoryList({ categories }: { categories: CodebookCategory[] }) {
 
 export function HarmonizerCodebooks() {
   const {
+    canEdit,
+    readOnlyMessage,
     surveyId,
     data,
     loading,
@@ -85,99 +87,102 @@ export function HarmonizerCodebooks() {
       />
 
       <div className="container width-fixed c-harmonizer-codebooks__body">
+        {readOnlyMessage ? <p role="status">{readOnlyMessage}</p> : null}
         {loadError ? (
           <p className="c-harmonizer-codebooks__error" role="alert">
             {loadError}
           </p>
         ) : data ? (
           <>
-            <section className="c-harmonizer-codebooks__panel" aria-labelledby="codebook-upload-title">
-              <h2 id="codebook-upload-title" className="c-harmonizer-codebooks__title">
-                Subir un diccionario
-              </h2>
-              <p className="text-color-secondary">
-                Acepta el <strong>descriptor del INEGI</strong> tal como se descarga (.xls o .xlsx, una
-                hoja por tabla: VIVIENDAS, PERSONAS…) o la <strong>plantilla CSV</strong> de la
-                plataforma, para otras encuestas o para descriptores que solo existen en PDF. Después,
-                en el mapeo de cada edición elige el diccionario que le corresponde.
-              </p>
-              <form className="c-harmonizer-codebooks__form" onSubmit={submit} noValidate>
-                <div className="c-harmonizer-codebooks__field">
-                  <label htmlFor="codebook-name">Nombre</label>
-                  <input
-                    id="codebook-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="ej. Censo 2010"
-                    aria-required="true"
-                    aria-invalid={!!fieldErrors.name}
-                    aria-describedby={fieldErrors.name ? 'codebook-name-error' : undefined}
-                  />
-                  {fieldErrors.name ? (
-                    <p id="codebook-name-error" className="c-harmonizer-codebooks__error" role="alert">
-                      {fieldErrors.name}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="c-harmonizer-codebooks__field">
-                  <label htmlFor="codebook-file">Archivo (.xls, .xlsx o .csv)</label>
-                  <input
-                    key={fileInputKey}
-                    id="codebook-file"
-                    type="file"
-                    accept=".xls,.xlsx,.csv"
-                    onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
-                    aria-required="true"
-                    aria-invalid={!!fieldErrors.file}
-                    aria-describedby={fieldErrors.file ? 'codebook-file-error' : 'codebook-file-help'}
-                  />
-                  {fieldErrors.file ? (
-                    <p id="codebook-file-error" className="c-harmonizer-codebooks__error" role="alert">
-                      {fieldErrors.file}
-                    </p>
-                  ) : (
-                    <p id="codebook-file-help" className="form-help">
-                      Máximo 20 MB. El CSV debe estar en UTF-8.
-                    </p>
-                  )}
-                </div>
-                <div className="c-harmonizer-codebooks__form-actions">
-                  <Button type="submit" variant="primary" disabled={uploading}>
-                    {uploading ? 'Subiendo…' : 'Subir diccionario'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    icon="pictogram-file-download"
-                    onClick={downloadTemplate}
-                  >
-                    Plantilla CSV
-                  </Button>
-                </div>
-              </form>
-              <p className="form-help">
-                Plantilla: una fila por variable o por categoría. La primera fila de cada variable lleva
-                su descripción y su <code>tipo</code> (texto, entero o decimal); cada fila con{' '}
-                <code>codigo</code> y <code>etiqueta</code> agrega una categoría, y{' '}
-                <code>faltante = sí</code> la marca como «No especificado». <code>tabla</code> es
-                opcional y separa archivos distintos (viviendas, personas).
-              </p>
-              {uploadError ? (
-                <p className="c-harmonizer-codebooks__error" role="alert">
-                  {uploadError}
+            {canEdit ? (
+              <section className="c-harmonizer-codebooks__panel" aria-labelledby="codebook-upload-title">
+                <h2 id="codebook-upload-title" className="c-harmonizer-codebooks__title">
+                  Subir un diccionario
+                </h2>
+                <p className="text-color-secondary">
+                  Acepta el <strong>descriptor del INEGI</strong> tal como se descarga (.xls o .xlsx, una
+                  hoja por tabla: VIVIENDAS, PERSONAS…) o la <strong>plantilla CSV</strong> de la
+                  plataforma, para otras encuestas o para descriptores que solo existen en PDF. Después,
+                  en el mapeo de cada edición elige el diccionario que le corresponde.
                 </p>
-              ) : null}
-              {uploaded ? (
-                <p className="c-harmonizer-codebooks__success" role="status">
-                  Se subió «{uploaded.name}»:{' '}
-                  {uploaded.tables
-                    .map((t) => `${t.name ? `${t.name}, ` : ''}${t.variableCount} variables`)
-                    .join(' · ')}
-                  .
+                <form className="c-harmonizer-codebooks__form" onSubmit={submit} noValidate>
+                  <div className="c-harmonizer-codebooks__field">
+                    <label htmlFor="codebook-name">Nombre</label>
+                    <input
+                      id="codebook-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="ej. Censo 2010"
+                      aria-required="true"
+                      aria-invalid={!!fieldErrors.name}
+                      aria-describedby={fieldErrors.name ? 'codebook-name-error' : undefined}
+                    />
+                    {fieldErrors.name ? (
+                      <p id="codebook-name-error" className="c-harmonizer-codebooks__error" role="alert">
+                        {fieldErrors.name}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="c-harmonizer-codebooks__field">
+                    <label htmlFor="codebook-file">Archivo (.xls, .xlsx o .csv)</label>
+                    <input
+                      key={fileInputKey}
+                      id="codebook-file"
+                      type="file"
+                      accept=".xls,.xlsx,.csv"
+                      onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
+                      aria-required="true"
+                      aria-invalid={!!fieldErrors.file}
+                      aria-describedby={fieldErrors.file ? 'codebook-file-error' : 'codebook-file-help'}
+                    />
+                    {fieldErrors.file ? (
+                      <p id="codebook-file-error" className="c-harmonizer-codebooks__error" role="alert">
+                        {fieldErrors.file}
+                      </p>
+                    ) : (
+                      <p id="codebook-file-help" className="form-help">
+                        Máximo 20 MB. El CSV debe estar en UTF-8.
+                      </p>
+                    )}
+                  </div>
+                  <div className="c-harmonizer-codebooks__form-actions">
+                    <Button type="submit" variant="primary" disabled={uploading}>
+                      {uploading ? 'Subiendo…' : 'Subir diccionario'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      icon="pictogram-file-download"
+                      onClick={downloadTemplate}
+                    >
+                      Plantilla CSV
+                    </Button>
+                  </div>
+                </form>
+                <p className="form-help">
+                  Plantilla: una fila por variable o por categoría. La primera fila de cada variable lleva
+                  su descripción y su <code>tipo</code> (texto, entero o decimal); cada fila con{' '}
+                  <code>codigo</code> y <code>etiqueta</code> agrega una categoría, y{' '}
+                  <code>faltante = sí</code> la marca como «No especificado». <code>tabla</code> es
+                  opcional y separa archivos distintos (viviendas, personas).
                 </p>
-              ) : null}
-            </section>
+                {uploadError ? (
+                  <p className="c-harmonizer-codebooks__error" role="alert">
+                    {uploadError}
+                  </p>
+                ) : null}
+                {uploaded ? (
+                  <p className="c-harmonizer-codebooks__success" role="status">
+                    Se subió «{uploaded.name}»:{' '}
+                    {uploaded.tables
+                      .map((t) => `${t.name ? `${t.name}, ` : ''}${t.variableCount} variables`)
+                      .join(' · ')}
+                    .
+                  </p>
+                ) : null}
+              </section>
+            ) : null}
 
             {deleteError ? (
               <p className="c-harmonizer-codebooks__error" role="alert">
@@ -224,7 +229,7 @@ export function HarmonizerCodebooks() {
                             <ul className="c-harmonizer-codebooks__list">
                               {codebook.datasets.map((d) => (
                                 <li key={d.id}>
-                                  <Link to={`/harmonizer/datasets/${d.id}/mapping`} className="hyperlink">
+                                  <Link to={`/harmonizer/datasets/${d.id}/${canEdit ? 'mapping' : 'harmonized'}`} className="hyperlink">
                                     {d.name}
                                   </Link>{' '}
                                   <span className="text-color-secondary">
@@ -254,7 +259,7 @@ export function HarmonizerCodebooks() {
                               type="button"
                               className="hyperlink"
                               aria-label={`Eliminar diccionario ${codebook.name}`}
-                              disabled={removingId === codebook.id}
+                              disabled={!canEdit || removingId === codebook.id}
                               onClick={() => requestRemove(codebook)}
                             >
                               Eliminar

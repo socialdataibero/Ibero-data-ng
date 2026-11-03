@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 import {
@@ -41,6 +42,7 @@ function sameRecoding(a: CatalogCategory[], b: CatalogCategory[], ma: ValueMaps,
 
 export function useHarmonizerVariable() {
   const { surveyId = '', variableId = '' } = useParams();
+  const { canEdit, readOnlyMessage } = useHarmonizerAccess({ surveyId });
   const [data, setData] = useState<VariableComparison | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -116,7 +118,7 @@ export function useHarmonizerVariable() {
   }, [data]);
 
   const applySuggestion = () => {
-    if (!data) return;
+    if (!canEdit || !data) return;
     setCatalog(data.suggestion.categories.map((c) => ({ ...c })));
     setMaps((prev) => {
       const next: ValueMaps = {};
@@ -156,7 +158,7 @@ export function useHarmonizerVariable() {
     setMaps((prev) => ({ ...prev, [datasetId]: { ...prev[datasetId], [value]: target } }));
 
   const persist = (categories: CatalogCategory[], valueMaps: ValueMaps, done: string) => {
-    if (!data) return;
+    if (!canEdit || !data || saving) return;
     setSaving(true);
     setSaveError(null);
     setNotice(null);
@@ -199,6 +201,7 @@ export function useHarmonizerVariable() {
   };
 
   const review = (mark: boolean) => {
+    if (!canEdit || reviewing) return;
     setReviewing(true);
     setReviewError(null);
     void (async () => {
@@ -218,6 +221,8 @@ export function useHarmonizerVariable() {
   };
 
   return {
+    canEdit,
+    readOnlyMessage,
     surveyId,
     data,
     loading,

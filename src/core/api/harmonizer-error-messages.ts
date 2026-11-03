@@ -140,6 +140,10 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   new_survey_name_required: () => 'Escribe el nombre de la encuesta nueva.',
   survey_name_taken: (b) => `Ya existe una encuesta llamada «${param(b, 'name')}».`,
   survey_not_found: () => 'La encuesta no existe.',
+  survey_not_editable: () => 'Necesitas el rol Administrador o Editor en la organización de esta encuesta para modificarla. Las encuestas sin organización solo pueden ser modificadas por el administrador del sistema.',
+  survey_org_role_required: () => 'Necesitas el rol Administrador o Editor en la organización para crear encuestas.',
+  survey_organization_required: () => 'Selecciona una organización para la nueva encuesta.',
+  organization_not_found: () => 'La organización no existe.',
   harmonizer_dataset_not_found: () => 'La edición no existe.',
   harmonizer_dataset_file_missing: () =>
     'No se encontraron los datos guardados de esta edición. Vuelve a subir el archivo.',

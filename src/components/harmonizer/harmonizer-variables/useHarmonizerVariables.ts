@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 import {
@@ -12,6 +13,7 @@ import type { Crumb } from '../../shared/page-header/PageHeader';
 
 export function useHarmonizerVariables() {
   const { surveyId = '' } = useParams();
+  const { canEdit, readOnlyMessage } = useHarmonizerAccess({ surveyId });
   const [data, setData] = useState<SurveyCanonicalVariables | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -61,6 +63,7 @@ export function useHarmonizerVariables() {
   );
 
   const startRename = (variable: SurveyCanonicalVariable) => {
+    if (!canEdit) return;
     setDeleteError(null);
     setEditingId(variable.id);
     setEditName(variable.name);
@@ -75,7 +78,7 @@ export function useHarmonizerVariables() {
   const submitRename = useCallback(
     (event: FormEvent) => {
       event.preventDefault();
-      if (!editingId || !data) return;
+      if (!canEdit || !editingId || !data) return;
       const name = editName.trim();
       const problem = canonicalNameProblem(name);
       if (problem) {
@@ -104,10 +107,11 @@ export function useHarmonizerVariables() {
         }
       })();
     },
-    [editingId, editName, data, surveyId],
+    [canEdit, editingId, editName, data, surveyId],
   );
 
   const requestRemove = (variable: SurveyCanonicalVariable) => {
+    if (!canEdit) return;
     setDeleteError(null);
     setPendingDelete(variable);
   };
@@ -115,7 +119,7 @@ export function useHarmonizerVariables() {
   const cancelRemove = () => setPendingDelete(null);
 
   const confirmRemove = async () => {
-    if (!pendingDelete) return;
+    if (!canEdit || !pendingDelete) return;
     const variable = pendingDelete;
     setRemovingId(variable.id);
     setDeleteError(null);
@@ -149,6 +153,8 @@ export function useHarmonizerVariables() {
   const hasCatalog = data?.items.some((v) => v.categories.length > 0) ?? false;
 
   return {
+    canEdit,
+    readOnlyMessage,
     surveyId,
     data,
     warningCount,

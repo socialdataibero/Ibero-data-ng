@@ -65,7 +65,8 @@
   color: var(--field-label-color);
 }
 
-.c-harmonizer-new-survey__field > input {
+.c-harmonizer-new-survey__field > input,
+.c-harmonizer-new-survey__field > select {
   box-sizing: border-box;
   width: 100%;
   height: 40px;
@@ -79,12 +80,14 @@
   border-radius: 8px;
 }
 
-.c-harmonizer-new-survey__field > input:not(:disabled):hover {
+.c-harmonizer-new-survey__field > input:not(:disabled):hover,
+.c-harmonizer-new-survey__field > select:not(:disabled):hover {
   background-color: var(--field-hover-bg);
   border-color: var(--field-hover-border);
 }
 
-.c-harmonizer-new-survey__field > input:not(:disabled):focus {
+.c-harmonizer-new-survey__field > input:not(:disabled):focus,
+.c-harmonizer-new-survey__field > select:not(:disabled):focus {
   outline: none;
   background-color: var(--field-focus-bg);
   border-color: var(--field-focus-border);

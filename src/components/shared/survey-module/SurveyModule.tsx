@@ -8,6 +8,8 @@ import './survey-module.css';
 
 interface Props {
   survey: HarmonizerSurvey;
+  canEdit: boolean;
+  organizationName?: string;
   onDelete?: (survey: HarmonizerSurvey) => void;
   deleting?: boolean;
   onDeleteDataset?: (survey: HarmonizerSurvey, dataset: HarmonizerDatasetSummary) => void;
@@ -18,6 +20,8 @@ interface Props {
 
 export function SurveyModule({
   survey,
+  canEdit,
+  organizationName,
   onDelete,
   deleting = false,
   onDeleteDataset,
@@ -58,21 +62,25 @@ export function SurveyModule({
           <Link to={`/harmonizer/surveys/${survey.id}/codebooks`} className="hyperlink">
             Diccionarios
           </Link>
-          <span className="survey-module__link-separator" aria-hidden="true">
-            |
-          </span>
-          <Link to="/harmonizer/upload" className="hyperlink">
-            Subir archivo
-            <span className="pictogram-file-upload" aria-hidden="true" />
-          </Link>
-          <span className="survey-module__link-separator" aria-hidden="true">
-            |
-          </span>
-          <Link to={`/harmonizer/surveys/${survey.id}/edit`} className="hyperlink">
-            Editar
-            <span className="pictogram-edit" aria-hidden="true" />
-          </Link>
-          {onDelete ? (
+          {canEdit ? (
+            <>
+              <span className="survey-module__link-separator" aria-hidden="true">
+                |
+              </span>
+              <Link to="/harmonizer/upload" className="hyperlink">
+                Subir archivo
+                <span className="pictogram-file-upload" aria-hidden="true" />
+              </Link>
+              <span className="survey-module__link-separator" aria-hidden="true">
+                |
+              </span>
+              <Link to={`/harmonizer/surveys/${survey.id}/edit`} className="hyperlink">
+                Editar
+                <span className="pictogram-edit" aria-hidden="true" />
+              </Link>
+            </>
+          ) : null}
+          {canEdit && onDelete ? (
             <>
               <span className="survey-module__link-separator" aria-hidden="true">
                 |
@@ -93,6 +101,9 @@ export function SurveyModule({
       </header>
 
       <div className="survey-module__content">
+        {organizationName ? (
+          <p className="text-color-secondary">Organización: {organizationName}</p>
+        ) : null}
         {survey.description ? (
           <p className="survey-module__description">{survey.description}</p>
         ) : null}
@@ -126,15 +137,19 @@ export function SurveyModule({
                         className="survey-module__row-actions"
                         aria-label={`Acciones de ${dataset.name}`}
                       >
-                        <Link
-                          to={`/harmonizer/datasets/${dataset.id}/mapping`}
-                          className="hyperlink"
-                        >
-                          Mapear
-                        </Link>
-                        <span className="survey-module__link-separator" aria-hidden="true">
-                          |
-                        </span>
+                        {canEdit ? (
+                          <>
+                            <Link
+                              to={`/harmonizer/datasets/${dataset.id}/mapping`}
+                              className="hyperlink"
+                            >
+                              Mapear
+                            </Link>
+                            <span className="survey-module__link-separator" aria-hidden="true">
+                              |
+                            </span>
+                          </>
+                        ) : null}
                         <Link
                           to={`/harmonizer/datasets/${dataset.id}/harmonized`}
                           className="hyperlink"
@@ -160,7 +175,7 @@ export function SurveyModule({
                             </button>
                           </>
                         ) : null}
-                        {onDeleteDataset ? (
+                        {canEdit && onDeleteDataset ? (
                           <>
                             <span className="survey-module__link-separator" aria-hidden="true">
                               |

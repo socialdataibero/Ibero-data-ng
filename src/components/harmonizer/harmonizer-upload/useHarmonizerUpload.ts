@@ -6,6 +6,7 @@ import {
   type MappingRouteState,
   type UploadEncoding,
 } from '../../../core/models/harmonizer.model';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
 import { isValidYear } from '../../../core/utils/validation';
@@ -19,11 +20,19 @@ export const CRUMBS: Crumb[] = [
 
 export function useHarmonizerUpload() {
   const navigate = useNavigate();
-  const [surveys, setSurveys] = useState<HarmonizerSurvey[]>([]);
+  const access = useHarmonizerAccess({ loadOrganizations: true });
+  const [organizationId, setOrganizationId] = useState('');
+  const [allSurveys, setSurveys] = useState<HarmonizerSurvey[]>([]);
 
   const [datasetName, setDatasetName] = useState('');
   const [datasetYear, setDatasetYear] = useState<number | ''>(new Date().getFullYear());
-  const [uploadSurveyId, setUploadSurveyId] = useState(NEW_OPTION);
+  const [selectedSurveyId, setUploadSurveyId] = useState('');
+  const surveys = allSurveys.filter(access.isSurveyEditable);
+  const uploadSurveyId = selectedSurveyId === NEW_OPTION || surveys.some((survey) => survey.id === selectedSurveyId)
+    ? selectedSurveyId : (surveys[0]?.id ?? NEW_OPTION);
+  const canUploadToSurvey = !access.loading && !access.error && (uploadSurveyId === NEW_OPTION
+    ? access.editableOrganizations.some((organization) => organization.id === organizationId)
+    : surveys.some((survey) => survey.id === uploadSurveyId));
   const [newSurveyName, setNewSurveyName] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [encoding, setEncoding] = useState<UploadEncoding>('auto');
@@ -43,9 +52,9 @@ export function useHarmonizerUpload() {
         const list = await harmonizerService.listSurveys(controller.signal);
         if (!active) return;
         setSurveys(list);
-        if (list.length > 0)
-          setUploadSurveyId((current) => (current === NEW_OPTION ? list[0].id : current));
-      } catch {}
+      } catch (err) {
+        if (active) setError(errorMessage(err, 'No se pudieron cargar las encuestas.'));
+      }
     })();
     return () => {
       active = false;
@@ -54,9 +63,9 @@ export function useHarmonizerUpload() {
   }, []);
 
   const canUpload = useMemo(() => {
-    if (!file || !datasetName.trim() || datasetYear === '') return false;
+    if (!canUploadToSurvey || !file || !datasetName.trim() || datasetYear === '') return false;
     return uploadSurveyId !== NEW_OPTION || newSurveyName.trim() !== '';
-  }, [file, datasetName, datasetYear, uploadSurveyId, newSurveyName]);
+  }, [canUploadToSurvey, file, datasetName, datasetYear, uploadSurveyId, newSurveyName]);
 
   // El servidor elige el lector por la extensión; la codificación solo aplica a DBF.
   const isDbf = !!file && /\.dbf$/i.test(file.name);
@@ -100,7 +109,7 @@ export function useHarmonizerUpload() {
       setErrorFile('');
       setError(null);
 
-      if (!validate() || !file || datasetYear === '') return;
+      if (!canUploadToSurvey || uploading || !validate() || !file || datasetYear === '') return;
 
       setUploading(true);
 
@@ -111,6 +120,7 @@ export function useHarmonizerUpload() {
               name: datasetName.trim(),
               year: Number(datasetYear),
               surveyId: uploadSurveyId,
+              organizationId: uploadSurveyId === NEW_OPTION ? organizationId : undefined,
               newSurvey: uploadSurveyId === NEW_OPTION ? newSurveyName.trim() : undefined,
               encoding: isDbf ? encoding : undefined,
             },
@@ -148,7 +158,9 @@ export function useHarmonizerUpload() {
             setErrorFile(errorMessage(err, 'No se pudo leer el archivo.'));
             return;
           }
-          const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey', 'encoding']);
+          const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey', 'organizationId', 'encoding']);
+          if (matched.organizationId) setError(matched.organizationId);
+          if (matched.surveyId) setError(matched.surveyId);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);
           if (matched.newSurvey) setErrorNewSurveyName(matched.newSurvey);
@@ -163,6 +175,9 @@ export function useHarmonizerUpload() {
       })();
     },
     [
+      canUploadToSurvey,
+      uploading,
+      organizationId,
       validate,
       file,
       datasetYear,
@@ -178,6 +193,11 @@ export function useHarmonizerUpload() {
 
   return {
     surveys,
+    organizations: access.editableOrganizations,
+    organizationId,
+    setOrganizationId,
+    accessLoading: access.loading,
+    accessError: access.error,
     datasetName,
     setDatasetName,
     datasetYear,

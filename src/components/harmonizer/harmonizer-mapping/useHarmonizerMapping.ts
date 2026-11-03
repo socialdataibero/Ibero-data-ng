@@ -13,6 +13,7 @@ import {
   type MappingRouteState,
   type ValueType,
 } from '../../../core/models/harmonizer.model';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 import { canonicalNameProblem, sameCanonicalName } from '../../../core/utils/validation';
@@ -179,6 +180,8 @@ export function useHarmonizerMapping() {
   const uploadSource = routeState?.source ?? null;
 
   const [dataset, setDataset] = useState<HarmonizerDataset | null>(null);
+  const access = useHarmonizerAccess({ surveyId: dataset?.id === datasetId ? dataset.surveyId : undefined });
+  const canEdit = dataset?.id === datasetId && access.canEdit;
   const [canonicalVariables, setCanonicalVariables] = useState<CanonicalVariable[]>([]);
   const [rows, setRows] = useState<ColumnRow[]>([]);
   const [codebook, setCodebook] = useState<MappingInfo['codebook']>(null);
@@ -241,8 +244,8 @@ export function useHarmonizerMapping() {
   );
 
   const hasUnsavedChanges = useMemo(
-    () => rows.some((row) => isRowDirty(row, canonicalVariables)),
-    [rows, canonicalVariables],
+    () => canEdit && rows.some((row) => isRowDirty(row, canonicalVariables)),
+    [canEdit, rows, canonicalVariables],
   );
 
   const harmonizedHref = `/harmonizer/datasets/${datasetId}/harmonized`;
@@ -565,6 +568,7 @@ export function useHarmonizerMapping() {
    * de cada columna. Lo que el usuario ya cambió en pantalla se conserva.
    */
   const applyCodebook = useCallback(() => {
+    if (!canEdit || attachingCodebook) return;
     setAttachingCodebook(true);
     setCodebookError(null);
     void (async () => {
@@ -595,7 +599,7 @@ export function useHarmonizerMapping() {
         setAttachingCodebook(false);
       }
     })();
-  }, [datasetId, codebookChoice, tableChoice, canonicalVariables, showBulk]);
+  }, [canEdit, attachingCodebook, datasetId, codebookChoice, tableChoice, canonicalVariables, showBulk]);
 
   const chooseCodebook = useCallback((id: string) => {
     setCodebookChoice(id);
@@ -620,6 +624,7 @@ export function useHarmonizerMapping() {
   const save = useCallback(
     (event: FormEvent) => {
       event.preventDefault();
+      if (!canEdit || saving) return;
       setSaveError(null);
 
       // Mismas reglas que el servidor. Un nombre idéntico a una canónica existente la
@@ -705,7 +710,7 @@ export function useHarmonizerMapping() {
         }
       })();
     },
-    [datasetId, rows, canonicalVariables, navigate, harmonizedHref],
+    [canEdit, saving, datasetId, rows, canonicalVariables, navigate, harmonizedHref],
   );
 
   const crumbs: Crumb[] = [
@@ -715,6 +720,8 @@ export function useHarmonizerMapping() {
   ];
 
   return {
+    canEdit,
+    readOnlyMessage: access.readOnlyMessage,
     datasetId,
     dataset,
     renamedColumns,

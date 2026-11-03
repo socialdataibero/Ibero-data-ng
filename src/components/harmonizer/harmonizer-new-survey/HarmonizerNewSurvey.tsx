@@ -7,6 +7,10 @@ import './harmonizer-new-survey.css';
 export function HarmonizerNewSurvey() {
   const {
     isEdit,
+    canSubmit,
+    organizationId,
+    setOrganizationId,
+    organizations,
     crumbs,
     surveyName,
     setSurveyName,
@@ -56,8 +60,36 @@ export function HarmonizerNewSurvey() {
       ) : (
         <div className="container width-fixed c-harmonizer-new-survey__body">
           <form className="c-harmonizer-new-survey__form" onSubmit={submit} noValidate>
-            <fieldset className="c-harmonizer-new-survey__section">
+            <fieldset className="c-harmonizer-new-survey__section" disabled={saving || (isEdit && !canSubmit)}>
               <legend className="c-harmonizer-new-survey__legend">Datos de la encuesta</legend>
+
+              {isEdit && !canSubmit ? (
+                <p role="status">Solo lectura. No tienes permiso para modificar esta encuesta.</p>
+              ) : null}
+              {!isEdit ? (
+                <div className="c-harmonizer-new-survey__field">
+                  <label htmlFor="survey-organization">Organización *</label>
+                  <select
+                    id="survey-organization"
+                    name="organizationId"
+                    value={organizationId}
+                    onChange={(event) => setOrganizationId(event.target.value)}
+                    required
+                    disabled={organizations.length === 0}
+                    aria-describedby={organizations.length === 0 ? 'survey-organization-help' : undefined}
+                  >
+                    <option value="">Selecciona una organización</option>
+                    {organizations.map((organization) => (
+                      <option key={organization.id} value={organization.id}>{organization.name}</option>
+                    ))}
+                  </select>
+                  {organizations.length === 0 ? (
+                    <p id="survey-organization-help" role="status">
+                      Necesitas el rol Administrador o Editor en una organización para crear encuestas.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="c-harmonizer-new-survey__field">
                 <label htmlFor="survey-name">Nombre *</label>
@@ -97,7 +129,7 @@ export function HarmonizerNewSurvey() {
                   type="submit"
                   variant="primary"
                   icon={isEdit ? 'pictogram-edit' : 'pictogram-add'}
-                  disabled={saving || !surveyName.trim()}
+                  disabled={saving || !canSubmit || !surveyName.trim()}
                 >
                   {submitLabel}
                 </Button>

@@ -5,6 +5,7 @@ import type {
   ExportFormat,
   SurveyHarmonizedView,
 } from '../../../core/models/harmonizer.model';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { datasetsService } from '../../../core/services/datasets.service';
 import { resourcesService } from '../../../core/services/resources.service';
@@ -49,6 +50,11 @@ export function useHarmonizerView() {
 
   const [datasetView, setDatasetView] = useState<DatasetHarmonizedView | null>(null);
   const [surveyView, setSurveyView] = useState<SurveyHarmonizedView | null>(null);
+  const { canEdit } = useHarmonizerAccess({
+    surveyId: datasetId
+      ? (datasetView?.dataset.id === datasetId ? datasetView.dataset.surveyId : undefined)
+      : surveyId,
+  });
   // `loading` es la primera carga (esqueleto); `refreshing`, un cambio de página o de
   // variables con la tabla ya en pantalla.
   const [loading, setLoading] = useState(true);
@@ -295,6 +301,7 @@ export function useHarmonizerView() {
   ];
 
   return {
+    canEdit,
     datasetId,
     surveyId,
     datasetView,

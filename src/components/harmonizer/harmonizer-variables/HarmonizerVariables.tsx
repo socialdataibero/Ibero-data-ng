@@ -10,6 +10,8 @@ import './harmonizer-variables.css';
 
 export function HarmonizerVariables() {
   const {
+    canEdit,
+    readOnlyMessage,
     data,
     loading,
     loadError,
@@ -60,6 +62,7 @@ export function HarmonizerVariables() {
       />
 
       <div className="container width-fixed c-harmonizer-variables__body">
+        {readOnlyMessage ? <p role="status">{readOnlyMessage}</p> : null}
         {loadError ? (
           <p className="c-harmonizer-variables__error" role="alert">
             {loadError}
@@ -143,7 +146,7 @@ export function HarmonizerVariables() {
                       return (
                         <tr key={variable.id}>
                           <td>
-                            {editingId === variable.id ? (
+                            {canEdit && editingId === variable.id ? (
                               <form
                                 className="c-harmonizer-variables__rename"
                                 onSubmit={submitRename}
@@ -221,7 +224,7 @@ export function HarmonizerVariables() {
                                 {variable.usages.map((usage) => (
                                   <li key={usage.datasetId}>
                                     <Link
-                                      to={`/harmonizer/datasets/${usage.datasetId}/mapping`}
+                                      to={`/harmonizer/datasets/${usage.datasetId}/${canEdit ? 'mapping' : 'harmonized'}`}
                                       className="hyperlink"
                                     >
                                       {usage.datasetName}
@@ -265,7 +268,7 @@ export function HarmonizerVariables() {
                                 type="button"
                                 className="hyperlink"
                                 aria-label={`Renombrar variable ${variable.name}`}
-                                disabled={editingId === variable.id}
+                                disabled={!canEdit || editingId === variable.id}
                                 onClick={() => startRename(variable)}
                               >
                                 Renombrar
@@ -281,7 +284,7 @@ export function HarmonizerVariables() {
                                 className="hyperlink"
                                 aria-label={`Eliminar variable ${variable.name}`}
                                 aria-describedby={inUse ? 'variable-delete-note' : undefined}
-                                disabled={inUse || removingId === variable.id}
+                                disabled={!canEdit || inUse || removingId === variable.id}
                                 onClick={() => requestRemove(variable)}
                               >
                                 Eliminar

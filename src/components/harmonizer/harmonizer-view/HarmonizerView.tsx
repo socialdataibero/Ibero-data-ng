@@ -18,6 +18,7 @@ function originClass(index: number, originCount: number): string | undefined {
 
 export function HarmonizerView() {
   const {
+    canEdit,
     datasetId,
     surveyId,
     datasetView,
@@ -84,7 +85,7 @@ export function HarmonizerView() {
         crumbs={crumbs}
         action={
           <div className="c-harmonizer-view__header-actions" role="group" aria-label="Descargas">
-            {datasetView && datasetId ? (
+            {canEdit && datasetView && datasetId ? (
               <Button
                 type="button"
                 variant="secondary"
@@ -154,7 +155,7 @@ export function HarmonizerView() {
             </div>
 
             {/* H-18: la vista solo muestra columnas mapeadas; aclarar que las demás no se pierden. */}
-            {datasetView && datasetView.dataset.columnCount > selectedCount ? (
+            {canEdit && datasetView && datasetView.dataset.columnCount > selectedCount ? (
               <p className="text-color-secondary">
                 {datasetView.dataset.columnCount - selectedCount === 1
                   ? 'La columna sin mapear no aparece en esta vista ni en las descargas, pero se conserva: '
@@ -314,7 +315,7 @@ export function HarmonizerView() {
             {headers.length === 0 ? (
               <p className="c-harmonizer-view__empty">
                 No hay columnas mapeadas.
-                {datasetId ? (
+                {canEdit && datasetId ? (
                   <>
                     {' '}
                     <Link to={`/harmonizer/datasets/${datasetId}/mapping`} className="hyperlink">

@@ -7,10 +7,14 @@ export interface HarmonizerDatasetSummary {
   totalColumns: number;
 }
 
-export interface HarmonizerSurvey {
+export interface HarmonizerSurveyDetails {
   id: string;
   name: string;
   description: string | null;
+  organizationId: string | null;
+}
+
+export interface HarmonizerSurvey extends HarmonizerSurveyDetails {
   datasets: HarmonizerDatasetSummary[];
 }
 

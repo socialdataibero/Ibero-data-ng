@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
 import type {
@@ -16,6 +17,7 @@ export const CRUMBS: Crumb[] = [
 const PAGE_SIZE = 10;
 
 export function useHarmonizerHome() {
+  const access = useHarmonizerAccess();
   const [surveys, setSurveys] = useState<HarmonizerSurvey[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -65,6 +67,7 @@ export function useHarmonizerHome() {
   const goTo = (target: number) => setPage(Math.min(Math.max(1, target), totalPages));
 
   const requestRemoveSurvey = (survey: HarmonizerSurvey) => {
+    if (!access.isSurveyEditable(survey)) return;
     setDeleteError(null);
     setPendingDelete(survey);
   };
@@ -72,7 +75,7 @@ export function useHarmonizerHome() {
   const cancelRemoveSurvey = () => setPendingDelete(null);
 
   const confirmRemoveSurvey = async () => {
-    if (!pendingDelete) return;
+    if (!pendingDelete || !access.isSurveyEditable(pendingDelete)) return;
     const survey = pendingDelete;
     setRemovingId(survey.id);
     setDeleteError(null);
@@ -92,6 +95,7 @@ export function useHarmonizerHome() {
   };
 
   const requestRemoveDataset = (survey: HarmonizerSurvey, dataset: HarmonizerDatasetSummary) => {
+    if (!access.isSurveyEditable(survey)) return;
     setDeleteError(null);
     setPendingDatasetDelete({ survey, dataset });
   };
@@ -99,7 +103,7 @@ export function useHarmonizerHome() {
   const cancelRemoveDataset = () => setPendingDatasetDelete(null);
 
   const confirmRemoveDataset = async () => {
-    if (!pendingDatasetDelete) return;
+    if (!pendingDatasetDelete || !access.isSurveyEditable(pendingDatasetDelete.survey)) return;
     const { dataset } = pendingDatasetDelete;
     setRemovingDatasetId(dataset.id);
     setDeleteError(null);
@@ -129,6 +133,10 @@ export function useHarmonizerHome() {
   };
 
   return {
+    isSurveyEditable: access.isSurveyEditable,
+    canCreate: access.canCreate,
+    organizations: access.organizations,
+    accessError: access.error,
     surveys,
     total,
     page,

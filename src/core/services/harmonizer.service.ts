@@ -1,6 +1,7 @@
 import { http, downloadBlob, triggerDownload } from '../api/http';
 import type {
   HarmonizerSurvey,
+  HarmonizerSurveyDetails,
   HarmonizerDataset,
   MappingInfo,
   MappingChoice,
@@ -27,6 +28,7 @@ export interface UploadDatasetPayload {
   year: number;
   surveyId: string;
   newSurvey?: string;
+  organizationId?: string;
   /** Solo para DBF. */
   encoding?: UploadEncoding;
 }
@@ -75,22 +77,22 @@ export const harmonizerService = {
     return items;
   },
 
-  createSurvey: async (name: string, description?: string): Promise<HarmonizerSurvey> => {
-    const created = await http.post<{ id: string; name: string; description: string | null }>(
+  createSurvey: async (name: string, organizationId: string, description?: string): Promise<HarmonizerSurvey> => {
+    const created = await http.post<HarmonizerSurveyDetails>(
       '/harmonizer/surveys',
-      { name, description },
+      { name, description, organizationId },
     );
     return { ...created, datasets: [] };
   },
 
   getSurvey: (surveyId: string, signal?: AbortSignal) =>
-    http.get<{ id: string; name: string; description: string | null }>(
+    http.get<HarmonizerSurveyDetails>(
       `/harmonizer/surveys/${surveyId}`,
       signal,
     ),
 
   updateSurvey: (surveyId: string, payload: UpdateSurveyPayload) =>
-    http.patch<{ id: string; name: string; description: string | null }>(
+    http.patch<HarmonizerSurveyDetails>(
       `/harmonizer/surveys/${surveyId}`,
       payload,
     ),
@@ -116,6 +118,7 @@ export const harmonizerService = {
     form.append('year', String(payload.year));
     form.append('surveyId', payload.surveyId);
     if (payload.newSurvey) form.append('newSurvey', payload.newSurvey);
+    if (payload.organizationId) form.append('organizationId', payload.organizationId);
     if (payload.encoding) form.append('encoding', payload.encoding);
     form.append('file', file);
     return http.post<{

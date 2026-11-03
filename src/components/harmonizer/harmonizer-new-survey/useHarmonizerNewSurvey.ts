@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
 import type { Crumb } from '../../shared/page-header/PageHeader';
@@ -13,10 +14,15 @@ export function useHarmonizerNewSurvey() {
   const navigate = useNavigate();
   const { surveyId } = useParams();
   const isEdit = !!surveyId;
+  const access = useHarmonizerAccess({ surveyId, loadOrganizations: !isEdit });
+  const [organizationId, setOrganizationId] = useState('');
+  const canSubmit = !access.loading && !access.error && (isEdit
+    ? access.canEdit
+    : access.editableOrganizations.some((organization) => organization.id === organizationId));
   const [surveyName, setSurveyName] = useState('');
   const [surveyDescription, setSurveyDescription] = useState('');
-  const [loading, setLoading] = useState(isEdit);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const loading = access.loading;
+  const loadError = access.error;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorName, setErrorName] = useState('');
@@ -27,33 +33,15 @@ export function useHarmonizerNewSurvey() {
   );
 
   useEffect(() => {
-    if (!surveyId) return;
-    let active = true;
-    const controller = new AbortController();
-    (async () => {
-      setLoading(true);
-      setLoadError(null);
-      try {
-        const survey = await harmonizerService.getSurvey(surveyId, controller.signal);
-        if (!active) return;
-        setSurveyName(survey.name);
-        setSurveyDescription(survey.description ?? '');
-      } catch (err) {
-        if (!active) return;
-        setLoadError(errorMessage(err, 'No se pudo cargar la encuesta.'));
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [surveyId]);
+    if (!access.survey) return;
+    setSurveyName(access.survey.name);
+    setSurveyDescription(access.survey.description ?? '');
+  }, [access.survey]);
 
   const submit = useCallback(
     (event: FormEvent) => {
       event.preventDefault();
+      if (!canSubmit || saving) return;
       setErrorName('');
       setError(null);
 
@@ -77,7 +65,7 @@ export function useHarmonizerNewSurvey() {
               description: surveyDescription.trim(),
             });
           } else {
-            await harmonizerService.createSurvey(name, surveyDescription.trim() || undefined);
+            await harmonizerService.createSurvey(name, organizationId, surveyDescription.trim() || undefined);
             setSurveyName('');
             setSurveyDescription('');
           }
@@ -103,11 +91,15 @@ export function useHarmonizerNewSurvey() {
         }
       })();
     },
-    [surveyId, surveyName, surveyDescription, navigate],
+    [surveyId, surveyName, surveyDescription, organizationId, canSubmit, saving, navigate],
   );
 
   return {
     isEdit,
+    canSubmit,
+    organizationId,
+    setOrganizationId,
+    organizations: access.editableOrganizations,
     crumbs,
     surveyName,
     setSurveyName,
