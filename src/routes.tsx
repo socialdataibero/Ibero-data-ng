@@ -5,6 +5,7 @@ import { RequireSysadmin } from './core/guards/RequireSysadmin';
 import { LegacyRedirect } from './core/routing/LegacyRedirect';
 import { AppShell } from './components/shared/app-shell/AppShell';
 import { PortalShell } from './components/shared/portal/portal-shell/PortalShell';
+import { PageNotFound } from './components/shared/page-not-found/PageNotFound';
 import { useInternalLinkNavigation } from './core/hooks/useInternalLinkNavigation';
 import { DatasetCreateSkeleton } from './components/dataset-create/DatasetCreateSkeleton';
 import { OrganizationCreateSkeleton } from './components/organization-create/OrganizationCreateSkeleton';
@@ -129,6 +130,7 @@ export function AppRoutes() {
           {lazyRoute('/topics', <PortalTopics />, <PortalTopicsSkeleton />)}
           {lazyRoute('/charts', <PortalChartsView />, <PortalChartsViewSkeleton />)}
           {lazyRoute('/data/view', <PortalChartsView />, <PortalChartsViewSkeleton />)}
+          <Route path="*" element={<PageNotFound />} />
         </Route>
 
         {/* Old Spanish portal URLs, already shared since the portal went live. */}
