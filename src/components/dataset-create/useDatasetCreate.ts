@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { datasetsService } from '../../core/services/datasets.service';
 import { organizationsService } from '../../core/services/organizations.service';
+import { useAuth } from '../../core/auth/useAuth';
 import { ApiError, errorMessage, fieldErrors, isNotFound } from '../../core/api/http';
 import { isValidSlug, isValidUrl, isValidYear, looksLikeUrl } from '../../core/utils/validation';
 import type {
@@ -39,9 +40,12 @@ export function useDatasetCreate() {
   const { organizationId = '' } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const [checkingOrganization, setCheckingOrganization] = useState(true);
   const [organizationNotFound, setOrganizationNotFound] = useState(false);
+  // The server only lets the sysadmin and the organization's ADMIN/EDITOR create datasets; show the form only to them.
+  const [cannotCreate, setCannotCreate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revisionOf, setRevisionOf] = useState<Dataset | null>(null);
@@ -68,8 +72,14 @@ export function useDatasetCreate() {
     let active = true;
     setCheckingOrganization(true);
     setOrganizationNotFound(false);
-    organizationsService
-      .get(organizationId)
+    setCannotCreate(false);
+    const checkRole = currentUser?.isSysadmin
+      ? Promise.resolve()
+      : organizationsService.myMemberships().then((memberships) => {
+          const role = memberships.find((m) => m.organization.id === organizationId)?.role;
+          if (active) setCannotCreate(role !== 'ADMIN' && role !== 'EDITOR');
+        });
+    Promise.all([organizationsService.get(organizationId), checkRole])
       .catch((err: unknown) => {
         if (active && isNotFound(err)) setOrganizationNotFound(true);
       })
@@ -79,7 +89,7 @@ export function useDatasetCreate() {
     return () => {
       active = false;
     };
-  }, [organizationId]);
+  }, [organizationId, currentUser]);
 
   useEffect(() => {
     const revisionOfId = searchParams.get('revisionOf');
@@ -168,6 +178,7 @@ export function useDatasetCreate() {
     organizationId,
     checkingOrganization,
     organizationNotFound,
+    cannotCreate,
     saving,
     error,
     revisionOf,

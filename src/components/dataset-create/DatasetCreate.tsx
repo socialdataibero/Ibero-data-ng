@@ -19,6 +19,7 @@ export function DatasetCreate() {
     organizationNotFound,
     saving,
     error,
+    cannotCreate,
     revisionOf,
     fields,
     fieldErrors,
@@ -27,6 +28,21 @@ export function DatasetCreate() {
 
   if (organizationNotFound) return <OrganizationNotFound />;
   if (checkingOrganization) return <DatasetCreateSkeleton />;
+  if (cannotCreate) {
+    return (
+      <div className="c-dataset-create">
+        <PageHeader
+          title="Nuevo conjunto de datos"
+          intro="Para agregar conjuntos de datos a esta organización necesitas el rol de Administrador o Editor en ella. Pídeselo a quien la administra."
+          crumbs={[
+            { label: 'Inicio', href: '/dashboard' },
+            { label: 'Conjuntos de datos', href: '/datasets' },
+            { label: 'Nuevo conjunto de datos' },
+          ]}
+        />
+      </div>
+    );
+  }
 
   const crumbs = [
     { label: 'Inicio', href: '/dashboard' },
