@@ -111,7 +111,7 @@ export function HorizontalCard({
         ) : null}
         {showDataset ? (
           <div>
-            <dt>Dataset</dt>
+            <dt>Conjunto de datos</dt>
             <dd>
               {datasetAsLink ? (
                 <a

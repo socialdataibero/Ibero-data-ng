@@ -37,7 +37,7 @@ function resultName(step: Step): string {
 }
 
 export const OP_DESCRIPTIONS: Record<OpName, string> = {
-  join: 'Cruza este dataset con otro resource por una columna en común (ej: hogares + personas por folio). El otro resource debe ser del mismo dataset.',
+  join: 'Cruza este conjunto de datos con otro recurso por una columna en común (ej: hogares + personas por folio). El otro recurso debe ser del mismo conjunto de datos.',
   group_by: 'Agrupa las filas por una o más columnas. Úsalo con cálculos para resumir por grupo.',
   aggregate: 'Calcula un valor por grupo: suma, promedio, conteo, mínimo, máximo o mediana.',
   compute:

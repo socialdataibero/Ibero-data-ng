@@ -156,7 +156,7 @@ export function useDatasetCreate() {
         if (errorMessage(err, '').toLowerCase().includes('slug')) {
           setErrorSlug('Ese identificador ya está en uso; prueba con otro.');
         } else {
-          setError(errorMessage(err, 'No se pudo crear el dataset.'));
+          setError(errorMessage(err, 'No se pudo crear el conjunto de datos.'));
         }
       }
     } finally {

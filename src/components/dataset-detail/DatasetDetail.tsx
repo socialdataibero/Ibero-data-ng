@@ -177,12 +177,13 @@ export function DatasetDetail() {
             {uploading ? 'Subiendo…' : 'Seleccionar archivo'}
           </Button>
           <p className="c-dataset-detail__help">
-            Sube un archivo <code>.parquet</code> como recurso de este dataset.{' '}
+            Sube un archivo <code>.parquet</code> como recurso de este conjunto de datos.{' '}
             ¿Necesitas unificar columnas de varias ediciones de una encuesta primero?{' '}
             <Link to="/harmonizer" className="hyperlink">
               Usa el Armonizador
             </Link>{' '}
-            y desde ahí podrás adjuntar el resultado directamente a este o cualquier otro dataset.
+            y desde ahí podrás adjuntar el resultado directamente a este o cualquier otro conjunto
+            de datos.
           </p>
           {uploadError ? <p className="c-dataset-detail__error">{uploadError}</p> : null}
         </section>

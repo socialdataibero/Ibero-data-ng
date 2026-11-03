@@ -31,14 +31,14 @@ export function DatasetCreate() {
   const crumbs = [
     { label: 'Inicio', href: '/dashboard' },
     { label: 'Organizaciones', href: '/organizations' },
-    { label: 'Datasets', href: `/organizations/${organizationId}` },
-    { label: revisionOf ? 'Nueva revisión' : 'Nuevo dataset' },
+    { label: 'Conjuntos de datos', href: `/organizations/${organizationId}` },
+    { label: revisionOf ? 'Nueva revisión' : 'Nuevo conjunto de datos' },
   ];
 
   return (
     <div className="c-dataset-create">
       <PageHeader
-        title={revisionOf ? 'Nueva revisión' : 'Nuevo dataset'}
+        title={revisionOf ? 'Nueva revisión' : 'Nuevo conjunto de datos'}
         intro={
           revisionOf ? (
             <p className="c-dataset-create__revision m-0">
@@ -88,7 +88,7 @@ export function DatasetCreate() {
                 </div>
 
                 <div className="c-dataset-create__field">
-                  <label htmlFor="slug">Identificador del dataset *</label>
+                  <label htmlFor="slug">Identificador del conjunto de datos *</label>
                   <input
                     id="slug"
                     type="text"
@@ -109,8 +109,8 @@ export function DatasetCreate() {
                     </p>
                   ) : (
                     <p id="slug-help" className="form-help">
-                      Nombre corto para reconocer el dataset en el sistema. No es una URL: solo
-                      minúsculas, números y guiones (ej. enigh-2024-v1).
+                      Nombre corto para reconocer el conjunto de datos en el sistema. No es una URL:
+                      solo minúsculas, números y guiones (ej. enigh-2024-v1).
                     </p>
                   )}
                 </div>
@@ -123,7 +123,7 @@ export function DatasetCreate() {
                     value={fields.description}
                     onChange={(e) => fields.setDescription(e.target.value)}
                     name="description"
-                    placeholder="Qué contiene el dataset, metodología, fuente y notas relevantes."
+                    placeholder="Qué contiene el conjunto de datos, metodología, fuente y notas relevantes."
                   />
                 </div>
               </fieldset>
@@ -299,7 +299,7 @@ export function DatasetCreate() {
                 Cancelar
               </Button>
               <Button type="submit" variant="primary" disabled={saving} icon="pictogram-add">
-                {saving ? 'Creando…' : 'Crear dataset'}
+                {saving ? 'Creando…' : 'Crear conjunto de datos'}
               </Button>
             </div>
           </div>

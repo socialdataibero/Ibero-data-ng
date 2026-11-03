@@ -100,7 +100,7 @@ export function HarmonizerView() {
               onClick={openAttach}
               disabled={headers.length === 0}
             >
-              Usar en un dataset
+              Usar en un conjunto de datos
             </Button>
             <Button
               type="button"
@@ -208,21 +208,21 @@ export function HarmonizerView() {
               <section className="c-harmonizer-view__panel" aria-labelledby="attach-title">
                 <header className="c-harmonizer-view__panel-heading">
                   <h2 id="attach-title" className="c-harmonizer-view__panel-title">
-                    Usar en un dataset
+                    Usar en un conjunto de datos
                   </h2>
                 </header>
                 <div className="c-harmonizer-view__panel-body">
                   <p className="text-color-secondary">
-                    Se adjuntará este armonizado (Parquet) como un nuevo recurso del dataset que
-                    elijas.
+                    Se adjuntará este armonizado (Parquet) como un nuevo recurso del conjunto de
+                    datos que elijas.
                   </p>
-                  <label htmlFor="attach-search">Buscar dataset</label>
+                  <label htmlFor="attach-search">Buscar conjunto de datos</label>
                   <input
                     id="attach-search"
                     type="text"
                     value={attachQuery}
                     onChange={(e) => setAttachQuery(e.target.value)}
-                    placeholder="Título del dataset u organización…"
+                    placeholder="Título del conjunto de datos u organización…"
                   />
                   {attachSearching ? (
                     <p className="text-color-secondary" aria-live="polite">
@@ -270,7 +270,7 @@ export function HarmonizerView() {
                       disabled={!attachTarget || attaching}
                       onClick={confirmAttach}
                     >
-                      {attaching ? 'Adjuntando…' : 'Adjuntar a este dataset'}
+                      {attaching ? 'Adjuntando…' : 'Adjuntar a este conjunto de datos'}
                     </Button>
                   </div>
                 </div>

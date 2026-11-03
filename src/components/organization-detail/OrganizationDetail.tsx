@@ -51,11 +51,11 @@ export function OrganizationDetail() {
   return (
     <div className="c-organization-detail">
       <PageHeader
-        title="Datasets"
+        title="Conjuntos de datos"
         intro={
           organization
-            ? `Datasets publicados por ${organization.name}.`
-            : 'Datasets de esta organización.'
+            ? `Conjuntos de datos publicados por ${organization.name}.`
+            : 'Conjuntos de datos de esta organización.'
         }
         crumbs={crumbs}
         action={
@@ -65,7 +65,7 @@ export function OrganizationDetail() {
             icon="pictogram-add"
             href={`/organizations/${organizationId}/datasets/new`}
           >
-            Nuevo dataset
+            Nuevo conjunto de datos
           </Button>
         }
       />
@@ -119,8 +119,8 @@ export function OrganizationDetail() {
         ) : datasets.length === 0 ? (
           <p className="c-organization-detail__empty">
             {hasCriteria
-              ? 'No hay datasets que coincidan con la búsqueda o los filtros.'
-              : 'Todavía no hay datasets en esta organización.'}
+              ? 'No hay conjuntos de datos que coincidan con la búsqueda o los filtros.'
+              : 'Todavía no hay conjuntos de datos en esta organización.'}
           </p>
         ) : (
           <ul className="c-organization-detail__grid">
@@ -163,7 +163,7 @@ export function OrganizationDetail() {
                       variant="secondary"
                       size="small"
                       icon="pictogram-delete"
-                      aria-label={`Eliminar dataset ${dataset.title}`}
+                      aria-label={`Eliminar conjunto de datos ${dataset.title}`}
                       disabled={removingId === dataset.id}
                       onClick={(event) => requestRemoveDataset(dataset, event as MouseEvent)}
                     >
@@ -192,11 +192,11 @@ export function OrganizationDetail() {
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        title="Borrar dataset"
+        title="Borrar conjunto de datos"
         message={
           pendingDelete ? (
             <>
-              ¿Borrar el dataset "{pendingDelete.title}"? Se borran también sus resources y
+              ¿Borrar el conjunto de datos "{pendingDelete.title}"? Se borran también sus recursos y
               análisis. Esto no se puede deshacer.
             </>
           ) : null

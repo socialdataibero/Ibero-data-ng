@@ -129,8 +129,8 @@ export function HarmonizerMapping() {
             </p>
             <p className="text-color-secondary">
               En <em>Tipo</em> elige cómo se guarda la variable al descargar el Parquet o usarlo en
-              un dataset: <em>Entero</em> o <em>Decimal</em> permiten sumar, promediar, multiplicar
-              por el factor de expansión y filtrar con «mayor que»; <em>Texto</em> conserva el valor
+              un conjunto de datos: <em>Entero</em> o <em>Decimal</em> permiten sumar, promediar,
+              multiplicar por el factor de expansión y filtrar con «mayor que»; <em>Texto</em> conserva el valor
               tal cual (útil para claves como <code>01</code>). Viene sugerido según los valores de
               esta edición; al guardar queda confirmado para la variable en todas las ediciones. Si
               algún valor no es número, el guardado lo indica para que lo marques como no

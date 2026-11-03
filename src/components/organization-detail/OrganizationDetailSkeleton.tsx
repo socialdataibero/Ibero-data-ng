@@ -8,7 +8,7 @@ const ITEMS = 4;
 
 export function OrganizationDetailGridSkeleton() {
   return (
-    <SkeletonStatus label="Cargando datasets…">
+    <SkeletonStatus label="Cargando conjuntos de datos…">
       <ul className="c-organization-detail__grid">
         {Array.from({ length: ITEMS }, (_, index) => (
           <li key={index}>

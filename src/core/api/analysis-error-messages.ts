@@ -41,7 +41,7 @@ const CODE_MESSAGES: Record<string, string> = {
   duplicate_join_alias: 'Dos cruces usan el mismo alias, o el alias está reservado. Usa otro.',
   sort_direction_not_allowed: 'La dirección de orden elegida no está permitida.',
   percentage_reference_not_found: 'El porcentaje debe referirse a una agregación del análisis.',
-  resource_not_found: 'El recurso ya no existe en este dataset.',
+  resource_not_found: 'El recurso ya no existe en este conjunto de datos.',
   public_analysis_not_found: 'Ese análisis no existe o ya no es público.',
   analysis_not_found: 'El análisis ya no existe.',
   analysis_slug_taken: 'Ese slug ya está en uso; prueba con otro.',

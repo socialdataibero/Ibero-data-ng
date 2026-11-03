@@ -221,7 +221,7 @@ export function useHarmonizerMapping() {
         setTableChoice(info.codebook?.table ?? '');
       } catch (err) {
         if (!active) return;
-        setLoadError(errorMessage(err, 'No se pudo cargar el mapeo de este dataset.'));
+        setLoadError(errorMessage(err, 'No se pudo cargar el mapeo de esta edición.'));
       } finally {
         if (active) setLoading(false);
       }

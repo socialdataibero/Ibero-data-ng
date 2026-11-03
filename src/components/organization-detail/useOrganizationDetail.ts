@@ -80,7 +80,7 @@ export function useOrganizationDetail() {
         setDatasets(items);
         setTotal(count);
       } catch (err) {
-        if (active && !isNotFound(err)) setError('No se pudieron cargar los datasets.');
+        if (active && !isNotFound(err)) setError('No se pudieron cargar los conjuntos de datos.');
       } finally {
         if (active) setLoading(false);
       }
@@ -124,7 +124,7 @@ export function useOrganizationDetail() {
         setRefreshKey((key) => key + 1);
       }
     } catch {
-      setError('No se pudo borrar el dataset.');
+      setError('No se pudo borrar el conjunto de datos.');
     } finally {
       setRemovingId(null);
       setPendingDelete(null);

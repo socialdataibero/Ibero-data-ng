@@ -33,7 +33,7 @@ export function OrganizationsList() {
     <div className="c-organizations-list cards-section">
       <PageHeader
         title="Organizaciones"
-        intro="Organizaciones que publican y administran datasets en la plataforma."
+        intro="Organizaciones que publican y administran conjuntos de datos en la plataforma."
         crumbs={CRUMBS}
         action={
           currentUser?.isSysadmin ? (

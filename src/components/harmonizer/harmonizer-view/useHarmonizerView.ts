@@ -281,7 +281,7 @@ export function useHarmonizerView() {
         setAttachResults([]);
         setAttachTarget(null);
       } catch (err) {
-        setAttachError(errorMessage(err, 'No se pudo adjuntar al dataset.'));
+        setAttachError(errorMessage(err, 'No se pudo adjuntar al conjunto de datos.'));
       } finally {
         setAttaching(false);
       }

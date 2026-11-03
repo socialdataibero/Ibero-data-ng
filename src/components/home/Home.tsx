@@ -28,7 +28,7 @@ export function Home() {
     <div className="c-home">
       <PageHeader
         title="Inicio"
-        intro="Banco de bases de datos de Ibero Data MX. Datasets abiertos y privados, con acceso programático vía DuckDB."
+        intro="Banco de bases de datos de Ibero Data MX. Conjuntos de datos abiertos y privados, con acceso programático vía DuckDB."
         crumbs={CRUMBS}
       />
 
@@ -42,11 +42,12 @@ export function Home() {
           </h2>
           <ul className="c-home__how-list">
             <li>
-              <strong>Catálogo abierto:</strong> Explora datasets de organizaciones de sociedad
-              civil mexicana.
+              <strong>Catálogo abierto:</strong> Explora conjuntos de datos de organizaciones de
+              sociedad civil mexicana.
             </li>
             <li>
-              <strong>Privacidad:</strong> Cada organización gestiona quién accede a sus datasets.
+              <strong>Privacidad:</strong> Cada organización gestiona quién accede a sus conjuntos
+              de datos.
             </li>
           </ul>
         </div>
@@ -64,7 +65,7 @@ export function Home() {
           <li>
             <AccessWidget
               title="Conjuntos de datos"
-              description="Explora, filtra y agrega datasets del catálogo."
+              description="Explora, filtra y agrega conjuntos de datos del catálogo."
               meta={`${totalDatasets} conjuntos`}
               href="/datasets"
               pictogram="pictogram-layers"

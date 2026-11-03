@@ -586,7 +586,7 @@ export function AnalysisBuilder({
           <SavedAnalysesSkeleton />
         ) : b.analyses.length === 0 ? (
           <p className="c-analysis-builder__meta">
-            Todavía no hay análisis guardados para este dataset.
+            Todavía no hay análisis guardados para este conjunto de datos.
           </p>
         ) : (
           <ul className="c-analysis-builder__list">
