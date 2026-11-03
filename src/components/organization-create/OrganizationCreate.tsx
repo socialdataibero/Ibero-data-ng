@@ -16,13 +16,8 @@ export function OrganizationCreate() {
     <div className="c-dataset-create c-organization-create">
       <PageHeader
         title="Nueva organización"
-        intro="Registra una organización para publicar y administrar datasets."
+        intro="Registra una organización para publicar y administrar conjuntos de datos."
         crumbs={CRUMBS}
-        action={
-          <Button type="button" variant="secondary" href="/organizations">
-            Cancelar
-          </Button>
-        }
       />
 
       <div className="container width-fixed c-dataset-create__body">
@@ -97,9 +92,6 @@ export function OrganizationCreate() {
 
           <div className="c-dataset-create__footer">
             <div className="c-dataset-create__actions">
-              <Button type="button" variant="secondary" href="/organizations">
-                Cancelar
-              </Button>
               <Button type="submit" variant="primary" disabled={saving} icon="pictogram-add">
                 {saving ? 'Creando…' : 'Crear organización'}
               </Button>
