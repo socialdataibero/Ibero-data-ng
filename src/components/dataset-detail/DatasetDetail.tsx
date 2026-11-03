@@ -216,14 +216,15 @@ export function DatasetDetail() {
                 type="button"
                 variant="primary"
                 icon="pictogram-link-external"
+                aria-describedby="vistrace-help"
                 onClick={openInVistrace}
                 disabled={openingVistrace || !selectedResourceId}
               >
                 {openingVistrace ? 'Abriendo…' : 'Crear análisis con vistrace'}
               </Button>
-              <p className="c-dataset-detail__help">
-                Abre este archivo en vistrace. Desde ahí, “Guardar en Ibero Data” lo publica como
-                análisis de este dataset con su receta completa.
+              <p id="vistrace-help" className="c-dataset-detail__help">
+                Abre este archivo en vistrace en una pestaña nueva. Desde ahí, “Guardar en Ibero
+                Data” lo publica como análisis de este conjunto de datos con su receta completa.
               </p>
               {vistraceError ? (
                 <p className="c-dataset-detail__error">{vistraceError}</p>

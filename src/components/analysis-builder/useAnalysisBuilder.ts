@@ -376,17 +376,26 @@ export function useAnalysisBuilder({
 
   const openInVistrace = async (analysis: Analysis, event: MouseEvent) => {
     event.stopPropagation();
-    setOpeningVistraceId(analysis.id);
     setVistraceError(null);
+    // Opened before the await so the browser treats it as a click, not a blocked popup; same as the dataset button (SDI-122).
+    const vistraceTab = window.open('about:blank', '_blank');
+    if (!vistraceTab) {
+      setVistraceError('Permite las ventanas emergentes para abrir vistrace en una pestaña nueva.');
+      return;
+    }
+    vistraceTab.opener = null;
+    setOpeningVistraceId(analysis.id);
     try {
       const { url } = await analysesService.vistraceHandoff(
         organizationId,
         datasetId,
         analysis.id,
       );
-      window.location.href = url;
+      vistraceTab.location.replace(url);
     } catch (err) {
+      vistraceTab.close();
       setVistraceError(errorMessage(err, 'No se pudo abrir en vistrace.'));
+    } finally {
       setOpeningVistraceId(null);
     }
   };

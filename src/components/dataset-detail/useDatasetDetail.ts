@@ -80,17 +80,27 @@ export function useDatasetDetail() {
 
   const openInVistrace = async () => {
     if (!selectedResourceId) return;
-    setOpeningVistrace(true);
     setVistraceError(null);
+    const vistraceTab = window.open('about:blank', '_blank');
+    if (!vistraceTab) {
+      setVistraceError(
+        'Permite las ventanas emergentes para abrir vistrace en una pestaña nueva.',
+      );
+      return;
+    }
+    vistraceTab.opener = null;
+    setOpeningVistrace(true);
     try {
       const { url } = await resourcesService.vistraceHandoff(
         organizationId,
         datasetId,
         selectedResourceId,
       );
-      window.location.href = url;
+      vistraceTab.location.replace(url);
     } catch (err) {
+      vistraceTab.close();
       setVistraceError(errorMessage(err, 'No se pudo abrir en vistrace.'));
+    } finally {
       setOpeningVistrace(false);
     }
   };
