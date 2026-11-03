@@ -112,8 +112,8 @@ export function useAnalysisBuilder({
   const [openAnalysisId, setOpenAnalysisId] = useState<string | null>(null);
   const [openAnalysisData, setOpenAnalysisData] = useState<PreviewResult | null>(null);
 
-  const [openingVizCanvasId, setOpeningVizCanvasId] = useState<string | null>(null);
-  const [vizCanvasError, setVizCanvasError] = useState<string | null>(null);
+  const [openingVistraceId, setOpeningVistraceId] = useState<string | null>(null);
+  const [vistraceError, setVistraceError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Analysis | null>(null);
 
@@ -374,20 +374,20 @@ export function useAnalysisBuilder({
     }
   };
 
-  const openInVizCanvas = async (analysis: Analysis, event: MouseEvent) => {
+  const openInVistrace = async (analysis: Analysis, event: MouseEvent) => {
     event.stopPropagation();
-    setOpeningVizCanvasId(analysis.id);
-    setVizCanvasError(null);
+    setOpeningVistraceId(analysis.id);
+    setVistraceError(null);
     try {
-      const { url } = await analysesService.vizcanvasHandoff(
+      const { url } = await analysesService.vistraceHandoff(
         organizationId,
         datasetId,
         analysis.id,
       );
       window.location.href = url;
     } catch (err) {
-      setVizCanvasError(errorMessage(err, 'No se pudo abrir en VizCanvas.'));
-      setOpeningVizCanvasId(null);
+      setVistraceError(errorMessage(err, 'No se pudo abrir en vistrace.'));
+      setOpeningVistraceId(null);
     }
   };
 
@@ -402,7 +402,7 @@ export function useAnalysisBuilder({
     if (!pendingDelete) return;
     const analysis = pendingDelete;
     setRemovingId(analysis.id);
-    setVizCanvasError(null);
+    setVistraceError(null);
     try {
       await analysesService.remove(organizationId, datasetId, analysis.id);
       if (openAnalysisId === analysis.id) {
@@ -411,7 +411,7 @@ export function useAnalysisBuilder({
       }
       await reloadAnalyses();
     } catch (err) {
-      setVizCanvasError(errorMessage(err, 'No se pudo borrar el análisis.'));
+      setVistraceError(errorMessage(err, 'No se pudo borrar el análisis.'));
     } finally {
       setRemovingId(null);
       setPendingDelete(null);
@@ -471,11 +471,11 @@ export function useAnalysisBuilder({
     openAnalysisId,
     openAnalysisData,
     openAnalysis,
-    openingVizCanvasId,
-    vizCanvasError,
+    openingVistraceId,
+    vistraceError,
     removingId,
     pendingDelete,
-    openInVizCanvas,
+    openInVistrace,
     requestRemoveAnalysis,
     cancelRemoveAnalysis,
     confirmRemoveAnalysis,

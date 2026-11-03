@@ -17,6 +17,6 @@ export const resourcesService = {
   runQuery: (organizationId: string, datasetId: string, resourceId: string, sql: string) =>
     http.post<QueryResult>(`${base(organizationId, datasetId)}/${resourceId}/query`, { sql }),
 
-  vizcanvasHandoff: (organizationId: string, datasetId: string, resourceId: string) =>
-    http.get<{ url: string }>(`${base(organizationId, datasetId)}/${resourceId}/vizcanvas-handoff`),
+  vistraceHandoff: (organizationId: string, datasetId: string, resourceId: string) =>
+    http.get<{ url: string }>(`${base(organizationId, datasetId)}/${resourceId}/vistrace-handoff`),
 };

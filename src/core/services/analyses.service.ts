@@ -49,8 +49,8 @@ export const analysesService = {
   getData: (organizationId: string, datasetId: string, analysisId: string) =>
     http.get<PreviewResult>(`${base(organizationId, datasetId)}/${analysisId}/data`),
 
-  vizcanvasHandoff: (organizationId: string, datasetId: string, analysisId: string) =>
-    http.get<{ url: string }>(`${base(organizationId, datasetId)}/${analysisId}/vizcanvas-handoff`),
+  vistraceHandoff: (organizationId: string, datasetId: string, analysisId: string) =>
+    http.get<{ url: string }>(`${base(organizationId, datasetId)}/${analysisId}/vistrace-handoff`),
 
   remove: (organizationId: string, datasetId: string, analysisId: string) =>
     http.delete<void>(`${base(organizationId, datasetId)}/${analysisId}`),

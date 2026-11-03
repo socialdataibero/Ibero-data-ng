@@ -23,7 +23,7 @@ export interface PreviewResult {
 
 export type AnalysisStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
 
-export type AnalysisOrigin = 'IBERO' | 'VIZCANVAS';
+export type AnalysisOrigin = 'IBERO' | 'VISTRACE';
 
 export interface Analysis {
   id: string;

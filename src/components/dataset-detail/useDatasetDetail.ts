@@ -24,8 +24,8 @@ export function useDatasetDetail() {
     [resources, selectedResourceId],
   );
 
-  const [openingVizCanvas, setOpeningVizCanvas] = useState(false);
-  const [vizCanvasError, setVizCanvasError] = useState<string | null>(null);
+  const [openingVistrace, setOpeningVistrace] = useState(false);
+  const [vistraceError, setVistraceError] = useState<string | null>(null);
   const [editingAnalysis, setEditingAnalysis] = useState<Analysis | null>(null);
 
   const reloadResources = useCallback(async () => {
@@ -78,20 +78,20 @@ export function useDatasetDetail() {
     setEditingAnalysis(analysis);
   };
 
-  const openInVizCanvas = async () => {
+  const openInVistrace = async () => {
     if (!selectedResourceId) return;
-    setOpeningVizCanvas(true);
-    setVizCanvasError(null);
+    setOpeningVistrace(true);
+    setVistraceError(null);
     try {
-      const { url } = await resourcesService.vizcanvasHandoff(
+      const { url } = await resourcesService.vistraceHandoff(
         organizationId,
         datasetId,
         selectedResourceId,
       );
       window.location.href = url;
     } catch (err) {
-      setVizCanvasError(errorMessage(err, 'No se pudo abrir en VizCanvas.'));
-      setOpeningVizCanvas(false);
+      setVistraceError(errorMessage(err, 'No se pudo abrir en vistrace.'));
+      setOpeningVistrace(false);
     }
   };
 
@@ -107,12 +107,12 @@ export function useDatasetDetail() {
     selectedResourceId,
     setSelectedResourceId,
     selectedResource,
-    openingVizCanvas,
-    vizCanvasError,
+    openingVistrace,
+    vistraceError,
     editingAnalysis,
     setEditingAnalysis,
     onFileSelected,
     onRequestEditResource,
-    openInVizCanvas,
+    openInVistrace,
   };
 }

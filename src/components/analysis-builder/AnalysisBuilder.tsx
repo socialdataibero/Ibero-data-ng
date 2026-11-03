@@ -577,9 +577,9 @@ export function AnalysisBuilder({
 
       <div className="c-analysis-builder__saved">
         <h3 className="c-analysis-builder__subtitle">Análisis guardados</h3>
-        {b.vizCanvasError ? (
+        {b.vistraceError ? (
           <p className="c-analysis-builder__error" role="alert">
-            {b.vizCanvasError}
+            {b.vistraceError}
           </p>
         ) : null}
         {b.loadingAnalyses ? (
@@ -600,8 +600,8 @@ export function AnalysisBuilder({
                   >
                     <span className="c-analysis-builder__folder">{analysis.folder}</span>
                     <span className="c-analysis-builder__item-title">{analysis.title}</span>
-                    {analysis.origin === 'VIZCANVAS' ? (
-                      <span className="c-analysis-builder__origin">VizCanvas</span>
+                    {analysis.origin === 'VISTRACE' ? (
+                      <span className="c-analysis-builder__origin">vistrace</span>
                     ) : null}
                     <span
                       className={`c-analysis-builder__status c-analysis-builder__status--${analysis.status.toLowerCase()}`}
@@ -610,7 +610,7 @@ export function AnalysisBuilder({
                     </span>
                   </button>
                   <div className="c-analysis-builder__item-actions">
-                    {analysis.origin !== 'VIZCANVAS' ? (
+                    {analysis.origin !== 'VISTRACE' ? (
                       <Button
                         type="button"
                         variant="secondary"
@@ -620,19 +620,19 @@ export function AnalysisBuilder({
                         Editar
                       </Button>
                     ) : null}
-                    {analysis.status === 'DONE' || analysis.origin === 'VIZCANVAS' ? (
+                    {analysis.status === 'DONE' || analysis.origin === 'VISTRACE' ? (
                       <Button
                         type="button"
                         variant="secondary"
                         icon="pictogram-link-external"
-                        onClick={(e) => void b.openInVizCanvas(analysis, e as MouseEvent)}
-                        disabled={b.openingVizCanvasId === analysis.id}
+                        onClick={(e) => void b.openInVistrace(analysis, e as MouseEvent)}
+                        disabled={b.openingVistraceId === analysis.id}
                       >
-                        {b.openingVizCanvasId === analysis.id
+                        {b.openingVistraceId === analysis.id
                           ? 'Abriendo…'
-                          : analysis.origin === 'VIZCANVAS'
-                            ? 'Editar en VizCanvas'
-                            : 'VizCanvas'}
+                          : analysis.origin === 'VISTRACE'
+                            ? 'Editar en vistrace'
+                            : 'vistrace'}
                       </Button>
                     ) : null}
                     <Button

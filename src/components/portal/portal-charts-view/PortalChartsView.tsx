@@ -26,9 +26,9 @@ export default function PortalChartsView() {
     setModalTab,
     modalTabs,
     openModal,
-    openingVizCanvas,
-    vizCanvasError,
-    goToVizCanvas,
+    openingVistrace,
+    vistraceError,
+    goToVistrace,
   } = usePortalChartsView();
 
   if (loading) {
@@ -87,13 +87,13 @@ export default function PortalChartsView() {
               Ver cómo se hizo este análisis
             </button>
           ) : null}
-          <Button type="button" variant="secondary" onClick={goToVizCanvas} disabled={openingVizCanvas}>
-            {openingVizCanvas ? 'Abriendo…' : 'Abrir en VizCanvas'}
+          <Button type="button" variant="secondary" onClick={goToVistrace} disabled={openingVistrace}>
+            {openingVistrace ? 'Abriendo…' : 'Abrir en vistrace'}
           </Button>
         </div>
-        {vizCanvasError ? (
+        {vistraceError ? (
           <p role="alert" className="text-color-secondary" style={{ marginTop: '0.5rem' }}>
-            {vizCanvasError}
+            {vistraceError}
           </p>
         ) : null}
 

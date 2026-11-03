@@ -46,11 +46,11 @@ const CODE_MESSAGES: Record<string, string> = {
   analysis_not_found: 'El análisis ya no existe.',
   analysis_slug_taken: 'Ese slug ya está en uso; prueba con otro.',
   analysis_result_not_ready: 'Este análisis todavía no tiene un resultado listo.',
-  analysis_from_vizcanvas: 'Este análisis se hizo en VizCanvas; ábrelo ahí para editarlo.',
-  analysis_not_from_vizcanvas: 'Este análisis se hizo con el constructor de pasos; guárdalo como un análisis nuevo.',
-  vizcanvas_recipe_missing: 'Este análisis no tiene una receta de VizCanvas.',
-  vizcanvas_recipe_invalid: 'La receta de VizCanvas no es válida.',
-  invalid_parquet: 'El resultado de VizCanvas no es un archivo Parquet válido.',
+  analysis_from_vistrace: 'Este análisis se hizo en vistrace; ábrelo ahí para editarlo.',
+  analysis_not_from_vistrace: 'Este análisis se hizo con el constructor de pasos; guárdalo como un análisis nuevo.',
+  vistrace_recipe_missing: 'Este análisis no tiene una receta de vistrace.',
+  vistrace_recipe_invalid: 'La receta de vistrace no es válida.',
+  invalid_parquet: 'El resultado de vistrace no es un archivo Parquet válido.',
 };
 
 // Same labels as OP_LABELS in the analysis builder, for the steps that run row by row.

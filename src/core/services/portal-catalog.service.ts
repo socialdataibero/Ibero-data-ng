@@ -118,9 +118,9 @@ export const portalCatalogService = {
     };
   },
 
-  openInVizCanvas: async (name: string, signal?: AbortSignal): Promise<string> => {
+  openInVistrace: async (name: string, signal?: AbortSignal): Promise<string> => {
     const { url } = await http.get<{ url: string }>(
-      `/public/catalog/${encodeURIComponent(name)}/vizcanvas-handoff`,
+      `/public/catalog/${encodeURIComponent(name)}/vistrace-handoff`,
       signal,
     );
     return url;

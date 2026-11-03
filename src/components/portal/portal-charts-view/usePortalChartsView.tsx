@@ -102,8 +102,8 @@ export function usePortalChartsView() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('table');
-  const [openingVizCanvas, setOpeningVizCanvas] = useState(false);
-  const [vizCanvasError, setVizCanvasError] = useState<string | null>(null);
+  const [openingVistrace, setOpeningVistrace] = useState(false);
+  const [vistraceError, setVistraceError] = useState<string | null>(null);
 
   const { data, loading, error } = usePortalRequest(({ signal }) => loadView(id, signal), [id]);
 
@@ -155,17 +155,17 @@ export function usePortalChartsView() {
     setModalOpen(true);
   };
 
-  const goToVizCanvas = async () => {
+  const goToVistrace = async () => {
     if (!pkg) return;
-    setOpeningVizCanvas(true);
-    setVizCanvasError(null);
+    setOpeningVistrace(true);
+    setVistraceError(null);
     try {
-      const url = await portalCatalogService.openInVizCanvas(pkg.name);
+      const url = await portalCatalogService.openInVistrace(pkg.name);
       window.open(url, '_blank', 'noopener');
     } catch (err) {
-      setVizCanvasError(publicErrorMessage(err, 'No se pudo abrir en VizCanvas.'));
+      setVistraceError(publicErrorMessage(err, 'No se pudo abrir en vistrace.'));
     } finally {
-      setOpeningVizCanvas(false);
+      setOpeningVistrace(false);
     }
   };
 
@@ -188,8 +188,8 @@ export function usePortalChartsView() {
     setModalTab,
     modalTabs,
     openModal,
-    openingVizCanvas,
-    vizCanvasError,
-    goToVizCanvas,
+    openingVistrace,
+    vistraceError,
+    goToVistrace,
   };
 }

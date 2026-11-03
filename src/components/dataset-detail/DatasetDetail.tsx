@@ -30,13 +30,13 @@ export function DatasetDetail() {
     selectedResourceId,
     setSelectedResourceId,
     selectedResource,
-    openingVizCanvas,
-    vizCanvasError,
+    openingVistrace,
+    vistraceError,
     editingAnalysis,
     setEditingAnalysis,
     onFileSelected,
     onRequestEditResource,
-    openInVizCanvas,
+    openInVistrace,
   } = useDatasetDetail();
 
   const crumbs = [
@@ -207,17 +207,17 @@ export function DatasetDetail() {
                 type="button"
                 variant="primary"
                 icon="pictogram-link-external"
-                onClick={openInVizCanvas}
-                disabled={openingVizCanvas || !selectedResourceId}
+                onClick={openInVistrace}
+                disabled={openingVistrace || !selectedResourceId}
               >
-                {openingVizCanvas ? 'Abriendo…' : 'Crear análisis con VizCanvas'}
+                {openingVistrace ? 'Abriendo…' : 'Crear análisis con vistrace'}
               </Button>
               <p className="c-dataset-detail__help">
-                Abre este archivo en VizCanvas. Desde ahí, “Guardar en Ibero Data” lo publica como
+                Abre este archivo en vistrace. Desde ahí, “Guardar en Ibero Data” lo publica como
                 análisis de este dataset con su receta completa.
               </p>
-              {vizCanvasError ? (
-                <p className="c-dataset-detail__error">{vizCanvasError}</p>
+              {vistraceError ? (
+                <p className="c-dataset-detail__error">{vistraceError}</p>
               ) : null}
             </>
           )}
