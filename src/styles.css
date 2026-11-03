@@ -115,6 +115,19 @@ select:focus {
   outline-offset: 1px;
 }
 
+/* The `background` shorthand above also wipes Sisdai's select arrow; put it back for every dropdown, placed as Sisdai does. */
+select:not([multiple]) {
+  background-image: var(--field-selector-svg);
+  background-repeat: no-repeat;
+  background-position: calc(100% - 8px) 50%;
+  background-size: 32px;
+  padding-inline-end: 2.5rem;
+}
+
+select:not([multiple]):disabled {
+  background-image: var(--field-selector-disabled-svg);
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
