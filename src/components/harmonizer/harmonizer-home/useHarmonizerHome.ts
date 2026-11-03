@@ -7,7 +7,11 @@ import type {
 } from '../../../core/models/harmonizer.model';
 import type { Crumb } from '../../shared/page-header/PageHeader';
 
-export const CRUMBS: Crumb[] = [{ label: 'Inicio', href: '/dashboard' }, { label: 'Armonizador' }];
+export const CRUMBS: Crumb[] = [
+  { label: 'Inicio', href: '/dashboard' },
+  { label: 'Armonizador', href: '/harmonizer' },
+  { label: 'Encuestas' },
+];
 
 const PAGE_SIZE = 10;
 

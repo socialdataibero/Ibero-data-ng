@@ -181,7 +181,7 @@ export function SideMenu({
                 <li key={item.id}>
                   <NavLink
                     to={item.href ?? '#'}
-                    end
+                    end={item.href === '/dashboard'}
                     tabIndex={tabMenu}
                     className={({ isActive }) => (isActive ? 'link-active' : undefined)}
                   >
