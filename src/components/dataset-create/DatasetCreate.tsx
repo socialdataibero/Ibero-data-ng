@@ -8,6 +8,7 @@ import {
 } from '../../core/models/dataset.model';
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { OrganizationNotFound } from '../shared/organization-not-found/OrganizationNotFound';
+import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
 import { useDatasetCreate } from './useDatasetCreate';
 import { DatasetCreateSkeleton } from './DatasetCreateSkeleton';
 import './dataset-create.css';
@@ -21,23 +22,51 @@ export function DatasetCreate() {
     error,
     cannotCreate,
     revisionOf,
+    editing,
+    isEditing,
+    datasetNotFound,
     fields,
     fieldErrors,
     submit,
   } = useDatasetCreate();
 
   if (organizationNotFound) return <OrganizationNotFound />;
-  if (checkingOrganization) return <DatasetCreateSkeleton />;
+  if (datasetNotFound) return <DatasetNotFound />;
+  // Never show an empty edit form: saving it would clear the dataset's fields.
+  if (isEditing && !editing && error) {
+    return (
+      <div className="container width-fixed c-dataset-create__body">
+        <p className="c-dataset-create__error" role="alert">
+          {error}
+        </p>
+      </div>
+    );
+  }
+  if (checkingOrganization || (isEditing && !editing)) return <DatasetCreateSkeleton />;
+
+  const pageTitle = editing
+    ? 'Editar conjunto de datos'
+    : revisionOf
+      ? 'Nueva revisión'
+      : 'Nuevo conjunto de datos';
+  const backHref = editing
+    ? `/organizations/${organizationId}/datasets/${editing.id}`
+    : `/organizations/${organizationId}`;
+
   if (cannotCreate) {
     return (
       <div className="c-dataset-create">
         <PageHeader
-          title="Nuevo conjunto de datos"
-          intro="Para agregar conjuntos de datos a esta organización necesitas el rol de Administrador o Editor en ella. Pídeselo a quien la administra."
+          title={pageTitle}
+          intro={
+            editing
+              ? 'Para editar conjuntos de datos de esta organización necesitas el rol de Administrador o Editor en ella. Pídeselo a quien la administra.'
+              : 'Para agregar conjuntos de datos a esta organización necesitas el rol de Administrador o Editor en ella. Pídeselo a quien la administra.'
+          }
           crumbs={[
             { label: 'Inicio', href: '/dashboard' },
             { label: 'Conjuntos de datos', href: '/datasets' },
-            { label: 'Nuevo conjunto de datos' },
+            { label: pageTitle },
           ]}
         />
       </div>
@@ -48,15 +77,18 @@ export function DatasetCreate() {
     { label: 'Inicio', href: '/dashboard' },
     { label: 'Organizaciones', href: '/organizations' },
     { label: 'Conjuntos de datos', href: `/organizations/${organizationId}` },
-    { label: revisionOf ? 'Nueva revisión' : 'Nuevo conjunto de datos' },
+    ...(editing ? [{ label: editing.title, href: backHref }] : []),
+    { label: editing ? 'Editar' : pageTitle },
   ];
 
   return (
     <div className="c-dataset-create">
       <PageHeader
-        title={revisionOf ? 'Nueva revisión' : 'Nuevo conjunto de datos'}
+        title={pageTitle}
         intro={
-          revisionOf ? (
+          editing ? (
+            'Cambia la información y la visibilidad de este conjunto de datos.'
+          ) : revisionOf ? (
             <p className="c-dataset-create__revision m-0">
               Esta es una <strong>revisión</strong> de <strong>{revisionOf.title}</strong> (v
               {revisionOf.revision}).
@@ -67,7 +99,7 @@ export function DatasetCreate() {
         }
         crumbs={crumbs}
         action={
-          <Button type="button" variant="secondary" href={`/organizations/${organizationId}`}>
+          <Button type="button" variant="secondary" href={backHref}>
             Cancelar
           </Button>
         }
@@ -110,6 +142,7 @@ export function DatasetCreate() {
                     type="text"
                     value={fields.slug}
                     onChange={(e) => fields.setSlug(e.target.value)}
+                    disabled={isEditing}
                     onBlur={(e) => {
                       if (!fields.slug.trim()) fields.setSlug(e.target.value);
                     }}
@@ -125,8 +158,9 @@ export function DatasetCreate() {
                     </p>
                   ) : (
                     <p id="slug-help" className="form-help">
-                      Nombre corto para reconocer el conjunto de datos en el sistema. No es una URL:
-                      solo minúsculas, números y guiones (ej. enigh-2024-v1).
+                      {isEditing
+                        ? 'El identificador no se puede cambiar después de crear el conjunto de datos.'
+                        : 'Nombre corto para reconocer el conjunto de datos en el sistema. No es una URL: solo minúsculas, números y guiones (ej. enigh-2024-v1).'}
                     </p>
                   )}
                 </div>
@@ -268,7 +302,7 @@ export function DatasetCreate() {
                 </div>
               </fieldset>
 
-              {revisionOf ? (
+              {revisionOf || editing?.revisionOf ? (
                 <fieldset className="c-dataset-create__section">
                   <legend className="c-dataset-create__legend">Versionado</legend>
                   <div className="c-dataset-create__field">
@@ -311,11 +345,22 @@ export function DatasetCreate() {
 
           <div className="c-dataset-create__footer">
             <div className="c-dataset-create__actions">
-              <Button type="button" variant="secondary" href={`/organizations/${organizationId}`}>
+              <Button type="button" variant="secondary" href={backHref}>
                 Cancelar
               </Button>
-              <Button type="submit" variant="primary" disabled={saving} icon="pictogram-add">
-                {saving ? 'Creando…' : 'Crear conjunto de datos'}
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={saving}
+                icon={editing ? undefined : 'pictogram-add'}
+              >
+                {editing
+                  ? saving
+                    ? 'Guardando…'
+                    : 'Guardar cambios'
+                  : saving
+                    ? 'Creando…'
+                    : 'Crear conjunto de datos'}
               </Button>
             </div>
           </div>

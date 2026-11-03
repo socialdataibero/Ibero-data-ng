@@ -17,6 +17,11 @@ export interface CreateDatasetPayload {
   changelog?: string;
 }
 
+/** Editable metadata (SDI-132); null clears an optional field. The slug cannot change. */
+export type UpdateDatasetPayload = {
+  [K in Exclude<keyof CreateDatasetPayload, 'slug' | 'revisionOfId'>]?: CreateDatasetPayload[K] | null;
+};
+
 export type DatasetSort = 'recent' | 'title-asc' | 'title-desc' | 'year-desc' | 'year-asc';
 
 export interface ListDatasetsParams {
@@ -63,6 +68,9 @@ export const datasetsService = {
 
   create: (organizationId: string, payload: CreateDatasetPayload) =>
     http.post<Dataset>(`/organizations/${organizationId}/datasets`, payload),
+
+  update: (organizationId: string, datasetId: string, payload: UpdateDatasetPayload) =>
+    http.patch<Dataset>(`/organizations/${organizationId}/datasets/${datasetId}`, payload),
 
   remove: (organizationId: string, datasetId: string) =>
     http.delete<void>(`/organizations/${organizationId}/datasets/${datasetId}`),

@@ -37,7 +37,8 @@ function validateSourceUrl(value: string): string {
 }
 
 export function useDatasetCreate() {
-  const { organizationId = '' } = useParams();
+  // With :datasetId the same form edits that dataset (SDI-132) instead of creating one.
+  const { organizationId = '', datasetId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -49,6 +50,8 @@ export function useDatasetCreate() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revisionOf, setRevisionOf] = useState<Dataset | null>(null);
+  const [editing, setEditing] = useState<Dataset | null>(null);
+  const [datasetNotFound, setDatasetNotFound] = useState(false);
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -106,9 +109,42 @@ export function useDatasetCreate() {
     };
   }, [organizationId, searchParams]);
 
+  useEffect(() => {
+    setEditing(null);
+    setDatasetNotFound(false);
+    if (!datasetId) return;
+    let active = true;
+    datasetsService
+      .get(organizationId, datasetId)
+      .then((dataset) => {
+        if (!active) return;
+        setEditing(dataset);
+        setTitle(dataset.title);
+        setSlug(dataset.slug);
+        setDescription(dataset.description ?? '');
+        setVisibility(dataset.visibility);
+        setSurvey(dataset.survey ?? '');
+        setYear(dataset.year != null ? String(dataset.year) : '');
+        setPeriodType(dataset.periodType ?? '');
+        setSourceOrg(dataset.sourceOrg ?? '');
+        setSourceUrl(dataset.sourceUrl ?? '');
+        setTagsText(dataset.tags.join(', '));
+        setLicenseId(dataset.licenseId ?? '');
+        setChangelog(dataset.changelog ?? '');
+      })
+      .catch((err: unknown) => {
+        if (!active) return;
+        if (isNotFound(err)) setDatasetNotFound(true);
+        else setError(errorMessage(err, 'No se pudo cargar el conjunto de datos.'));
+      });
+    return () => {
+      active = false;
+    };
+  }, [organizationId, datasetId]);
+
   const validate = (): boolean => {
     const nextTitleError = validateTitle(title);
-    const nextSlugError = validateSlug(slug);
+    const nextSlugError = datasetId ? '' : validateSlug(slug);
     const nextYearError = validateYear(year);
     const nextSourceUrlError = validateSourceUrl(sourceUrl);
     setErrorTitle(nextTitleError);
@@ -134,6 +170,24 @@ export function useDatasetCreate() {
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
+
+      if (datasetId) {
+        await datasetsService.update(organizationId, datasetId, {
+          title,
+          description: description || null,
+          visibility,
+          survey: survey || null,
+          year: year ? Number(year) : null,
+          periodType: periodType || null,
+          sourceOrg: sourceOrg || null,
+          sourceUrl: sourceUrl || null,
+          tags,
+          licenseId: licenseId || null,
+          changelog: changelog || null,
+        });
+        navigate(`/organizations/${organizationId}/datasets/${datasetId}`);
+        return;
+      }
 
       const dataset = await datasetsService.create(organizationId, {
         title,
@@ -166,7 +220,14 @@ export function useDatasetCreate() {
         if (errorMessage(err, '').toLowerCase().includes('slug')) {
           setErrorSlug('Ese identificador ya está en uso; prueba con otro.');
         } else {
-          setError(errorMessage(err, 'No se pudo crear el conjunto de datos.'));
+          setError(
+            errorMessage(
+              err,
+              datasetId
+                ? 'No se pudieron guardar los cambios.'
+                : 'No se pudo crear el conjunto de datos.',
+            ),
+          );
         }
       }
     } finally {
@@ -179,6 +240,9 @@ export function useDatasetCreate() {
     checkingOrganization,
     organizationNotFound,
     cannotCreate,
+    editing,
+    isEditing: Boolean(datasetId),
+    datasetNotFound,
     saving,
     error,
     revisionOf,

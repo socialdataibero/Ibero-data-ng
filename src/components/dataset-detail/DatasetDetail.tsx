@@ -90,6 +90,14 @@ export function DatasetDetail() {
           action={
             canEdit ? (
               <div className="c-dataset-detail__header-actions" role="group" aria-label="Acciones">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon="pictogram-edit"
+                  href={`/organizations/${organizationId}/datasets/${dataset.id}/edit`}
+                >
+                  Editar
+                </Button>
                 {!dataset.supersededBy ? (
                   <Button
                     type="button"

@@ -172,6 +172,11 @@ export function AppRoutes() {
               <DatasetCreateSkeleton />,
             )}
             {lazyRoute(
+              '/organizations/:organizationId/datasets/:datasetId/edit',
+              <DatasetCreate />,
+              <DatasetCreateSkeleton />,
+            )}
+            {lazyRoute(
               '/organizations/:organizationId/datasets/:datasetId',
               <DatasetDetail />,
               <DatasetDetailSkeleton />,
