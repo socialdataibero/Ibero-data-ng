@@ -11,7 +11,6 @@ export interface AuthContextValue {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => void;
   updateFullName: (fullName: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -49,15 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadCurrentUser],
   );
 
-  const register = useCallback(
-    async (email: string, password: string, fullName: string) => {
-      const res = await http.post<AuthResponse>('/auth/register', { email, password, fullName });
-      setToken(res.accessToken);
-      await loadCurrentUser();
-    },
-    [loadCurrentUser],
-  );
-
   const updateFullName = useCallback(async (fullName: string) => {
     setCurrentUser(await http.patch<User>('/users/me', { fullName }));
   }, []);
@@ -77,12 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: currentUser !== null,
       loading,
       login,
-      register,
       logout,
       updateFullName,
       changePassword,
     }),
-    [currentUser, loading, login, register, logout, updateFullName, changePassword],
+    [currentUser, loading, login, logout, updateFullName, changePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -12,9 +12,7 @@ export interface AdminMainNavProps {
   authenticated?: boolean;
   user?: AdminMainNavUser | null;
   loginHref?: string;
-  registerHref?: string;
   onLogin?: () => void;
-  onRegister?: () => void;
   onLogout?: () => void;
 }
 
@@ -29,9 +27,7 @@ export function AdminMainNav({
   authenticated,
   user = null,
   loginHref = '/login',
-  registerHref = '/register',
   onLogin,
-  onRegister,
   onLogout,
 }: AdminMainNavProps) {
   const sessionActive = authenticated ?? Boolean(user?.name);
@@ -112,20 +108,6 @@ export function AdminMainNav({
                 }}
               >
                 Iniciar sesión
-              </Button>
-            </li>
-            <li>
-              <Button
-                type="button"
-                variant="primary"
-                size="small"
-                href={onRegister ? undefined : registerHref}
-                onClick={() => {
-                  onRegister?.();
-                  closeMenuAndSubmenu();
-                }}
-              >
-                Registrarse
               </Button>
             </li>
           </ul>
