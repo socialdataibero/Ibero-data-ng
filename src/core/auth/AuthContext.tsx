@@ -53,7 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
-    await http.patch<void>('/users/me/password', { currentPassword, newPassword });
+    // The server signs out every other session and returns a new token for this one (SDI-133).
+    const res = await http.patch<AuthResponse>('/users/me/password', { currentPassword, newPassword });
+    setToken(res.accessToken);
   }, []);
 
   const logout = useCallback(() => {

@@ -164,9 +164,9 @@ export function ProfileForm({ fullName: savedFullName, email, onUpdate, classNam
       clearPasswords();
       setSaved(
         nameChanged && password
-          ? 'Nombre y contraseña actualizados.'
+          ? 'Nombre y contraseña actualizados. Se cerraron tus otras sesiones.'
           : password
-            ? 'Contraseña actualizada.'
+            ? 'Contraseña actualizada. Se cerraron tus otras sesiones.'
             : 'Nombre actualizado.',
       );
     } catch (err) {
