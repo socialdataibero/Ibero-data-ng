@@ -1,6 +1,7 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { SearchField } from 'sectei-library';
+import { filterSideMenuItems, flattenSideMenuItems } from './filterSideMenuItems';
 import './side-menu.css';
 
 export interface SideMenuItem {
@@ -44,7 +45,10 @@ export function SideMenu({
   const idBase = useId();
   const containerId = `${idBase}-menu-side`;
   const [menuOpen, setMenuOpen] = useState(menuOpenInitially);
-  const [filtered, setFiltered] = useState(items);
+  const searchCatalog = useMemo(() => flattenSideMenuItems(items), [items]);
+  const [matches, setMatches] = useState<SideMenuItem[] | null>(null);
+  const isSearching = matches !== null && matches !== searchCatalog;
+  const filtered = matches === null ? items : filterSideMenuItems(items, matches);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const item of items) {
@@ -56,8 +60,8 @@ export function SideMenu({
   });
 
   useEffect(() => {
-    setFiltered(items);
-  }, [items]);
+    setMatches(null);
+  }, [searchCatalog]);
 
   useEffect(() => {
     setOpenSections((prev) => {
@@ -98,10 +102,10 @@ export function SideMenu({
         {!children ? (
           <div className="menu-side-search">
             <SearchField
-              catalog={items}
+              catalog={searchCatalog}
               searchProperty="label"
               placeholder={searchPlaceholder}
-              onFilter={(next) => setFiltered(next as SideMenuItem[])}
+              onFilter={(next) => setMatches(next as SideMenuItem[])}
             />
           </div>
         ) : null}
@@ -116,7 +120,7 @@ export function SideMenu({
 
             {filtered.map((item) => {
               if (item.subItems?.length) {
-                const sectionOpen = Boolean(openSections[item.id]);
+                const sectionOpen = isSearching || Boolean(openSections[item.id]);
                 const panelId = `${idBase}-collapsible-${item.id}`;
 
                 return (
