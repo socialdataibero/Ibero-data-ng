@@ -6,6 +6,7 @@ import { LegacyRedirect } from './core/routing/LegacyRedirect';
 import { AppShell } from './components/shared/app-shell/AppShell';
 import { PortalShell } from './components/shared/portal/portal-shell/PortalShell';
 import { PageNotFound } from './components/shared/page-not-found/PageNotFound';
+import { DatasetCreateOrganization } from './components/dataset-create-organization/DatasetCreateOrganization';
 import { useInternalLinkNavigation } from './core/hooks/useInternalLinkNavigation';
 import { DatasetCreateSkeleton } from './components/dataset-create/DatasetCreateSkeleton';
 import { OrganizationCreateSkeleton } from './components/organization-create/OrganizationCreateSkeleton';
@@ -145,6 +146,7 @@ export function AppRoutes() {
           <Route element={<AppShell />}>
             {lazyRoute('/dashboard', <Home />, <HomeSkeleton />)}
             {lazyRoute('/datasets', <DatasetsList />, <DatasetsListSkeleton />)}
+            <Route path="/datasets/new" element={<DatasetCreateOrganization />} />
             {lazyRoute('/organizations', <OrganizationsList />, <OrganizationsListSkeleton />)}
             <Route element={<RequireSysadmin redirectTo="/organizations" />}>
               {lazyRoute(

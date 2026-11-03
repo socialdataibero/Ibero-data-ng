@@ -31,10 +31,10 @@ export function DatasetsList() {
     <div className="c-datasets-list cards-section">
       <PageHeader
         title="Conjuntos de datos"
-        intro="Catálogo de datasets abiertos y privados. Explora, filtra y abre fichas para consultar recursos."
+        intro="Catálogo de conjuntos de datos abiertos y privados. Explora, filtra y abre fichas para consultar recursos."
         crumbs={CRUMBS}
         action={
-          <Button type="button" variant="primary" icon="pictogram-add" href="/organizations">
+          <Button type="button" variant="primary" icon="pictogram-add" href="/datasets/new">
             Agregar conjunto de datos
           </Button>
         }

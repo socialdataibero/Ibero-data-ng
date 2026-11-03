@@ -1,5 +1,6 @@
 import { http } from '../api/http';
 import type { Organization } from '../models/dataset.model';
+import type { OrganizationMembership } from '../models/user.model';
 
 export type OrganizationSort = 'recent' | 'name-asc' | 'name-desc' | 'datasets-desc' | 'members-desc';
 
@@ -28,8 +29,12 @@ function buildQuery(params: ListOrganizationsParams): string {
 }
 
 export const organizationsService = {
+  /** The signed-in user's memberships, with their role in each organization. */
+  myMemberships: (signal?: AbortSignal) =>
+    http.get<OrganizationMembership[]>('/users/me/organizations', signal),
+
   /** Paginated, filtered listing — drives the real Organizations list UI. */
-  listPaged: (params: ListOrganizationsParams = {}) => http.get<ListOrganizationsResult>(`/organizations${buildQuery(params)}`),
+  listPaged: (params: ListOrganizationsParams = {}, signal?: AbortSignal) => http.get<ListOrganizationsResult>(`/organizations${buildQuery(params)}`, signal),
 
   recent: () => http.get<Organization[]>('/organizations/recent'),
 
