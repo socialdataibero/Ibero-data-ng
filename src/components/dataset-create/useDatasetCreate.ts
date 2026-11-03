@@ -11,6 +11,30 @@ import type {
   Survey,
 } from '../../core/models/dataset.model';
 
+function validateTitle(value: string): string {
+  return value.trim() ? '' : 'El título es obligatorio.';
+}
+
+function validateSlug(value: string): string {
+  if (!value.trim()) return 'El identificador del conjunto de datos es obligatorio.';
+  if (looksLikeUrl(value)) {
+    return 'Esto parece una URL. Si es el enlace a los datos, pégalo en «URL de la fuente original» y aquí escribe un nombre corto (ej. enigh-2024-v1).';
+  }
+  return isValidSlug(value) ? '' : 'Solo se permiten minúsculas, números y guiones.';
+}
+
+function validateYear(value: string): string {
+  return !value.trim() || isValidYear(value.trim(), 1990, 2099)
+    ? ''
+    : 'Ingresa un año válido entre 1990 y 2099.';
+}
+
+function validateSourceUrl(value: string): string {
+  return !value.trim() || isValidUrl(value.trim())
+    ? ''
+    : 'Ingresa una URL válida (ej: https://…).';
+}
+
 export function useDatasetCreate() {
   const { organizationId = '' } = useParams();
   const [searchParams] = useSearchParams();
@@ -73,37 +97,15 @@ export function useDatasetCreate() {
   }, [organizationId, searchParams]);
 
   const validate = (): boolean => {
-    let ok = true;
-
-    if (!title.trim()) {
-      setErrorTitle('El título es obligatorio.');
-      ok = false;
-    }
-
-    if (!slug.trim()) {
-      setErrorSlug('El identificador del dataset es obligatorio.');
-      ok = false;
-    } else if (looksLikeUrl(slug)) {
-      setErrorSlug(
-        'Esto parece una URL. Si es el enlace a los datos, pégalo en «URL de la fuente original» y aquí escribe un nombre corto (ej. enigh-2024-v1).',
-      );
-      ok = false;
-    } else if (!isValidSlug(slug)) {
-      setErrorSlug('Solo se permiten minúsculas, números y guiones.');
-      ok = false;
-    }
-
-    if (year.trim() && !isValidYear(year.trim(), 1990, 2099)) {
-      setErrorYear('Ingresa un año válido entre 1990 y 2099.');
-      ok = false;
-    }
-
-    if (sourceUrl.trim() && !isValidUrl(sourceUrl.trim())) {
-      setErrorSourceUrl('Ingresa una URL válida (ej: https://…).');
-      ok = false;
-    }
-
-    return ok;
+    const nextTitleError = validateTitle(title);
+    const nextSlugError = validateSlug(slug);
+    const nextYearError = validateYear(year);
+    const nextSourceUrlError = validateSourceUrl(sourceUrl);
+    setErrorTitle(nextTitleError);
+    setErrorSlug(nextSlugError);
+    setErrorYear(nextYearError);
+    setErrorSourceUrl(nextSourceUrlError);
+    return !nextTitleError && !nextSlugError && !nextYearError && !nextSourceUrlError;
   };
 
   const submit = async (event: FormEvent) => {
@@ -171,9 +173,15 @@ export function useDatasetCreate() {
     revisionOf,
     fields: {
       title,
-      setTitle,
+      setTitle: (value: string) => {
+        setTitle(value);
+        setErrorTitle(validateTitle(value));
+      },
       slug,
-      setSlug,
+      setSlug: (value: string) => {
+        setSlug(value);
+        setErrorSlug(validateSlug(value));
+      },
       description,
       setDescription,
       visibility,
@@ -181,13 +189,19 @@ export function useDatasetCreate() {
       survey,
       setSurvey,
       year,
-      setYear,
+      setYear: (value: string) => {
+        setYear(value);
+        setErrorYear(validateYear(value));
+      },
       periodType,
       setPeriodType,
       sourceOrg,
       setSourceOrg,
       sourceUrl,
-      setSourceUrl,
+      setSourceUrl: (value: string) => {
+        setSourceUrl(value);
+        setErrorSourceUrl(validateSourceUrl(value));
+      },
       tagsText,
       setTagsText,
       licenseId,

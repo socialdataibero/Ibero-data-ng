@@ -71,6 +71,10 @@ export function DatasetCreate() {
                     type="text"
                     value={fields.title}
                     onChange={(e) => fields.setTitle(e.target.value)}
+                    onBlur={(e) => {
+                      if (!fields.title.trim()) fields.setTitle(e.target.value);
+                    }}
+                    aria-required="true"
                     name="title"
                     placeholder="Ej: ENIGH 2024 — Encuesta Nacional de Ingresos y Gastos"
                     aria-invalid={!!fieldErrors.title}
@@ -90,6 +94,10 @@ export function DatasetCreate() {
                     type="text"
                     value={fields.slug}
                     onChange={(e) => fields.setSlug(e.target.value)}
+                    onBlur={(e) => {
+                      if (!fields.slug.trim()) fields.setSlug(e.target.value);
+                    }}
+                    aria-required="true"
                     name="slug"
                     placeholder="ej. enigh-2024-v1"
                     aria-invalid={!!fieldErrors.slug}
