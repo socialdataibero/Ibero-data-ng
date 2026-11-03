@@ -180,12 +180,6 @@ export function ProfileForm({ fullName: savedFullName, email, onUpdate, classNam
     }
   }
 
-  function handleClear() {
-    setFullName(savedFullName);
-    clearPasswords();
-    clearMessages();
-  }
-
   return (
     <form
       className={['profile-form', className].filter(Boolean).join(' ')}
@@ -271,9 +265,6 @@ export function ProfileForm({ fullName: savedFullName, email, onUpdate, classNam
           {saved}
         </p>
         <div className="profile-form__actions">
-          <Button type="button" variant="secondary" onClick={handleClear} disabled={saving}>
-            Borrar
-          </Button>
           <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Guardando…' : 'Actualizar perfil'}
           </Button>
