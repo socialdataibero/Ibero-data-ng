@@ -147,6 +147,12 @@ export function AppRoutes() {
             {lazyRoute('/dashboard', <Home />, <HomeSkeleton />)}
             {lazyRoute('/datasets', <DatasetsList />, <DatasetsListSkeleton />)}
             <Route path="/datasets/new" element={<DatasetCreateOrganization />} />
+            {/* Same detail page as under /organizations, reached from the datasets catalog so it stays in that section (SDI-131). */}
+            {lazyRoute(
+              '/datasets/:organizationId/:datasetId',
+              <DatasetDetail />,
+              <DatasetDetailSkeleton />,
+            )}
             {lazyRoute('/organizations', <OrganizationsList />, <OrganizationsListSkeleton />)}
             <Route element={<RequireSysadmin redirectTo="/organizations" />}>
               {lazyRoute(

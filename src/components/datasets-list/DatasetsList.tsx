@@ -100,7 +100,7 @@ export function DatasetsList() {
                 <li key={id}>
                   <HorizontalCard
                     {...card}
-                    href={`/organizations/${organizationId}/datasets/${id}`}
+                    href={`/datasets/${organizationId}/${id}`}
                   />
                 </li>
               ),

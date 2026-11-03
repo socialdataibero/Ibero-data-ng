@@ -1,5 +1,5 @@
 import { useId, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from 'sectei-library';
 import { AnalysisBuilder } from '../analysis-builder/AnalysisBuilder';
 import { PageHeader } from '../shared/page-header/PageHeader';
@@ -16,6 +16,7 @@ function visibilityLabel(visibility: string): string {
 }
 
 export function DatasetDetail() {
+  const { pathname } = useLocation();
   const fileInputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const {
@@ -39,12 +40,20 @@ export function DatasetDetail() {
     openInVistrace,
   } = useDatasetDetail();
 
-  const crumbs = [
-    { label: 'Inicio', href: '/dashboard' },
-    { label: 'Organizaciones', href: '/organizations' },
-    { label: 'Datasets', href: `/organizations/${organizationId}` },
-    { label: dataset?.title ?? 'Dataset' },
-  ];
+  const title = dataset?.title ?? 'Conjunto de datos';
+  // Opened from the datasets catalog (/datasets/...), the page stays in that section (SDI-131).
+  const crumbs = pathname.startsWith('/datasets/')
+    ? [
+        { label: 'Inicio', href: '/dashboard' },
+        { label: 'Conjuntos de datos', href: '/datasets' },
+        { label: title },
+      ]
+    : [
+        { label: 'Inicio', href: '/dashboard' },
+        { label: 'Organizaciones', href: '/organizations' },
+        { label: 'Conjuntos de datos', href: `/organizations/${organizationId}` },
+        { label: title },
+      ];
 
   if (datasetNotFound) return <DatasetNotFound />;
 
