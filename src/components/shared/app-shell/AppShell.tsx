@@ -26,7 +26,7 @@ export function AppShell() {
           <SideMenu
             items={navItems}
             pathname={pathname}
-            searchPlaceholder='Busca "conjuntos", "análisis"…'
+            searchPlaceholder='Busca "encuestas"…'
           />
         </div>
 
