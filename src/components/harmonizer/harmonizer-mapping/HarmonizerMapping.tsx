@@ -75,6 +75,9 @@ export function HarmonizerMapping() {
     canonicalPrefix,
     suggestionLabel,
   } = useHarmonizerMapping();
+  // El servidor nombra `columna_N` los encabezados vacíos y agrega sufijo a los repetidos.
+  const unnamedColumns = renamedColumns.filter((r) => r.original.trim() === '');
+  const repeatedColumns = renamedColumns.filter((r) => r.original.trim() !== '');
 
   const chosenCodebook = codebooks.find((c) => c.id === codebookChoice);
   const codebookChanged =
@@ -164,17 +167,36 @@ export function HarmonizerMapping() {
 
             {renamedColumns.length > 0 ? (
               <div className="c-harmonizer-mapping__notice" role="status">
-                <p>
-                  El archivo tenía columnas con el mismo nombre. Para conservarlas todas, se
-                  renombraron así:
-                </p>
-                <ul>
-                  {renamedColumns.map((r) => (
-                    <li key={r.position}>
-                      Columna {r.position}: <code>{r.original}</code> → <code>{r.renamed}</code>
-                    </li>
-                  ))}
-                </ul>
+                {unnamedColumns.length > 0 ? (
+                  <>
+                    <p>
+                      El archivo tenía columnas sin nombre en el encabezado. Se les puso el nombre{' '}
+                      <code>columna_N</code>, donde N es su posición en el archivo:
+                    </p>
+                    <ul>
+                      {unnamedColumns.map((r) => (
+                        <li key={r.position}>
+                          Columna {r.position}: (sin nombre) → <code>{r.renamed}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+                {repeatedColumns.length > 0 ? (
+                  <>
+                    <p>
+                      El archivo tenía columnas con el mismo nombre. Para conservarlas todas, se
+                      renombraron así:
+                    </p>
+                    <ul>
+                      {repeatedColumns.map((r) => (
+                        <li key={r.position}>
+                          Columna {r.position}: <code>{r.original}</code> → <code>{r.renamed}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
                 <p>
                   Revisa a qué variable corresponde cada una antes de mapearlas; los nombres
                   renombrados no existen en el archivo original.

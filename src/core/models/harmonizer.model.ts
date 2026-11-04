@@ -29,7 +29,10 @@ export interface HarmonizerDataset {
   columnCount: number;
 }
 
-/** Encabezado repetido en el CSV que el servidor renombró al subirlo. */
+/**
+ * Encabezado que el servidor renombró al subirlo: repetido (`EDAD.1`) o vacío
+ * (`original` es `""` y recibe `columna_N`).
+ */
 export interface RenamedColumn {
   /** Posición de la columna en el archivo, empezando en 1. */
   position: number;
