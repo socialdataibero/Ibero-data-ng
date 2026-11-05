@@ -12,6 +12,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
+    "@uppy/core": "6.3.0",
+    "@uppy/tus": "6.0.0",
     "d3": "^7.9.0",
     "d3-array": "^3.2.4",
     "d3-scale": "^4.0.2",

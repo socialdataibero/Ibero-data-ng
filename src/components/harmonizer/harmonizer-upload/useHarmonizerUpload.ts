@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   NEW_OPTION,
+  type HarmonizerImportPhase,
   type HarmonizerSurvey,
   type MappingRouteState,
   type UploadEncoding,
 } from '../../../core/models/harmonizer.model';
 import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
+import { uploadEdition, waitForImport, type EditionUpload } from '../../../core/services/harmonizer-upload';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
 import { isValidYear } from '../../../core/utils/validation';
 import type { Crumb } from '../../shared/page-header/PageHeader';
@@ -36,8 +38,27 @@ export function useHarmonizerUpload() {
   const [newSurveyName, setNewSurveyName] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [encoding, setEncoding] = useState<UploadEncoding>('auto');
-  const [uploading, setUploading] = useState(false);
+  // `uploading`: the file is being sent; `processing`: the server is importing it.
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'processing'>('idle');
+  const uploading = stage !== 'idle';
+  const [progress, setProgress] = useState({ sent: 0, total: 0 });
+  const [processing, setProcessing] = useState<{ phase: HarmonizerImportPhase | null; rowsRead: number }>({
+    phase: null,
+    rowsRead: 0,
+  });
+  const uploadRef = useRef<EditionUpload | null>(null);
+  const pollRef = useRef<AbortController | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Leaving the page stops an upload in progress. An import already on the server goes on;
+  // its edition shows up in the survey list when it finishes.
+  useEffect(
+    () => () => {
+      uploadRef.current?.cancel();
+      pollRef.current?.abort();
+    },
+    [],
+  );
 
   const [errorDatasetName, setErrorDatasetName] = useState('');
   const [errorDatasetYear, setErrorDatasetYear] = useState('');
@@ -111,11 +132,14 @@ export function useHarmonizerUpload() {
 
       if (!canUploadToSurvey || uploading || !validate() || !file || datasetYear === '') return;
 
-      setUploading(true);
+      setStage('uploading');
+      setProgress({ sent: 0, total: file.size });
+      setProcessing({ phase: null, rowsRead: 0 });
 
       void (async () => {
         try {
-          const { datasetId, renamedColumns, source } = await harmonizerService.uploadDataset(
+          const upload = uploadEdition(
+            file,
             {
               name: datasetName.trim(),
               year: Number(datasetYear),
@@ -124,11 +148,26 @@ export function useHarmonizerUpload() {
               newSurvey: uploadSurveyId === NEW_OPTION ? newSurveyName.trim() : undefined,
               encoding: isDbf ? encoding : undefined,
             },
-            file,
+            (sent, total) => setProgress({ sent, total }),
           );
+          uploadRef.current = upload;
+          const importId = await upload.done;
+          uploadRef.current = null;
+
+          setStage('processing');
+          const controller = new AbortController();
+          pollRef.current = controller;
+          const finished = await waitForImport(
+            importId,
+            (status) => setProcessing({ phase: status.phase, rowsRead: status.rowsRead }),
+            controller.signal,
+          );
+          const { datasetId, renamedColumns, source } = finished.result!;
           const state: MappingRouteState = { renamedColumns, source };
           void navigate(`/harmonizer/datasets/${datasetId}/mapping`, { state });
         } catch (err) {
+          // Cancelled by the user, or the page was left.
+          if (err instanceof DOMException && err.name === 'AbortError') return;
           if (err instanceof ApiError && err.body?.code === 'survey_name_taken') {
             setErrorNewSurveyName(
               'Ya existe una encuesta con ese nombre. Elígela en la lista de encuestas.',
@@ -153,7 +192,10 @@ export function useHarmonizerUpload() {
               err.body?.code === 'dbf_invalid' ||
               err.body?.code === 'dbf_field_unsupported' ||
               err.body?.code === 'dbf_not_utf8' ||
-              err.body?.code === 'dbf_no_rows')
+              err.body?.code === 'dbf_no_rows' ||
+              err.body?.code === 'dbf_too_large' ||
+              err.body?.code === 'gzip_invalid' ||
+              err.body?.code === 'upload_too_large')
           ) {
             setErrorFile(errorMessage(err, 'No se pudo leer el archivo.'));
             return;
@@ -170,7 +212,9 @@ export function useHarmonizerUpload() {
             setError(errorMessage(err, 'No se pudo subir el archivo.'));
           }
         } finally {
-          setUploading(false);
+          uploadRef.current = null;
+          pollRef.current = null;
+          setStage('idle');
         }
       })();
     },
@@ -190,6 +234,10 @@ export function useHarmonizerUpload() {
       navigate,
     ],
   );
+
+  const cancelUpload = useCallback(() => {
+    uploadRef.current?.cancel();
+  }, []);
 
   return {
     surveys,
@@ -211,6 +259,10 @@ export function useHarmonizerUpload() {
     encoding,
     setEncoding,
     uploading,
+    stage,
+    progress,
+    processing,
+    cancelUpload,
     error,
     fieldErrors: {
       datasetName: errorDatasetName,

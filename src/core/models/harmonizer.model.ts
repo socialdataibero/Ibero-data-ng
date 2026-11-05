@@ -1,3 +1,5 @@
+import type { ApiErrorBody } from '../api/api-error-body';
+
 export interface HarmonizerDatasetSummary {
   id: string;
   name: string;
@@ -62,6 +64,30 @@ export type UploadSource =
       /** Registros marcados como borrados en el DBF, que no se cargaron. */
       deletedRecords: number;
     };
+
+/** Estado de una subida por tus y de su importación en el servidor (`GET /harmonizer/imports/:id`). */
+export type HarmonizerImportStatus = 'UPLOADING' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+/** Lo que hace el servidor mientras importa: revisa la codificación, lee las filas o guarda. */
+export type HarmonizerImportPhase = 'checking' | 'reading' | 'saving';
+
+export interface HarmonizerImport {
+  id: string;
+  status: HarmonizerImportStatus;
+  phase: HarmonizerImportPhase | null;
+  rowsRead: number;
+  fileName: string;
+  fileSize: number;
+  /** Lo mismo que respondía la subida directa. Solo con `COMPLETED`. */
+  result: {
+    datasetId: string;
+    dataset: HarmonizerDataset;
+    renamedColumns: RenamedColumn[];
+    source: UploadSource;
+  } | null;
+  /** El mismo cuerpo de error que respondía la subida directa. Solo con `FAILED`. */
+  error: (ApiErrorBody & { statusCode: number }) | null;
+}
 
 /** Estado de navegación de la subida a la pantalla de mapeo. */
 export interface MappingRouteState {
