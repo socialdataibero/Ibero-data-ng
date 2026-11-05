@@ -121,6 +121,21 @@ function recodingInvalid(b: ApiErrorBody): string {
   }
 }
 
+// Temporary server limit (README "Temporary row limit") until mapping and downloads run on DuckDB.
+const TOO_MANY_ROWS_ACTION: Record<string, string> = {
+  mapping: 'El mapeo de la edición',
+  export: 'La descarga de la edición',
+  original: 'La descarga del archivo original de la edición',
+  survey_export: 'La descarga de la encuesta',
+};
+
+function tooManyRows(b: ApiErrorBody): string {
+  const action = TOO_MANY_ROWS_ACTION[param(b, 'operation')] ?? 'Esta operación sobre';
+  const name = b.params?.edition !== undefined ? param(b, 'edition') : param(b, 'survey');
+  const count = (key: string) => Number(b.params?.[key] ?? 0).toLocaleString('es-MX');
+  return `${action} «${name}» no está disponible por ahora: tiene ${count('rowCount')} filas y el límite temporal es ${count('maxRows')}. Estamos adaptando el armonizador para archivos grandes. Mientras tanto, la vista armonizada por páginas sí funciona.`;
+}
+
 const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   file_required: () => 'Falta el archivo.',
   dataset_name_taken: (b) =>
@@ -175,6 +190,7 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   variable_has_no_differences: (b) =>
     `La variable «${param(b, 'name')}» no tiene diferencias de códigos entre ediciones que revisar.`,
   export_format_not_supported: (b) => `Formato de exportación no admitido: «${param(b, 'format')}». Usa «csv» o «parquet».`,
+  harmonizer_too_many_rows: tooManyRows,
   harmonized_view_empty: () => 'No hay variables mapeadas para exportar como Parquet. Mapea al menos una columna.',
 };
 
