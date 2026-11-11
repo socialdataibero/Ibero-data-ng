@@ -223,12 +223,4 @@ export const harmonizerService = {
       variablesQuery(variables),
     );
   },
-
-  /** Same export as downloadDatasetExport, but returned as a Blob instead of triggering a browser download. */
-  getDatasetExportBlob: (datasetId: string, fmt: ExportFormat) =>
-    downloadBlob(`/harmonizer/datasets/${datasetId}/harmonized.${fmt}`),
-
-  /** Same export as downloadSurveyExport, but returned as a Blob instead of triggering a browser download. */
-  getSurveyExportBlob: (surveyId: string, fmt: ExportFormat, variables?: string[]) =>
-    downloadBlob(`/harmonizer/surveys/${surveyId}/harmonized.${fmt}${variablesQuery(variables)}`),
 };
