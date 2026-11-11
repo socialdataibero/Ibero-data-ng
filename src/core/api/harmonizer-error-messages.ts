@@ -121,21 +121,6 @@ function recodingInvalid(b: ApiErrorBody): string {
   }
 }
 
-// Temporary server limit (README "Temporary row limit") until mapping and downloads run on DuckDB.
-const TOO_MANY_ROWS_ACTION: Record<string, string> = {
-  mapping: 'El mapeo de la edición',
-  export: 'La descarga de la edición',
-  original: 'La descarga del archivo original de la edición',
-  survey_export: 'La descarga de la encuesta',
-};
-
-function tooManyRows(b: ApiErrorBody): string {
-  const action = TOO_MANY_ROWS_ACTION[param(b, 'operation')] ?? 'Esta operación sobre';
-  const name = b.params?.edition !== undefined ? param(b, 'edition') : param(b, 'survey');
-  const count = (key: string) => Number(b.params?.[key] ?? 0).toLocaleString('es-MX');
-  return `${action} «${name}» no está disponible por ahora: tiene ${count('rowCount')} filas y el límite temporal es ${count('maxRows')}. Estamos adaptando el armonizador para archivos grandes. Mientras tanto, la vista armonizada por páginas sí funciona.`;
-}
-
 function megabytes(b: ApiErrorBody, key: string): string {
   const bytes = Number(b.params?.[key] ?? 0);
   return bytes >= 1024 ** 3
@@ -197,7 +182,6 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   variable_has_no_differences: (b) =>
     `La variable «${param(b, 'name')}» no tiene diferencias de códigos entre ediciones que revisar.`,
   export_format_not_supported: (b) => `Formato de exportación no admitido: «${param(b, 'format')}». Usa «csv» o «parquet».`,
-  harmonizer_too_many_rows: tooManyRows,
   upload_too_large: (b) =>
     `El archivo pesa ${megabytes(b, 'size')} y el máximo es ${megabytes(b, 'maxBytes')}. Si es un CSV, puedes comprimirlo con gzip (.csv.gz) o dividirlo.`,
   dbf_too_large: (b) =>

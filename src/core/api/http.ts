@@ -120,6 +120,36 @@ export async function downloadBlob(path: string): Promise<DownloadedFile> {
   return { blob, filename };
 }
 
+/** A file the server prepared for a direct download (README "Direct downloads"). */
+export interface PreparedDownload {
+  /** Link relative to the API; it needs no session, works once and expires. */
+  url: string;
+  filename: string;
+  size: number | null;
+  expiresAt: string;
+}
+
+/**
+ * Asks the server to prepare a file (`POST <path>/download<query>`) and opens the link it returns,
+ * so the browser saves the file as it arrives instead of holding it whole in memory (as
+ * `downloadBlob` does), which large files such as the census do not fit. Errors come from the
+ * POST, as `ApiError`, before anything is downloaded.
+ */
+export async function downloadPrepared(path: string, query = ''): Promise<PreparedDownload> {
+  const prepared = await request<PreparedDownload>(`${path}/download${query}`, {
+    method: 'POST',
+  });
+  const link = document.createElement('a');
+  link.href = `${environment.apiUrl}${prepared.url}`;
+  // The API is another origin, so the browser names the file from the server's
+  // Content-Disposition and stays on this page (the response is an attachment).
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  return prepared;
+}
+
 export function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

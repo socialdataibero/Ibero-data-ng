@@ -110,7 +110,7 @@ export function HarmonizerView() {
               onClick={() => download('csv')}
               disabled={downloading !== null}
             >
-              {downloading === 'csv' ? 'Descargando…' : 'CSV'}
+              {downloading === 'csv' ? 'Preparando…' : 'CSV'}
             </Button>
             <Button
               type="button"
@@ -119,7 +119,7 @@ export function HarmonizerView() {
               onClick={() => download('parquet')}
               disabled={downloading !== null || headers.length === 0}
             >
-              {downloading === 'parquet' ? 'Descargando…' : 'Parquet'}
+              {downloading === 'parquet' ? 'Preparando…' : 'Parquet'}
             </Button>
             <Button
               type="button"
