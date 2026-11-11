@@ -721,7 +721,8 @@ export function useHarmonizerMapping() {
 
   return {
     canEdit,
-    readOnlyMessage: access.readOnlyMessage,
+    // Sin la edición no se conoce su encuesta, así que el permiso no dice nada: basta el error.
+    readOnlyMessage: loadError ? null : access.readOnlyMessage,
     datasetId,
     dataset,
     renamedColumns,

@@ -121,6 +121,13 @@ function recodingInvalid(b: ApiErrorBody): string {
   }
 }
 
+function megabytes(b: ApiErrorBody, key: string): string {
+  const bytes = Number(b.params?.[key] ?? 0);
+  return bytes >= 1024 ** 3
+    ? `${(bytes / 1024 ** 3).toLocaleString('es-MX', { maximumFractionDigits: 1 })} GB`
+    : `${Math.round(bytes / 1024 ** 2).toLocaleString('es-MX')} MB`;
+}
+
 const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   file_required: () => 'Falta el archivo.',
   dataset_name_taken: (b) =>
@@ -175,6 +182,20 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   variable_has_no_differences: (b) =>
     `La variable «${param(b, 'name')}» no tiene diferencias de códigos entre ediciones que revisar.`,
   export_format_not_supported: (b) => `Formato de exportación no admitido: «${param(b, 'format')}». Usa «csv» o «parquet».`,
+  upload_too_large: (b) =>
+    `El archivo pesa ${megabytes(b, 'size')} y el máximo es ${megabytes(b, 'maxBytes')}. Si es un CSV, puedes comprimirlo con gzip (.csv.gz) o dividirlo.`,
+  dbf_too_large: (b) =>
+    `Los archivos DBF pueden pesar como máximo ${megabytes(b, 'maxBytes')} y este pesa ${megabytes(b, 'size')}. ${EXPORT_TO_CSV}`,
+  gzip_invalid: () =>
+    'El archivo termina en .gz pero no es un archivo gzip completo. Vuelve a comprimir el CSV o súbelo sin comprimir.',
+  upload_length_required: () => 'No se pudo iniciar la subida: falta el tamaño del archivo. Recarga la página e inténtalo de nuevo.',
+  upload_not_found: () => 'La subida ya no existe en el servidor. Vuelve a subir el archivo.',
+  upload_finished: () => 'Esta subida ya terminó y se está procesando.',
+  upload_cancelled: () => 'La subida se canceló.',
+  upload_expired: () => 'La subida no terminó a tiempo y se borró. Vuelve a subir el archivo.',
+  harmonizer_import_not_found: () => 'No se encontró el proceso de esta subida.',
+  import_interrupted: () =>
+    'El servidor se detuvo varias veces mientras procesaba este archivo y la subida se canceló. Puede que el archivo sea demasiado grande para la configuración de memoria del servidor; avisa al administrador.',
   harmonized_view_empty: () => 'No hay variables mapeadas para exportar como Parquet. Mapea al menos una columna.',
 };
 

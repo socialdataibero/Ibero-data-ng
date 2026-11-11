@@ -14,6 +14,17 @@ export const resourcesService = {
     return http.post<Resource>(base(organizationId, datasetId), formData);
   },
 
+  /**
+   * Saves a harmonized view of the survey harmonizer as a resource: the server writes the
+   * Parquet straight to storage (README "From the harmonizer"), so it never goes through the
+   * browser or the upload's 500 MB limit.
+   */
+  attachHarmonized: (
+    organizationId: string,
+    datasetId: string,
+    source: { editionId: string } | { surveyId: string; variables?: string[] },
+  ) => http.post<Resource>(`${base(organizationId, datasetId)}/from-harmonizer`, source),
+
   runQuery: (organizationId: string, datasetId: string, resourceId: string, sql: string) =>
     http.post<QueryResult>(`${base(organizationId, datasetId)}/${resourceId}/query`, { sql }),
 
