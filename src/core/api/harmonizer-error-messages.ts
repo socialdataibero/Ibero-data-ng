@@ -183,11 +183,13 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
     `La variable «${param(b, 'name')}» no tiene diferencias de códigos entre ediciones que revisar.`,
   export_format_not_supported: (b) => `Formato de exportación no admitido: «${param(b, 'format')}». Usa «csv» o «parquet».`,
   upload_too_large: (b) =>
-    `El archivo pesa ${megabytes(b, 'size')} y el máximo es ${megabytes(b, 'maxBytes')}. Si es un CSV, puedes comprimirlo con gzip (.csv.gz) o dividirlo.`,
+    `El archivo pesa ${megabytes(b, 'size')} y el máximo es ${megabytes(b, 'maxBytes')}. Si es un CSV, divídelo en archivos más pequeños.`,
   dbf_too_large: (b) =>
     `Los archivos DBF pueden pesar como máximo ${megabytes(b, 'maxBytes')} y este pesa ${megabytes(b, 'size')}. ${EXPORT_TO_CSV}`,
   gzip_invalid: () =>
     'El archivo termina en .gz pero no es un archivo gzip completo. Vuelve a comprimir el CSV o súbelo sin comprimir.',
+  gzip_too_large: (b) =>
+    `El CSV dentro del archivo .gz pesa más de ${megabytes(b, 'maxBytes')} al descomprimirlo, que es el máximo. Divídelo en archivos más pequeños.`,
   upload_length_required: () => 'No se pudo iniciar la subida: falta el tamaño del archivo. Recarga la página e inténtalo de nuevo.',
   upload_not_found: () => 'La subida ya no existe en el servidor. Vuelve a subir el archivo.',
   upload_finished: () => 'Esta subida ya terminó y se está procesando.',
