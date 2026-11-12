@@ -60,6 +60,20 @@ export function useHarmonizerUpload() {
     [],
   );
 
+  // Closing or reloading the tab while the file is being sent loses the upload (the next one
+  // starts from zero), so the browser asks first. Once the file is on the server (`processing`)
+  // the import goes on without the page, so there is nothing to warn about.
+  useEffect(() => {
+    if (stage !== 'uploading') return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Older browsers only show the dialog when `returnValue` is set.
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [stage]);
+
   const [errorDatasetName, setErrorDatasetName] = useState('');
   const [errorDatasetYear, setErrorDatasetYear] = useState('');
   const [errorNewSurveyName, setErrorNewSurveyName] = useState('');
