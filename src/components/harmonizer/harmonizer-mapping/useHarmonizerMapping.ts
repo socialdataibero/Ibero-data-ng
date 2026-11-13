@@ -11,11 +11,15 @@ import {
   type MappingColumn,
   type MappingInfo,
   type MappingRouteState,
+  type AnalysisUnit,
+  type SourceDesign,
+  type SourceRole,
   type ValueType,
 } from '../../../core/models/harmonizer.model';
 import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
 import { errorMessage } from '../../../core/api/http';
+import { harmonizerErrorText } from '../../../core/api/harmonizer-error-messages';
 import { canonicalNameProblem, sameCanonicalName } from '../../../core/utils/validation';
 import { csvHeaderKey, downloadCsv, parseCsv } from '../../../core/utils/csv';
 
@@ -29,6 +33,8 @@ export interface ColumnRow {
   missingCodes: string;
   /** Tipo de la variable en el Parquet exportado. Se confirma al guardar. */
   dataType: ValueType;
+  /** Rol de diseño muestral; `''` = ninguno. Solo en ediciones muestrales. */
+  role: SourceRole | '';
 }
 
 /** `confirmed`: el guardado de la canónica; `suggested`: el inferido, sin confirmar; `changed`: lo cambió el usuario. */
@@ -84,6 +90,7 @@ function isRowDirty(row: ColumnRow, canonicals: CanonicalVariable[]): boolean {
       ? `${CANONICAL_PREFIX}${column.selectedCanonicalId}`
       : '';
   if (row.choice !== savedChoice) return true;
+  if (row.role !== (column.role ?? '')) return true;
   if (row.choice === '') return false;
   if (row.dataType !== confirmedType(row.choice, canonicals)) return true;
   return parseMissingCodes(row.missingCodes).join('\n') !== column.missingCodes.join('\n');
@@ -105,6 +112,7 @@ function initialRow(column: MappingColumn, canonicals: CanonicalVariable[]): Col
     newDescription: '',
     missingCodes: column.missingCodes.join(', '),
     dataType: defaultType(choice, column, canonicals),
+    role: column.role ?? '',
   };
 }
 
@@ -277,7 +285,13 @@ export function useHarmonizerMapping() {
       setRows((prev) =>
         prev.map((row, i) =>
           i === index
-            ? { ...row, choice, dataType: defaultType(choice, row.column, canonicalVariables) }
+            ? {
+                ...row,
+                choice,
+                dataType: defaultType(choice, row.column, canonicalVariables),
+                // Una columna sin mapear no está en la vista armonizada: no puede tener rol.
+                role: choice === '' ? '' : row.role,
+              }
             : row,
         ),
       );
@@ -309,6 +323,59 @@ export function useHarmonizerMapping() {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, missingCodes } : row)));
   }, []);
 
+  // Cada rol va en una sola columna: marcarlo en una se lo quita a la que lo tenía.
+  const setRole = useCallback((index: number, role: SourceRole | '') => {
+    setRows((prev) =>
+      prev.map((row, i) => {
+        if (i === index) return { ...row, role };
+        return role !== '' && row.role === role ? { ...row, role: '' } : row;
+      }),
+    );
+  }, []);
+
+  // Diseño y unidad de la fuente: se cambian aparte del mapeo, con su propio botón.
+  const [sourceDesign, setSourceDesign] = useState<SourceDesign | ''>('');
+  const [sourceUnit, setSourceUnit] = useState<AnalysisUnit | ''>('');
+  const [savingSource, setSavingSource] = useState(false);
+  const [sourceError, setSourceError] = useState<string | null>(null);
+  const [sourceNotice, setSourceNotice] = useState<string | null>(null);
+  useEffect(() => {
+    setSourceDesign(dataset?.design ?? '');
+    setSourceUnit(dataset?.unit ?? '');
+  }, [dataset?.design, dataset?.unit]);
+  const sourceChanged =
+    !!dataset && (sourceDesign !== (dataset.design ?? '') || sourceUnit !== (dataset.unit ?? ''));
+  const isSample = dataset?.design === 'sample';
+
+  const saveSource = useCallback(() => {
+    if (!canEdit || !dataset || savingSource || !sourceDesign || !sourceUnit) return;
+    setSavingSource(true);
+    setSourceError(null);
+    setSourceNotice(null);
+    void (async () => {
+      try {
+        const updated = await harmonizerService.updateDataset(datasetId, {
+          design: sourceDesign,
+          unit: sourceUnit,
+        });
+        setDataset(updated);
+        if (updated.design === 'census') {
+          // El servidor quitó los roles guardados: lo guardado y la pantalla quedan sin roles.
+          setRows((prev) => prev.map((row) => ({ ...row, role: '', column: { ...row.column, role: null } })));
+        }
+        setSourceNotice(
+          updated.design === 'sample' && dataset.design !== 'sample'
+            ? 'Se guardó la fuente. Marca en la tabla la columna del factor de expansión y guarda el mapeo.'
+            : 'Se guardó la fuente.',
+        );
+      } catch (err) {
+        setSourceError(errorMessage(err, 'No se pudo guardar el diseño y la unidad.'));
+      } finally {
+        setSavingSource(false);
+      }
+    })();
+  }, [canEdit, dataset, savingSource, sourceDesign, sourceUnit, datasetId]);
+
   const clearAll = useCallback(() => {
     setRows((prev) =>
       prev.map((row) => ({
@@ -318,6 +385,7 @@ export function useHarmonizerMapping() {
         newDescription: '',
         missingCodes: '',
         dataType: row.column.inferredType,
+        role: '',
       })),
     );
     setRowErrors(new Map());
@@ -428,7 +496,7 @@ export function useHarmonizerMapping() {
         );
         let copied = 0;
         const released: string[] = [];
-        const next = rows.map((row) => {
+        const next = rows.map((row): ColumnRow => {
           const source = byColumn.get(row.column.name);
           if (source) {
             copied++;
@@ -440,12 +508,14 @@ export function useHarmonizerMapping() {
               newDescription: '',
               missingCodes: source.missingCodes.join(', '),
               dataType: defaultType(choice, row.column, canonicalVariables),
+              // Los roles solo aplican si esta edición también es muestral.
+              role: isSample ? (source.role ?? '') : '',
             };
           }
           const target = rowTarget(row, canonicalVariables);
           if (target && copiedTargets.has(target)) {
             released.push(row.column.name);
-            return { ...row, choice: '', newName: '', newDescription: '', missingCodes: '' };
+            return { ...row, choice: '', newName: '', newDescription: '', missingCodes: '', role: '' };
           }
           return row;
         });
@@ -468,7 +538,7 @@ export function useHarmonizerMapping() {
         setCopying(false);
       }
     })();
-  }, [copySource, rows, canonicalVariables, showBulk]);
+  }, [copySource, rows, canonicalVariables, isSample, showBulk]);
 
   const variableName = useCallback(
     (row: ColumnRow) => {
@@ -522,12 +592,12 @@ export function useHarmonizerMapping() {
         const unknown = [...byColumn.keys()].filter((c) => c && !rows.some((row) => row.column.name === c));
         const badTypes: string[] = [];
         let changed = 0;
-        const next = rows.map((row) => {
+        const next = rows.map((row): ColumnRow => {
           const record = byColumn.get(row.column.name);
           if (!record) return row;
           changed++;
           const name = (record[at('variable')] ?? '').trim();
-          if (!name) return { ...row, choice: '', newName: '', newDescription: '', missingCodes: '' };
+          if (!name) return { ...row, choice: '', newName: '', newDescription: '', missingCodes: '', role: '' };
           const existing =
             canonicalVariables.find((cv) => cv.name === name) ??
             canonicalVariables.find((cv) => sameCanonicalName(cv.name, name));
@@ -685,6 +755,11 @@ export function useHarmonizerMapping() {
         return;
       }
 
+      if (isSample && !rows.some((row) => row.role === 'weight')) {
+        setSaveError(harmonizerErrorText({ code: 'sample_weight_required' }));
+        return;
+      }
+
       setSaving(true);
 
       const columns: MappingChoice[] = rows
@@ -697,6 +772,7 @@ export function useHarmonizerMapping() {
             row.choice === NEW_OPTION && row.newDescription.trim() ? row.newDescription.trim() : undefined,
           dataType: row.dataType,
           missingCodes: parseMissingCodes(row.missingCodes),
+          role: isSample ? row.role || null : undefined,
         }));
 
       void (async () => {
@@ -710,7 +786,7 @@ export function useHarmonizerMapping() {
         }
       })();
     },
-    [canEdit, saving, datasetId, rows, canonicalVariables, navigate, harmonizedHref],
+    [canEdit, saving, datasetId, rows, canonicalVariables, isSample, navigate, harmonizedHref],
   );
 
   const crumbs: Crumb[] = [
@@ -746,6 +822,17 @@ export function useHarmonizerMapping() {
     setNewName,
     setMissingCodes,
     setDataType,
+    setRole,
+    isSample,
+    sourceDesign,
+    setSourceDesign,
+    sourceUnit,
+    setSourceUnit,
+    sourceChanged,
+    saveSource,
+    savingSource,
+    sourceError,
+    sourceNotice,
     typeHint: (row: ColumnRow) => typeHint(row, canonicalVariables),
     typeStatus: (row: ColumnRow) => typeStatus(row, canonicalVariables),
     valueTypeLabel: VALUE_TYPE_LABEL,

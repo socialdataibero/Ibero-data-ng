@@ -21,6 +21,8 @@ import type {
   SavedMapping,
   VariableComparison,
   SaveRecodingPayload,
+  SourceDesign,
+  AnalysisUnit,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -31,6 +33,8 @@ export interface UploadDatasetPayload {
   organizationId?: string;
   /** Solo para DBF. */
   encoding?: UploadEncoding;
+  design: SourceDesign;
+  unit: AnalysisUnit;
 }
 
 export interface UpdateSurveyPayload {
@@ -101,6 +105,9 @@ export const harmonizerService = {
 
   removeDataset: (datasetId: string) => http.delete<void>(`/harmonizer/datasets/${datasetId}`),
 
+  updateDataset: (datasetId: string, changes: { design?: SourceDesign; unit?: AnalysisUnit }) =>
+    http.patch<HarmonizerDataset>(`/harmonizer/datasets/${datasetId}`, changes),
+
   listVariables: (surveyId: string, signal?: AbortSignal) =>
     http.get<SurveyCanonicalVariables>(`/harmonizer/surveys/${surveyId}/variables`, signal),
 
@@ -120,6 +127,8 @@ export const harmonizerService = {
     if (payload.newSurvey) form.append('newSurvey', payload.newSurvey);
     if (payload.organizationId) form.append('organizationId', payload.organizationId);
     if (payload.encoding) form.append('encoding', payload.encoding);
+    form.append('design', payload.design);
+    form.append('unit', payload.unit);
     form.append('file', file);
     return http.post<{
       datasetId: string;

@@ -23,6 +23,25 @@ const DBF_PROBLEM: Record<string, (body: ApiErrorBody) => string> = {
     `está incompleto: el encabezado anuncia ${param(b, 'expectedRecords')} registros y el archivo solo trae ${param(b, 'actualRecords')}`,
 };
 
+/** What the upload form says when the source design or unit is missing (`source_info_required`). */
+export const SOURCE_INFO_MISSING = {
+  design: 'Falta el diseño de la fuente (censal o muestral).',
+  unit: 'Falta la unidad de análisis (persona, vivienda u hogar).',
+} as const;
+
+const ROLE_TEXT: Record<string, string> = {
+  weight: 'factor de expansión',
+  stratum: 'estrato',
+  psu: 'UPM',
+};
+
+function sourceInfoRequired(b: ApiErrorBody): string {
+  const missing = Array.isArray(b.params?.missing) ? (b.params.missing as string[]) : [];
+  if (missing.includes('design') && missing.includes('unit'))
+    return 'Faltan el diseño de la fuente (censal o muestral) y la unidad de análisis (persona, vivienda u hogar).';
+  return missing.includes('unit') ? SOURCE_INFO_MISSING.unit : SOURCE_INFO_MISSING.design;
+}
+
 const EXPORT_TO_CSV = 'Exporta la tabla a CSV desde el programa que la creó y súbela de nuevo.';
 
 function quoteList(values: unknown): string {
@@ -199,6 +218,15 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
   import_interrupted: () =>
     'El servidor se detuvo varias veces mientras procesaba este archivo y la subida se canceló. Puede que el archivo sea demasiado grande para la configuración de memoria del servidor; avisa al administrador.',
   harmonized_view_empty: () => 'No hay variables mapeadas para exportar como Parquet. Mapea al menos una columna.',
+  source_info_required: sourceInfoRequired,
+  sample_weight_required: () =>
+    'Las fuentes muestrales requieren marcar una columna como factor de expansión.',
+  source_role_repeated: (b) =>
+    `Solo una columna puede ser ${ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}, y la tienen: ${quoteList(b.params?.columns)}.`,
+  source_role_unmapped: (b) =>
+    `La columna «${param(b, 'column')}» está marcada como ${ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}, pero no está mapeada a una variable. Mapéala o quítale el rol.`,
+  source_role_not_allowed: (b) =>
+    `Solo las fuentes muestrales llevan factor de expansión, estrato o UPM. Quita el rol de la columna «${param(b, 'column')}» o cambia el diseño de la edición a muestral.`,
 };
 
 /** Spanish text for a harmonizer error, or null when the code is not a harmonizer one. */
