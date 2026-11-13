@@ -8,6 +8,7 @@ import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
 import { DatasetResourcesSkeleton } from './DatasetDetailSkeleton';
 import { useDatasetDetail } from './useDatasetDetail';
 import './dataset-detail.css';
+import { SourceMetadataSummary } from './SourceMetadataSummary';
 
 /** A resource's size in MB (1 MB = 1024 × 1024 bytes, as in the upload limits), one decimal. */
 function sizeInMegabytes(bytes: number): string {
@@ -251,6 +252,7 @@ export function DatasetDetail() {
                 Data” lo publica como análisis de este conjunto de datos con su receta completa.
               </p>
               {vistraceError ? <p className="c-dataset-detail__error">{vistraceError}</p> : null}
+              {selectedResource ? <SourceMetadataSummary metadata={selectedResource.sourceMetadata} /> : null}
             </>
           )}
         </section>
