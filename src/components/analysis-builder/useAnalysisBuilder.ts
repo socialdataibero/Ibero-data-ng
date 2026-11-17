@@ -131,6 +131,19 @@ export function useAnalysisBuilder({
     void reloadAnalyses();
   }, [organizationId, datasetId, reloadAnalyses]);
 
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      analysesService.list(organizationId, datasetId).then(setAnalyses).catch(() => undefined);
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    window.addEventListener('focus', refreshWhenVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.removeEventListener('focus', refreshWhenVisible);
+    };
+  }, [organizationId, datasetId]);
+
   const firstRender = useRef(true);
   useEffect(() => {
     if (firstRender.current) {
