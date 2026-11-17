@@ -1,4 +1,4 @@
-import { http, downloadBlob, triggerDownload } from '../api/http';
+import { http, downloadBlob, downloadPrepared, triggerDownload } from '../api/http';
 import type {
   HarmonizerSurvey,
   HarmonizerSurveyDetails,
@@ -21,6 +21,8 @@ import type {
   SavedMapping,
   VariableComparison,
   SaveRecodingPayload,
+  SourceDesign,
+  AnalysisUnit,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -31,6 +33,8 @@ export interface UploadDatasetPayload {
   organizationId?: string;
   /** Solo para DBF. */
   encoding?: UploadEncoding;
+  design: SourceDesign;
+  unit: AnalysisUnit;
 }
 
 export interface UpdateSurveyPayload {
@@ -101,6 +105,9 @@ export const harmonizerService = {
 
   removeDataset: (datasetId: string) => http.delete<void>(`/harmonizer/datasets/${datasetId}`),
 
+  updateDataset: (datasetId: string, changes: { design?: SourceDesign; unit?: AnalysisUnit }) =>
+    http.patch<HarmonizerDataset>(`/harmonizer/datasets/${datasetId}`, changes),
+
   listVariables: (surveyId: string, signal?: AbortSignal) =>
     http.get<SurveyCanonicalVariables>(`/harmonizer/surveys/${surveyId}/variables`, signal),
 
@@ -120,6 +127,8 @@ export const harmonizerService = {
     if (payload.newSurvey) form.append('newSurvey', payload.newSurvey);
     if (payload.organizationId) form.append('organizationId', payload.organizationId);
     if (payload.encoding) form.append('encoding', payload.encoding);
+    form.append('design', payload.design);
+    form.append('unit', payload.unit);
     form.append('file', file);
     return http.post<{
       datasetId: string;
@@ -200,17 +209,17 @@ export const harmonizerService = {
       signal,
     ),
 
+  /**
+   * Downloads go through `downloadPrepared`: the promise ends when the server has prepared the
+   * file and the browser has started saving it (the census takes ~20 s to prepare).
+   */
   downloadDatasetExport: async (datasetId: string, fmt: ExportFormat): Promise<void> => {
-    const { blob, filename } = await downloadBlob(
-      `/harmonizer/datasets/${datasetId}/harmonized.${fmt}`,
-    );
-    triggerDownload(blob, filename ?? `harmonized.${fmt}`);
+    await downloadPrepared(`/harmonizer/datasets/${datasetId}/harmonized.${fmt}`);
   },
 
-  /** The uploaded CSV rebuilt from what the server stored: every column, values as read. */
+  /** The uploaded CSV: the kept original, or rebuilt from what the server stored. */
   downloadDatasetOriginal: async (datasetId: string): Promise<void> => {
-    const { blob, filename } = await downloadBlob(`/harmonizer/datasets/${datasetId}/original.csv`);
-    triggerDownload(blob, filename ?? 'original.csv');
+    await downloadPrepared(`/harmonizer/datasets/${datasetId}/original.csv`);
   },
 
   downloadSurveyExport: async (
@@ -218,17 +227,9 @@ export const harmonizerService = {
     fmt: ExportFormat,
     variables?: string[],
   ): Promise<void> => {
-    const { blob, filename } = await downloadBlob(
-      `/harmonizer/surveys/${surveyId}/harmonized.${fmt}${variablesQuery(variables)}`,
+    await downloadPrepared(
+      `/harmonizer/surveys/${surveyId}/harmonized.${fmt}`,
+      variablesQuery(variables),
     );
-    triggerDownload(blob, filename ?? `harmonized.${fmt}`);
   },
-
-  /** Same export as downloadDatasetExport, but returned as a Blob instead of triggering a browser download. */
-  getDatasetExportBlob: (datasetId: string, fmt: ExportFormat) =>
-    downloadBlob(`/harmonizer/datasets/${datasetId}/harmonized.${fmt}`),
-
-  /** Same export as downloadSurveyExport, but returned as a Blob instead of triggering a browser download. */
-  getSurveyExportBlob: (surveyId: string, fmt: ExportFormat, variables?: string[]) =>
-    downloadBlob(`/harmonizer/surveys/${surveyId}/harmonized.${fmt}${variablesQuery(variables)}`),
 };

@@ -1,8 +1,35 @@
+import { useEffect, useRef } from 'react';
 import { Button } from 'sectei-library';
-import { UPLOAD_ENCODING_LABEL, type UploadEncoding } from '../../../core/models/harmonizer.model';
+import {
+  ANALYSIS_UNIT_LABEL,
+  SOURCE_DESIGN_LABEL,
+  UPLOAD_ENCODING_LABEL,
+  type AnalysisUnit,
+  type HarmonizerImportPhase,
+  type SourceDesign,
+  type UploadEncoding,
+} from '../../../core/models/harmonizer.model';
 import { PageHeader } from '../../shared/page-header/PageHeader';
 import { CRUMBS, useHarmonizerUpload } from './useHarmonizerUpload';
 import './harmonizer-upload.css';
+
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+function formatBytes(bytes: number): string {
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < BYTE_UNITS.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value.toLocaleString('es-MX', { maximumFractionDigits: unit === 0 ? 0 : 1 })} ${BYTE_UNITS[unit]}`;
+}
+
+const PHASE_TEXT: Record<HarmonizerImportPhase, string> = {
+  checking: 'Revisando que el archivo esté en UTF-8…',
+  reading: 'Leyendo las filas…',
+  saving: 'Guardando la edición…',
+};
 
 export function HarmonizerUpload() {
   const {
@@ -24,13 +51,28 @@ export function HarmonizerUpload() {
     isDbf,
     encoding,
     setEncoding,
+    design,
+    setDesign,
+    unit,
+    setUnit,
     uploading,
+    stage,
+    progress,
+    processing,
+    cancelUpload,
     error,
     fieldErrors,
     canUpload,
     submit,
     newOption,
   } = useHarmonizerUpload();
+
+  // The progress panel is below the form: bring it into view when the upload starts and
+  // again when the server starts processing.
+  const progressRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (stage !== 'idle') progressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [stage]);
 
   return (
     <div className="c-harmonizer-upload">
@@ -171,15 +213,15 @@ export function HarmonizerUpload() {
               <input
                 id="dataset-file"
                 type="file"
-                accept=".csv,text/csv,.dbf"
+                accept=".csv,text/csv,.gz,.dbf"
                 onChange={onFileSelected}
                 aria-required="true"
                 aria-invalid={!!fieldErrors.file}
                 aria-describedby={fieldErrors.file ? 'dataset-file-error' : undefined}
               />
               <p className="form-help">
-                Se guarda todo como texto, sin inferir tipos; las celdas vacías quedan como cadena
-                vacía.
+                CSV en UTF-8, también comprimido con gzip (.csv.gz), o tabla DBF. Se guarda todo
+                como texto, sin inferir tipos; las celdas vacías quedan como cadena vacía.
               </p>
               {fieldErrors.file ? (
                 <p id="dataset-file-error" className="c-harmonizer-upload__error" role="alert">
@@ -213,6 +255,68 @@ export function HarmonizerUpload() {
               </div>
             ) : null}
 
+            <div className="c-harmonizer-upload__field">
+              <label htmlFor="dataset-design">Diseño de la fuente *</label>
+              <select
+                id="dataset-design"
+                value={design}
+                onChange={(e) => setDesign(e.target.value as SourceDesign | '')}
+                name="design"
+                aria-required="true"
+                aria-invalid={!!fieldErrors.design}
+                aria-describedby={
+                  fieldErrors.design ? 'dataset-design-help dataset-design-error' : 'dataset-design-help'
+                }
+              >
+                <option value="">Selecciona el diseño</option>
+                {(Object.keys(SOURCE_DESIGN_LABEL) as SourceDesign[]).map((value) => (
+                  <option key={value} value={value}>
+                    {SOURCE_DESIGN_LABEL[value]}
+                  </option>
+                ))}
+              </select>
+              <p id="dataset-design-help" className="form-help">
+                «Censal» si se enumeró a toda la población (como el Censo de Población). «Muestral» si
+                cada registro representa a varias unidades (como la ENOE o la ENIGH): en el mapeo
+                tendrás que marcar la columna del factor de expansión.
+              </p>
+              {fieldErrors.design ? (
+                <p id="dataset-design-error" className="c-harmonizer-upload__error" role="alert">
+                  {fieldErrors.design}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="c-harmonizer-upload__field">
+              <label htmlFor="dataset-unit">Unidad de análisis *</label>
+              <select
+                id="dataset-unit"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as AnalysisUnit | '')}
+                name="unit"
+                aria-required="true"
+                aria-invalid={!!fieldErrors.unit}
+                aria-describedby={
+                  fieldErrors.unit ? 'dataset-unit-help dataset-unit-error' : 'dataset-unit-help'
+                }
+              >
+                <option value="">Selecciona la unidad</option>
+                {(Object.keys(ANALYSIS_UNIT_LABEL) as AnalysisUnit[]).map((value) => (
+                  <option key={value} value={value}>
+                    {ANALYSIS_UNIT_LABEL[value]}
+                  </option>
+                ))}
+              </select>
+              <p id="dataset-unit-help" className="form-help">
+                Qué representa cada registro del archivo: una persona, una vivienda o un hogar.
+              </p>
+              {fieldErrors.unit ? (
+                <p id="dataset-unit-error" className="c-harmonizer-upload__error" role="alert">
+                  {fieldErrors.unit}
+                </p>
+              ) : null}
+            </div>
+
             {error ? <p className="c-harmonizer-upload__error">{error}</p> : null}
 
             <div className="c-harmonizer-upload__actions">
@@ -222,10 +326,43 @@ export function HarmonizerUpload() {
                 icon="pictogram-file-upload"
                 disabled={uploading || !canUpload}
               >
-                {uploading ? 'Subiendo…' : 'Subir y mapear'}
+                {stage === 'processing' ? 'Procesando…' : uploading ? 'Subiendo…' : 'Subir y mapear'}
               </Button>
             </div>
           </fieldset>
+
+          {stage === 'uploading' ? (
+            <div className="c-harmonizer-upload__progress" role="status" ref={progressRef}>
+              <label htmlFor="upload-progress">
+                Subiendo {formatBytes(progress.sent)} de {formatBytes(progress.total)}
+                {progress.total > 0 ? ` (${Math.floor((progress.sent / progress.total) * 100)} %)` : ''}
+              </label>
+              <progress id="upload-progress" max={progress.total || 1} value={progress.sent} />
+              <p className="form-help">
+                Si se corta la conexión, la subida se reintenta sola. No cierres esta página hasta
+                que termine.
+              </p>
+              <Button type="button" variant="secondary" onClick={cancelUpload}>
+                Cancelar subida
+              </Button>
+            </div>
+          ) : null}
+
+          {stage === 'processing' ? (
+            <div className="c-harmonizer-upload__progress" role="status" ref={progressRef}>
+              <p>
+                Archivo recibido. {processing.phase ? PHASE_TEXT[processing.phase] : 'En espera de procesarse…'}
+                {processing.phase === 'reading' && processing.rowsRead > 0
+                  ? ` ${processing.rowsRead.toLocaleString('es-MX')} filas leídas.`
+                  : ''}
+              </p>
+              <progress aria-label="Procesando el archivo" />
+              <p className="form-help">
+                Un archivo grande puede tardar varios minutos. Si sales de esta página, el proceso
+                sigue en el servidor y la edición aparecerá en la lista de encuestas cuando termine.
+              </p>
+            </div>
+          ) : null}
         </form>
       </div>
     </div>

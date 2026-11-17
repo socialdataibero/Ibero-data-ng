@@ -269,17 +269,15 @@ export function useHarmonizerView() {
     setAttachError(null);
     void (async () => {
       try {
-        const { blob, filename } = datasetId
-          ? await harmonizerService.getDatasetExportBlob(datasetId, 'parquet')
+        // The server writes the harmonized Parquet straight into the dataset: the file never
+        // comes to the browser (the census does not fit the upload).
+        const source = datasetId
+          ? { editionId: datasetId }
           : surveyId
-            ? await harmonizerService.getSurveyExportBlob(surveyId, 'parquet', selectedVariables)
-            : { blob: null, filename: null };
-        if (!blob) throw new Error('missing source');
-
-        const file = new File([blob], filename ?? `${title || 'armonizado'}.parquet`, {
-          type: 'application/octet-stream',
-        });
-        await resourcesService.upload(attachTarget.organizationId, attachTarget.id, file);
+            ? { surveyId, variables: selectedVariables }
+            : null;
+        if (!source) throw new Error('missing source');
+        await resourcesService.attachHarmonized(attachTarget.organizationId, attachTarget.id, source);
 
         setAttachedTo(attachTarget);
         setAttachOpen(false);
@@ -292,7 +290,7 @@ export function useHarmonizerView() {
         setAttaching(false);
       }
     })();
-  }, [attachTarget, datasetId, surveyId, selectedVariables, title]);
+  }, [attachTarget, datasetId, surveyId, selectedVariables]);
 
   const crumbs: Crumb[] = [
     { label: 'Inicio', href: '/dashboard' },

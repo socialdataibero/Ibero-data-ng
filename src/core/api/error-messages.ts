@@ -6,6 +6,7 @@ import { translateValidationDetail } from './validation-messages';
 /** Codes any module can return. */
 const GENERAL_MESSAGES: Record<string, string> = {
   insufficient_role: 'No tienes el rol necesario en esta organización para hacer esto.',
+  internal_error: 'Ocurrió un error inesperado en el servidor. Inténtalo de nuevo; si se repite, avisa al administrador.',
 };
 
 /**

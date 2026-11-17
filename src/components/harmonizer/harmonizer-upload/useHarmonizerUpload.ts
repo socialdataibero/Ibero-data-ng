@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   NEW_OPTION,
+  type AnalysisUnit,
+  type HarmonizerImportPhase,
   type HarmonizerSurvey,
   type MappingRouteState,
+  type SourceDesign,
   type UploadEncoding,
 } from '../../../core/models/harmonizer.model';
 import { useHarmonizerAccess } from '../../../core/hooks/useHarmonizerAccess';
 import { harmonizerService } from '../../../core/services/harmonizer.service';
+import { uploadEdition, waitForImport, type EditionUpload } from '../../../core/services/harmonizer-upload';
 import { ApiError, errorMessage, fieldErrors } from '../../../core/api/http';
+import { SOURCE_INFO_MISSING } from '../../../core/api/harmonizer-error-messages';
 import { isValidYear } from '../../../core/utils/validation';
 import type { Crumb } from '../../shared/page-header/PageHeader';
 
@@ -36,13 +41,51 @@ export function useHarmonizerUpload() {
   const [newSurveyName, setNewSurveyName] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [encoding, setEncoding] = useState<UploadEncoding>('auto');
-  const [uploading, setUploading] = useState(false);
+  // Sin valor inicial: la persona debe elegirlos.
+  const [design, setDesign] = useState<SourceDesign | ''>('');
+  const [unit, setUnit] = useState<AnalysisUnit | ''>('');
+  // `uploading`: the file is being sent; `processing`: the server is importing it.
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'processing'>('idle');
+  const uploading = stage !== 'idle';
+  const [progress, setProgress] = useState({ sent: 0, total: 0 });
+  const [processing, setProcessing] = useState<{ phase: HarmonizerImportPhase | null; rowsRead: number }>({
+    phase: null,
+    rowsRead: 0,
+  });
+  const uploadRef = useRef<EditionUpload | null>(null);
+  const pollRef = useRef<AbortController | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Leaving the page stops an upload in progress. An import already on the server goes on;
+  // its edition shows up in the survey list when it finishes.
+  useEffect(
+    () => () => {
+      uploadRef.current?.cancel();
+      pollRef.current?.abort();
+    },
+    [],
+  );
+
+  // Closing or reloading the tab while the file is being sent loses the upload (the next one
+  // starts from zero), so the browser asks first. Once the file is on the server (`processing`)
+  // the import goes on without the page, so there is nothing to warn about.
+  useEffect(() => {
+    if (stage !== 'uploading') return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Older browsers only show the dialog when `returnValue` is set.
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [stage]);
 
   const [errorDatasetName, setErrorDatasetName] = useState('');
   const [errorDatasetYear, setErrorDatasetYear] = useState('');
   const [errorNewSurveyName, setErrorNewSurveyName] = useState('');
   const [errorFile, setErrorFile] = useState('');
+  const [errorDesign, setErrorDesign] = useState('');
+  const [errorUnit, setErrorUnit] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -64,8 +107,9 @@ export function useHarmonizerUpload() {
 
   const canUpload = useMemo(() => {
     if (!canUploadToSurvey || !file || !datasetName.trim() || datasetYear === '') return false;
+    if (!design || !unit) return false;
     return uploadSurveyId !== NEW_OPTION || newSurveyName.trim() !== '';
-  }, [canUploadToSurvey, file, datasetName, datasetYear, uploadSurveyId, newSurveyName]);
+  }, [canUploadToSurvey, file, datasetName, datasetYear, design, unit, uploadSurveyId, newSurveyName]);
 
   // El servidor elige el lector por la extensión; la codificación solo aplica a DBF.
   const isDbf = !!file && /\.dbf$/i.test(file.name);
@@ -97,8 +141,18 @@ export function useHarmonizerUpload() {
       ok = false;
     }
 
+    if (!design) {
+      setErrorDesign(SOURCE_INFO_MISSING.design);
+      ok = false;
+    }
+
+    if (!unit) {
+      setErrorUnit(SOURCE_INFO_MISSING.unit);
+      ok = false;
+    }
+
     return ok;
-  }, [datasetName, datasetYear, uploadSurveyId, newSurveyName, file]);
+  }, [datasetName, datasetYear, uploadSurveyId, newSurveyName, file, design, unit]);
 
   const submit = useCallback(
     (event: FormEvent) => {
@@ -107,15 +161,21 @@ export function useHarmonizerUpload() {
       setErrorDatasetYear('');
       setErrorNewSurveyName('');
       setErrorFile('');
+      setErrorDesign('');
+      setErrorUnit('');
       setError(null);
 
-      if (!canUploadToSurvey || uploading || !validate() || !file || datasetYear === '') return;
+      if (!canUploadToSurvey || uploading || !validate() || !file || datasetYear === '' || !design || !unit)
+        return;
 
-      setUploading(true);
+      setStage('uploading');
+      setProgress({ sent: 0, total: file.size });
+      setProcessing({ phase: null, rowsRead: 0 });
 
       void (async () => {
         try {
-          const { datasetId, renamedColumns, source } = await harmonizerService.uploadDataset(
+          const upload = uploadEdition(
+            file,
             {
               name: datasetName.trim(),
               year: Number(datasetYear),
@@ -123,16 +183,39 @@ export function useHarmonizerUpload() {
               organizationId: uploadSurveyId === NEW_OPTION ? organizationId : undefined,
               newSurvey: uploadSurveyId === NEW_OPTION ? newSurveyName.trim() : undefined,
               encoding: isDbf ? encoding : undefined,
+              design,
+              unit,
             },
-            file,
+            (sent, total) => setProgress({ sent, total }),
           );
+          uploadRef.current = upload;
+          const importId = await upload.done;
+          uploadRef.current = null;
+
+          setStage('processing');
+          const controller = new AbortController();
+          pollRef.current = controller;
+          const finished = await waitForImport(
+            importId,
+            (status) => setProcessing({ phase: status.phase, rowsRead: status.rowsRead }),
+            controller.signal,
+          );
+          const { datasetId, renamedColumns, source } = finished.result!;
           const state: MappingRouteState = { renamedColumns, source };
           void navigate(`/harmonizer/datasets/${datasetId}/mapping`, { state });
         } catch (err) {
+          // Cancelled by the user, or the page was left.
+          if (err instanceof DOMException && err.name === 'AbortError') return;
           if (err instanceof ApiError && err.body?.code === 'survey_name_taken') {
             setErrorNewSurveyName(
               'Ya existe una encuesta con ese nombre. Elígela en la lista de encuestas.',
             );
+            return;
+          }
+          if (err instanceof ApiError && err.body?.code === 'source_info_required') {
+            const missing = Array.isArray(err.body.params?.missing) ? err.body.params.missing : [];
+            if (missing.includes('design')) setErrorDesign(SOURCE_INFO_MISSING.design);
+            if (missing.includes('unit')) setErrorUnit(SOURCE_INFO_MISSING.unit);
             return;
           }
           if (err instanceof ApiError && err.body?.code === 'dataset_name_taken') {
@@ -153,24 +236,40 @@ export function useHarmonizerUpload() {
               err.body?.code === 'dbf_invalid' ||
               err.body?.code === 'dbf_field_unsupported' ||
               err.body?.code === 'dbf_not_utf8' ||
-              err.body?.code === 'dbf_no_rows')
+              err.body?.code === 'dbf_no_rows' ||
+              err.body?.code === 'dbf_too_large' ||
+              err.body?.code === 'gzip_invalid' ||
+              err.body?.code === 'upload_too_large')
           ) {
             setErrorFile(errorMessage(err, 'No se pudo leer el archivo.'));
             return;
           }
-          const matched = fieldErrors(err, ['name', 'year', 'surveyId', 'newSurvey', 'organizationId', 'encoding']);
+          const matched = fieldErrors(err, [
+            'name',
+            'year',
+            'surveyId',
+            'newSurvey',
+            'organizationId',
+            'encoding',
+            'design',
+            'unit',
+          ]);
           if (matched.organizationId) setError(matched.organizationId);
           if (matched.surveyId) setError(matched.surveyId);
           if (matched.name) setErrorDatasetName(matched.name);
           if (matched.year) setErrorDatasetYear(matched.year);
           if (matched.newSurvey) setErrorNewSurveyName(matched.newSurvey);
           if (matched.encoding) setErrorFile(matched.encoding);
+          if (matched.design) setErrorDesign(matched.design);
+          if (matched.unit) setErrorUnit(matched.unit);
 
           if (Object.keys(matched).length === 0) {
             setError(errorMessage(err, 'No se pudo subir el archivo.'));
           }
         } finally {
-          setUploading(false);
+          uploadRef.current = null;
+          pollRef.current = null;
+          setStage('idle');
         }
       })();
     },
@@ -186,10 +285,16 @@ export function useHarmonizerUpload() {
       datasetName,
       isDbf,
       encoding,
+      design,
+      unit,
       surveys,
       navigate,
     ],
   );
+
+  const cancelUpload = useCallback(() => {
+    uploadRef.current?.cancel();
+  }, []);
 
   return {
     surveys,
@@ -210,13 +315,23 @@ export function useHarmonizerUpload() {
     isDbf,
     encoding,
     setEncoding,
+    design,
+    setDesign,
+    unit,
+    setUnit,
     uploading,
+    stage,
+    progress,
+    processing,
+    cancelUpload,
     error,
     fieldErrors: {
       datasetName: errorDatasetName,
       datasetYear: errorDatasetYear,
       newSurveyName: errorNewSurveyName,
       file: errorFile,
+      design: errorDesign,
+      unit: errorUnit,
     },
     canUpload,
     submit,

@@ -170,7 +170,7 @@ export function SurveyModule({
                               onClick={() => onDownloadOriginal(dataset)}
                             >
                               {downloadingDatasetId === dataset.id
-                                ? 'Descargando…'
+                                ? 'Preparando…'
                                 : 'Descargar original'}
                             </button>
                           </>

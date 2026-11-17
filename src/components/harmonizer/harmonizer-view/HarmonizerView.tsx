@@ -110,7 +110,7 @@ export function HarmonizerView() {
               onClick={() => download('csv')}
               disabled={downloading !== null}
             >
-              {downloading === 'csv' ? 'Descargando…' : 'CSV'}
+              {downloading === 'csv' ? 'Preparando…' : 'CSV'}
             </Button>
             <Button
               type="button"
@@ -119,7 +119,7 @@ export function HarmonizerView() {
               onClick={() => download('parquet')}
               disabled={downloading !== null || headers.length === 0}
             >
-              {downloading === 'parquet' ? 'Descargando…' : 'Parquet'}
+              {downloading === 'parquet' ? 'Preparando…' : 'Parquet'}
             </Button>
             <Button
               type="button"
@@ -216,6 +216,13 @@ export function HarmonizerView() {
                   <p className="text-color-secondary">
                     Se adjuntará este armonizado (Parquet) como un nuevo recurso del conjunto de
                     datos que elijas.
+                  </p>
+                  <p className="text-color-secondary">
+                    El recurso guarda una copia de los datos de la fuente: diseño, unidad de
+                    análisis, códigos de «No especificado» y roles muestrales (factor de expansión,
+                    estrato y UPM), tal como están ahora. Si después cambias el mapeo, el recurso
+                    conserva lo que se copió. Una encuesta con ediciones de distinto diseño, unidad
+                    o factor de expansión se adjunta sin estos datos.
                   </p>
                   <label htmlFor="attach-search">Buscar conjunto de datos</label>
                   <input
