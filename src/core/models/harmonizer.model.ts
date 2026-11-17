@@ -29,7 +29,36 @@ export interface HarmonizerDataset {
   rowCount: number;
   /** Columnas del archivo, mapeadas o no. */
   columnCount: number;
+  /** `null` en ediciones subidas antes de pedir el diseño y la unidad. */
+  design: SourceDesign | null;
+  unit: AnalysisUnit | null;
 }
+
+/** Cómo se levantó la fuente: censo (toda la población) o muestra (cada registro representa a varios). */
+export type SourceDesign = 'census' | 'sample';
+
+export const SOURCE_DESIGN_LABEL: Record<SourceDesign, string> = {
+  census: 'Censal',
+  sample: 'Muestral',
+};
+
+/** Qué representa cada registro de la fuente. */
+export type AnalysisUnit = 'person' | 'dwelling' | 'household';
+
+export const ANALYSIS_UNIT_LABEL: Record<AnalysisUnit, string> = {
+  person: 'Persona',
+  dwelling: 'Vivienda',
+  household: 'Hogar',
+};
+
+/** Rol de una columna en el diseño muestral. */
+export type SourceRole = 'weight' | 'stratum' | 'psu';
+
+export const SOURCE_ROLE_LABEL: Record<SourceRole, string> = {
+  weight: 'Factor de expansión',
+  stratum: 'Estrato',
+  psu: 'UPM',
+};
 
 /**
  * Encabezado que el servidor renombró al subirlo: repetido (`EDAD.1`) o vacío
@@ -183,6 +212,8 @@ export interface MappingColumn {
   suggested: string | null;
   suggestionSource: SuggestionSource | null;
   missingCodes: string[];
+  /** Rol de diseño muestral guardado. */
+  role: SourceRole | null;
   /** Tipo que sugieren los valores de esta edición. */
   inferredType: ValueType;
   values: ColumnValues;
@@ -204,7 +235,13 @@ export interface MappingInfo {
 /** Mapeo guardado de una edición, sin sus datos. */
 export interface SavedMapping {
   dataset: HarmonizerDataset;
-  columns: { column: string; canonicalId: string; canonicalName: string; missingCodes: string[] }[];
+  columns: {
+    column: string;
+    canonicalId: string;
+    canonicalName: string;
+    missingCodes: string[];
+    role: SourceRole | null;
+  }[];
 }
 
 export interface CodebookSummary {
@@ -318,6 +355,7 @@ export interface MappingChoice {
   newDescription?: string;
   dataType?: ValueType;
   missingCodes?: string[];
+  role?: SourceRole | null;
 }
 
 /** `null` es un valor faltante: celda vacía o código de no especificado. */

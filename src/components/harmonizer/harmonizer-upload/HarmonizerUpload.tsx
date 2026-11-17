@@ -1,8 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Button } from 'sectei-library';
 import {
+  ANALYSIS_UNIT_LABEL,
+  SOURCE_DESIGN_LABEL,
   UPLOAD_ENCODING_LABEL,
+  type AnalysisUnit,
   type HarmonizerImportPhase,
+  type SourceDesign,
   type UploadEncoding,
 } from '../../../core/models/harmonizer.model';
 import { PageHeader } from '../../shared/page-header/PageHeader';
@@ -47,6 +51,10 @@ export function HarmonizerUpload() {
     isDbf,
     encoding,
     setEncoding,
+    design,
+    setDesign,
+    unit,
+    setUnit,
     uploading,
     stage,
     progress,
@@ -246,6 +254,68 @@ export function HarmonizerUpload() {
                 </p>
               </div>
             ) : null}
+
+            <div className="c-harmonizer-upload__field">
+              <label htmlFor="dataset-design">Diseño de la fuente *</label>
+              <select
+                id="dataset-design"
+                value={design}
+                onChange={(e) => setDesign(e.target.value as SourceDesign | '')}
+                name="design"
+                aria-required="true"
+                aria-invalid={!!fieldErrors.design}
+                aria-describedby={
+                  fieldErrors.design ? 'dataset-design-help dataset-design-error' : 'dataset-design-help'
+                }
+              >
+                <option value="">Selecciona el diseño</option>
+                {(Object.keys(SOURCE_DESIGN_LABEL) as SourceDesign[]).map((value) => (
+                  <option key={value} value={value}>
+                    {SOURCE_DESIGN_LABEL[value]}
+                  </option>
+                ))}
+              </select>
+              <p id="dataset-design-help" className="form-help">
+                «Censal» si se enumeró a toda la población (como el Censo de Población). «Muestral» si
+                cada registro representa a varias unidades (como la ENOE o la ENIGH): en el mapeo
+                tendrás que marcar la columna del factor de expansión.
+              </p>
+              {fieldErrors.design ? (
+                <p id="dataset-design-error" className="c-harmonizer-upload__error" role="alert">
+                  {fieldErrors.design}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="c-harmonizer-upload__field">
+              <label htmlFor="dataset-unit">Unidad de análisis *</label>
+              <select
+                id="dataset-unit"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as AnalysisUnit | '')}
+                name="unit"
+                aria-required="true"
+                aria-invalid={!!fieldErrors.unit}
+                aria-describedby={
+                  fieldErrors.unit ? 'dataset-unit-help dataset-unit-error' : 'dataset-unit-help'
+                }
+              >
+                <option value="">Selecciona la unidad</option>
+                {(Object.keys(ANALYSIS_UNIT_LABEL) as AnalysisUnit[]).map((value) => (
+                  <option key={value} value={value}>
+                    {ANALYSIS_UNIT_LABEL[value]}
+                  </option>
+                ))}
+              </select>
+              <p id="dataset-unit-help" className="form-help">
+                Qué representa cada registro del archivo: una persona, una vivienda o un hogar.
+              </p>
+              {fieldErrors.unit ? (
+                <p id="dataset-unit-error" className="c-harmonizer-upload__error" role="alert">
+                  {fieldErrors.unit}
+                </p>
+              ) : null}
+            </div>
 
             {error ? <p className="c-harmonizer-upload__error">{error}</p> : null}
 

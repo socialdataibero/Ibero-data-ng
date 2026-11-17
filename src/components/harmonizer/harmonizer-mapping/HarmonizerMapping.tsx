@@ -8,9 +8,15 @@ import { ConfirmDialog } from '../../shared/confirm-dialog/ConfirmDialog';
 import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
 import {
+  ANALYSIS_UNIT_LABEL,
+  SOURCE_DESIGN_LABEL,
+  SOURCE_ROLE_LABEL,
   UPLOAD_ENCODING_LABEL,
+  type AnalysisUnit,
   type CodebookCategory,
   type ColumnValues,
+  type SourceDesign,
+  type SourceRole,
   type ValueType,
 } from '../../../core/models/harmonizer.model';
 import './harmonizer-mapping.css';
@@ -40,6 +46,17 @@ export function HarmonizerMapping() {
     setNewName,
     setMissingCodes,
     setDataType,
+    setRole,
+    isSample,
+    sourceDesign,
+    setSourceDesign,
+    sourceUnit,
+    setSourceUnit,
+    sourceChanged,
+    saveSource,
+    savingSource,
+    sourceError,
+    sourceNotice,
     typeHint,
     typeStatus,
     valueTypeLabel,
@@ -83,6 +100,7 @@ export function HarmonizerMapping() {
   const codebookChanged =
     codebookChoice !== (codebook?.id ?? '') || (codebookChoice !== '' && tableChoice !== (codebook?.table ?? ''));
   const filtering = filter.trim() !== '' || onlyUnmapped;
+  const tableColumns = isSample ? 6 : 5;
 
   return (
     <div className="c-harmonizer-mapping">
@@ -142,6 +160,14 @@ export function HarmonizerMapping() {
               algún valor no es número, el guardado lo indica para que lo marques como no
               especificado o elijas Texto.
             </p>
+            {isSample ? (
+              <p className="text-color-secondary">
+                Esta fuente es <em>muestral</em>: en <em>Rol muestral</em> marca la columna del{' '}
+                <em>factor de expansión</em> (obligatorio) y, si existen, la del <em>estrato</em> y la
+                de la <em>UPM</em> (unidad primaria de muestreo). Cada rol va en una sola columna
+                mapeada.
+              </p>
+            ) : null}
 
             {uploadSource?.format === 'dbf' ? (
               <div className="c-harmonizer-mapping__notice" role="status">
@@ -211,7 +237,89 @@ export function HarmonizerMapping() {
                   Filas cargadas: {dataset.rowCount.toLocaleString('es-MX')}
                 </StatusBadge>
               ) : null}
+              {dataset?.design ? (
+                <StatusBadge variant="neutral">Diseño: {SOURCE_DESIGN_LABEL[dataset.design]}</StatusBadge>
+              ) : null}
+              {dataset?.unit ? (
+                <StatusBadge variant="neutral">Unidad: {ANALYSIS_UNIT_LABEL[dataset.unit]}</StatusBadge>
+              ) : null}
             </div>
+
+            <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-source-title">
+              <h2 id="mapping-source-title" className="c-harmonizer-mapping__tools-title">
+                Fuente de los datos
+              </h2>
+              {dataset && (!dataset.design || !dataset.unit) ? (
+                <p className="c-harmonizer-mapping__notice" role="status">
+                  Esta edición se subió antes de que se pidieran el diseño y la unidad de análisis.
+                  {canEdit ? ' Decláralos aquí para que acompañen a los datos.' : ''}
+                </p>
+              ) : null}
+              <p className="text-color-secondary c-harmonizer-mapping__tools-help">
+                <em>Censal</em>: se enumeró a toda la población. <em>Muestral</em>: cada registro
+                representa a varias unidades y en la tabla se marca el factor de expansión. Pasar a
+                censal quita los roles muestrales marcados.
+              </p>
+              <div className="c-harmonizer-mapping__tools-row">
+                <div className="c-harmonizer-mapping__tool">
+                  <label htmlFor="mapping-design">Diseño</label>
+                  <select
+                    id="mapping-design"
+                    value={sourceDesign}
+                    onChange={(e) => setSourceDesign(e.target.value as SourceDesign | '')}
+                    disabled={!canEdit || savingSource}
+                  >
+                    <option value="" disabled>
+                      Selecciona el diseño
+                    </option>
+                    {(Object.keys(SOURCE_DESIGN_LABEL) as SourceDesign[]).map((value) => (
+                      <option key={value} value={value}>
+                        {SOURCE_DESIGN_LABEL[value]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="c-harmonizer-mapping__tool">
+                  <label htmlFor="mapping-unit">Unidad de análisis</label>
+                  <select
+                    id="mapping-unit"
+                    value={sourceUnit}
+                    onChange={(e) => setSourceUnit(e.target.value as AnalysisUnit | '')}
+                    disabled={!canEdit || savingSource}
+                  >
+                    <option value="" disabled>
+                      Selecciona la unidad
+                    </option>
+                    {(Object.keys(ANALYSIS_UNIT_LABEL) as AnalysisUnit[]).map((value) => (
+                      <option key={value} value={value}>
+                        {ANALYSIS_UNIT_LABEL[value]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="small"
+                    onClick={saveSource}
+                    disabled={savingSource || !sourceChanged || !sourceDesign || !sourceUnit}
+                  >
+                    {savingSource ? 'Guardando…' : 'Guardar fuente'}
+                  </Button>
+                ) : null}
+              </div>
+              {sourceNotice ? (
+                <p className="c-harmonizer-mapping__bulk-notice" role="status">
+                  {sourceNotice}
+                </p>
+              ) : null}
+              {sourceError ? (
+                <p className="c-harmonizer-mapping__error" role="alert">
+                  {sourceError}
+                </p>
+              ) : null}
+            </section>
 
             <section className="c-harmonizer-mapping__tools" aria-labelledby="mapping-codebook-title">
               <h2 id="mapping-codebook-title" className="c-harmonizer-mapping__tools-title">
@@ -406,13 +514,14 @@ export function HarmonizerMapping() {
                       <th scope="col">Variable canónica</th>
                       <th scope="col">Tipo</th>
                       <th scope="col">No especificado</th>
+                      {isSample ? <th scope="col">Rol muestral</th> : null}
                       <th scope="col">Sugerencia</th>
                     </tr>
                   </thead>
                   <tbody>
                     {visibleRows.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-color-secondary">
+                        <td colSpan={tableColumns} className="text-color-secondary">
                           Ninguna columna coincide con el filtro.
                         </td>
                       </tr>
@@ -429,7 +538,7 @@ export function HarmonizerMapping() {
                         <Fragment key={row.column.name}>
                           {startsSection ? (
                             <tr className="c-harmonizer-mapping__section">
-                              <th scope="colgroup" colSpan={5}>
+                              <th scope="colgroup" colSpan={tableColumns}>
                                 {section}
                               </th>
                             </tr>
@@ -553,6 +662,29 @@ export function HarmonizerMapping() {
                                 </p>
                               ) : null}
                             </td>
+                            {isSample ? (
+                              <td>
+                                <div className="c-harmonizer-mapping__field c-harmonizer-mapping__field--role">
+                                  <label className="a11y-sr-only" htmlFor={`role-${row.column.name}`}>
+                                    Rol muestral de {row.column.name}
+                                  </label>
+                                  <select
+                                    id={`role-${row.column.name}`}
+                                    value={row.role}
+                                    onChange={(e) => setRole(index, e.target.value as SourceRole | '')}
+                                    name={`role-${row.column.name}`}
+                                    disabled={!canEdit || row.choice === ''}
+                                  >
+                                    <option value="">Ninguno</option>
+                                    {(Object.keys(SOURCE_ROLE_LABEL) as SourceRole[]).map((role) => (
+                                      <option key={role} value={role}>
+                                        {SOURCE_ROLE_LABEL[role]}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </td>
+                            ) : null}
                             <td>
                               {row.column.suggestionSource ? (
                                 <StatusBadge

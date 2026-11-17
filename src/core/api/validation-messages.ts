@@ -25,9 +25,16 @@ const MESSAGES: Record<string, string> = {
 
 const ENCODING_ONE_OF = /^encoding must be one of: (.*)\.$/;
 
+const ONE_OF_TEXT: Record<string, string> = {
+  'design must be one of: census, sample.': 'El diseño de la fuente debe ser censal o muestral.',
+  'unit must be one of: person, dwelling, household.':
+    'La unidad de análisis debe ser persona, vivienda u hogar.',
+  'role must be one of: weight, stratum, psu.': 'El rol debe ser factor de expansión, estrato o UPM.',
+};
+
 /** Spanish text for one validation detail; unknown details are returned unchanged. */
 export function translateValidationDetail(detail: string): string {
   const encoding = ENCODING_ONE_OF.exec(detail);
   if (encoding) return `encoding debe ser uno de: ${encoding[1]}.`;
-  return MESSAGES[detail] ?? detail;
+  return MESSAGES[detail] ?? ONE_OF_TEXT[detail] ?? detail;
 }

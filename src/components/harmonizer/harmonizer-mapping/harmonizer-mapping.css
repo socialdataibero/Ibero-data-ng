@@ -108,6 +108,11 @@ body[data-theme='dark'] .c-harmonizer-mapping__notice {
   min-width: 9rem;
 }
 
+/* «Factor de expansión» must fit without being cut. */
+.c-harmonizer-mapping__field--role {
+  min-width: 12.5rem;
+}
+
 .c-harmonizer-mapping__type-hint {
   margin: 0;
   font-size: 0.8rem;

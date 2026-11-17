@@ -43,6 +43,8 @@ export function uploadEdition(
     editionName: payload.name,
     year: String(payload.year),
     surveyId: payload.surveyId,
+    design: payload.design,
+    unit: payload.unit,
   };
   if (payload.newSurvey) meta.newSurvey = payload.newSurvey;
   if (payload.organizationId) meta.organizationId = payload.organizationId;

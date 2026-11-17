@@ -8,6 +8,14 @@ import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
 import { DatasetResourcesSkeleton } from './DatasetDetailSkeleton';
 import { useDatasetDetail } from './useDatasetDetail';
 import './dataset-detail.css';
+import { SourceMetadataSummary } from './SourceMetadataSummary';
+
+/** A resource's size in MB (1 MB = 1024 × 1024 bytes, as in the upload limits), one decimal. */
+function sizeInMegabytes(bytes: number): string {
+  const mb = bytes / 1024 ** 2;
+  if (bytes > 0 && mb < 0.1) return '< 0.1 MB';
+  return `${mb.toLocaleString('es-MX', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
+}
 
 function visibilityLabel(visibility: string): string {
   if (visibility === 'PUBLIC') return 'Público';
@@ -225,7 +233,7 @@ export function DatasetDetail() {
               >
                 {resources.map((resource) => (
                   <option key={resource.id} value={resource.id}>
-                    {resource.filename} ({(resource.sizeBytes / 1024).toFixed(1)} KB)
+                    {resource.filename} ({sizeInMegabytes(resource.sizeBytes)})
                   </option>
                 ))}
               </select>
@@ -244,6 +252,7 @@ export function DatasetDetail() {
                 Data” lo publica como análisis de este conjunto de datos con su receta completa.
               </p>
               {vistraceError ? <p className="c-dataset-detail__error">{vistraceError}</p> : null}
+              {selectedResource ? <SourceMetadataSummary metadata={selectedResource.sourceMetadata} /> : null}
             </>
           )}
         </section>
