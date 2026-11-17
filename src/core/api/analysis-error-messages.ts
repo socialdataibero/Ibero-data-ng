@@ -115,6 +115,14 @@ export function analysisErrorText(body: ApiErrorBody): string | null {
   if (body.code === 'template_too_many_categories') {
     return `«${param(body, 'variable')}» tiene ${param(body, 'categories')} categorías y aquí se admiten hasta ${param(body, 'max')}.`;
   }
+  if (body.code === 'variable_metadata_invalid') {
+    const path = param(body, 'path');
+    const missing = /^the file has no column "(.*)"$/.exec(param(body, 'problem'));
+    if (missing) return `El archivo no tiene la columna «${missing[1]}» que describe el JSON (en ${path}).`;
+    return path
+      ? `La descripción de las variables no tiene el formato esperado. Revisa ${path}.`
+      : 'La descripción de las variables no tiene el formato esperado.';
+  }
   if (body.code === 'unknown_columns') {
     return `Estas columnas no existen en los recursos: ${param(body, 'columns')}.`;
   }

@@ -27,6 +27,8 @@ export function DatasetDetail() {
   const { pathname } = useLocation();
   const fileInputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
+  const metadataInputId = useId();
+  const metadataRef = useRef<HTMLInputElement>(null);
   const {
     organizationId,
     datasetId,
@@ -46,6 +48,10 @@ export function DatasetDetail() {
     editingAnalysis,
     setEditingAnalysis,
     onFileSelected,
+    savingMetadata,
+    metadataError,
+    metadataSaved,
+    onMetadataFileSelected,
     onRequestEditResource,
     openInVistrace,
   } = useDatasetDetail();
@@ -267,6 +273,50 @@ export function DatasetDetail() {
                   ? 'Elige qué quieres saber (distribución, proporción o promedio) y las variables; la plataforma aplica el factor de expansión, el universo de cada pregunta y los «no especificados», y dice qué tan precisa es cada cifra.'
                   : 'Este archivo todavía no tiene descritas sus variables (rol, etiquetas, universo), así que ninguna plantilla lo puede usar.'}
               </p>
+              {canEdit && selectedResource ? (
+                <div className="c-dataset-detail__metadata-upload">
+                  <input
+                    ref={metadataRef}
+                    id={metadataInputId}
+                    type="file"
+                    accept=".json,application/json"
+                    className="c-dataset-detail__file-input"
+                    aria-label="Descripción de las variables (JSON)"
+                    disabled={savingMetadata}
+                    onChange={onMetadataFileSelected}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    icon="pictogram-file-upload"
+                    aria-describedby="metadata-help"
+                    disabled={savingMetadata}
+                    onClick={() => metadataRef.current?.click()}
+                  >
+                    {savingMetadata
+                      ? 'Guardando…'
+                      : selectedResource.variableMetadata
+                        ? 'Reemplazar descripción de variables (JSON)'
+                        : 'Subir descripción de variables (JSON)'}
+                  </Button>
+                  <p id="metadata-help" className="c-dataset-detail__help">
+                    Un archivo <code>.json</code> que dice, para cada columna, qué tipo de variable es, su
+                    nombre, sus categorías, sus códigos de «no especificado» y a quién se le preguntó. Tiene la
+                    forma de <code>demo-plantillas/metadatos-censo2000-ags.json</code>. Reemplaza la descripción
+                    que tuviera el archivo.
+                  </p>
+                  {metadataError ? (
+                    <p className="c-dataset-detail__error" role="alert">
+                      {metadataError}
+                    </p>
+                  ) : null}
+                  {metadataSaved ? (
+                    <p className="c-dataset-detail__success" role="status">
+                      {metadataSaved}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               {selectedResource ? <SourceMetadataSummary metadata={selectedResource.sourceMetadata} /> : null}
             </>
           )}
