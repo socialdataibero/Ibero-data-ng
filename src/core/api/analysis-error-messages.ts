@@ -51,6 +51,18 @@ const CODE_MESSAGES: Record<string, string> = {
   vistrace_recipe_missing: 'Este análisis no tiene una receta de vistrace.',
   vistrace_recipe_invalid: 'La receta de vistrace no es válida.',
   invalid_parquet: 'El resultado de vistrace no es un archivo Parquet válido.',
+  // Analysis templates (demo).
+  template_not_found: 'La plantilla elegida no está disponible.',
+  template_no_metadata:
+    'Este recurso todavía no tiene la información necesaria sobre sus variables (rol, etiquetas, no especificados).',
+  template_input_unavailable: 'Ninguna variable de este recurso sirve para esta plantilla.',
+  template_input_required: 'Falta elegir una variable.',
+  template_input_unknown: 'Esa variable no está descrita en los metadatos del recurso.',
+  template_factor_required: 'Esta fuente es una muestra y no tiene un factor de expansión declarado.',
+  template_variable_in_two_roles:
+    'Una misma variable no puede ser lo que se mide y también el grupo que parte el resultado.',
+  variable_metadata_invalid: 'Los metadatos de las variables no tienen el formato esperado.',
+  resource_file_missing: 'El archivo de este recurso ya no está en el almacenamiento.',
 };
 
 // Same labels as OP_LABELS in the analysis builder, for the steps that run row by row.
@@ -93,6 +105,15 @@ export function analysisErrorText(body: ApiErrorBody): string | null {
   }
   if (body.code === 'sort_column_not_grouped') {
     return `No se puede ordenar por «${param(body, 'column')}»: cuando el análisis agrupa o calcula, solo se puede ordenar por una columna de «Agrupar por» o por un resultado de «Calcular» o «Convertir a porcentaje».`;
+  }
+  if (body.code === 'template_input_count') {
+    return `Elige entre ${param(body, 'min')} y ${param(body, 'max')} condiciones.`;
+  }
+  if (body.code === 'template_input_role_mismatch') {
+    return `«${param(body, 'variable')}» no se puede usar aquí: esta plantilla necesita otro tipo de variable.`;
+  }
+  if (body.code === 'template_too_many_categories') {
+    return `«${param(body, 'variable')}» tiene ${param(body, 'categories')} categorías y aquí se admiten hasta ${param(body, 'max')}.`;
   }
   if (body.code === 'unknown_columns') {
     return `Estas columnas no existen en los recursos: ${param(body, 'columns')}.`;

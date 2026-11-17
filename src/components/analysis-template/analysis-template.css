@@ -1,0 +1,311 @@
+.c-analysis-template {
+  display: block;
+  margin: 0;
+}
+
+.c-analysis-template__intro {
+  margin: 0;
+  max-width: 48rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.c-analysis-template__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding-block: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .c-analysis-template__body {
+    gap: 2.5rem;
+    padding-block: 2.5rem;
+  }
+}
+
+.c-analysis-template__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0;
+}
+
+.c-analysis-template__step > select,
+.c-analysis-template__field > select {
+  display: block;
+  width: 100%;
+  max-width: 32rem;
+  box-sizing: border-box;
+}
+
+.c-analysis-template__step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary, var(--color-secondary-12));
+}
+
+.c-analysis-template__step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--color-primary-3, #2f6db3);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.c-analysis-template__subtitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.c-analysis-template__label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--field-label-color, var(--color-secondary-8));
+}
+
+.c-analysis-template__help,
+.c-analysis-template__note {
+  margin: 0;
+  max-width: 56rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-analysis-template__muted {
+  font-weight: 400;
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-analysis-template__error {
+  margin: 0;
+  color: var(--error, #b91c1c);
+  font-size: 0.875rem;
+}
+
+.c-analysis-template__notice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--color-alert-3, #c46a1b);
+  background: var(--color-secondary-2, #f5f5f5);
+  font-size: 0.95rem;
+  color: var(--color-secondary-12, #111);
+}
+
+/* Template cards */
+.c-analysis-template__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.c-analysis-template__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--border, var(--color-secondary-3, #ddd));
+  border-radius: 8px;
+  background: var(--bg-card, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.c-analysis-template__card:hover:not(:disabled),
+.c-analysis-template__card:focus-visible {
+  border-color: var(--color-primary-3, #2f6db3);
+}
+
+.c-analysis-template__card.is-selected {
+  border-color: var(--color-primary-3, #2f6db3);
+  box-shadow: inset 0 0 0 1px var(--color-primary-3, #2f6db3);
+}
+
+.c-analysis-template__card:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.c-analysis-template__card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.c-analysis-template__card-text {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-analysis-template__card-reason {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-alert-3, #c46a1b);
+}
+
+/* Inputs */
+.c-analysis-template__inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.25rem 2rem;
+  width: 100%;
+}
+
+.c-analysis-template__field,
+.c-analysis-template__fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.c-analysis-template__fieldset:disabled {
+  opacity: 0.6;
+}
+
+.c-analysis-template__choice {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Result */
+.c-analysis-template__result-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.c-analysis-template__question {
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-secondary, var(--color-secondary-7));
+}
+
+.c-analysis-template__result-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.c-analysis-template__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+}
+
+.c-analysis-template__control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.c-analysis-template__segmented {
+  display: inline-flex;
+  border: 1px solid var(--field-border, var(--color-secondary-5, #999));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.c-analysis-template__segmented button {
+  padding: 0.45rem 0.9rem;
+  border: 0;
+  border-right: 1px solid var(--field-border, var(--color-secondary-5, #999));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.c-analysis-template__segmented button:last-child {
+  border-right: 0;
+}
+
+.c-analysis-template__segmented button.is-selected {
+  background: var(--color-primary-3, #2f6db3);
+  color: #fff;
+}
+
+.c-analysis-template__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.75rem 1rem 0.75rem 2rem;
+  border-left: 4px solid var(--color-alert-3, #c46a1b);
+  background: var(--color-secondary-2, #f5f5f5);
+  color: var(--color-secondary-12, #111);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.c-analysis-template__table-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.c-analysis-template__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.c-analysis-template__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.c-analysis-template__table th,
+.c-analysis-template__table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border, var(--color-secondary-3, #e6e6e6));
+  text-align: left;
+  vertical-align: top;
+}
+
+.c-analysis-template__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg, #fff);
+  font-weight: 600;
+}
+
+.c-analysis-template__table .is-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.c-analysis-template__table tr.is-total td {
+  font-weight: 600;
+}

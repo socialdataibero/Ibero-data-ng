@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
+    "@observablehq/plot": "0.6.17",
     "@uppy/core": "6.3.0",
     "@uppy/tus": "6.0.0",
     "d3": "^7.9.0",

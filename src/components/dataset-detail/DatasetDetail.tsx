@@ -252,6 +252,21 @@ export function DatasetDetail() {
                 Data” lo publica como análisis de este conjunto de datos con su receta completa.
               </p>
               {vistraceError ? <p className="c-dataset-detail__error">{vistraceError}</p> : null}
+              <Button
+                type="button"
+                variant="primary"
+                icon="pictogram-chart"
+                aria-describedby="templates-help"
+                href={`${pathname.replace(/\/$/, '')}/templates?resource=${selectedResourceId}`}
+                disabled={!selectedResourceId}
+              >
+                Nuevo análisis con plantilla
+              </Button>
+              <p id="templates-help" className="c-dataset-detail__help">
+                {selectedResource?.variableMetadata
+                  ? 'Elige qué quieres saber (distribución, proporción o promedio) y las variables; la plataforma aplica el factor de expansión, el universo de cada pregunta y los «no especificados», y dice qué tan precisa es cada cifra.'
+                  : 'Este archivo todavía no tiene descritas sus variables (rol, etiquetas, universo), así que ninguna plantilla lo puede usar.'}
+              </p>
               {selectedResource ? <SourceMetadataSummary metadata={selectedResource.sourceMetadata} /> : null}
             </>
           )}
