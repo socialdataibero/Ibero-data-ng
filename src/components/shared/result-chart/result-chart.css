@@ -65,3 +65,13 @@
   font-size: 0.875rem;
   color: var(--text-secondary, var(--color-secondary-7));
 }
+
+.c-result-chart {
+  min-width: 0;
+}
+
+.c-result-chart__number {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}

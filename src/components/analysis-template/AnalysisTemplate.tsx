@@ -50,7 +50,10 @@ function Choice(props: {
 
 function reasonText(template: TemplateListing): string {
   if (!template.reason) return '';
-  return translateApiError({ code: template.reason.code, message: template.reason.message }) ?? template.reason.message;
+  return (
+    translateApiError({ code: template.reason.code, message: template.reason.message }) ??
+    template.reason.message
+  );
 }
 
 /**
@@ -87,7 +90,9 @@ export function AnalysisTemplate() {
   ];
 
   const groupInput = template?.inputs.find((i) => i.name === 'group');
-  const mainColumns = new Set([...page.choices.conditions, page.choices.variable, page.choices.measure].filter(Boolean));
+  const mainColumns = new Set(
+    [...page.choices.conditions, page.choices.variable, page.choices.measure].filter(Boolean),
+  );
   const missingDisabled = template?.id === 'proportion' && base === 'total';
   // With both bases a warning true of each one would show twice: once is enough.
   const visibleWarnings = (result?.warnings ?? []).filter(
@@ -99,18 +104,23 @@ export function AnalysisTemplate() {
   const missingAvailable =
     template?.missing &&
     (template.id === 'proportion'
-      ? template.inputs[0].options.some((o) => page.choices.conditions.includes(o.column) && o.hasMissingCodes)
-      : template.inputs[0].options.find((o) => o.column === page.choices.variable)?.hasMissingCodes);
+      ? template.inputs
+          .find((input) => input.name === 'conditions')
+          ?.options.some((o) => page.choices.conditions.includes(o.column) && o.hasMissingCodes)
+      : template.inputs
+          .find((input) => input.name === 'variable')
+          ?.options.find((o) => o.column === page.choices.variable)?.hasMissingCodes);
 
   return (
     <div className="c-analysis-template">
-      {dataset ? (
+      {dataset || page.loadError ? (
         <PageHeader
           title="Nuevo análisis con plantilla"
           intro={
             <p className="c-analysis-template__intro">
-              Elige qué quieres saber y las variables; la plataforma aplica el método: el factor de expansión, la
-              población a la que se le hizo cada pregunta, los «no especificados» y la precisión de cada cifra.
+              Elige qué quieres saber y las variables; la plataforma aplica el método: el factor de expansión,
+              la población a la que se le hizo cada pregunta, los «no especificados» y la precisión de cada
+              cifra.
             </p>
           }
           crumbs={crumbs}
@@ -124,7 +134,16 @@ export function AnalysisTemplate() {
           <h2 id="step-resource" className="c-analysis-template__step-title">
             <span className="c-analysis-template__step-number">1</span> Recurso
           </h2>
-          {resources === null ? (
+          {page.loadError ? (
+            <>
+              <p className="c-analysis-template__error" role="alert">
+                {page.loadError}
+              </p>
+              <Button type="button" variant="secondary" onClick={page.retrySource}>
+                Reintentar
+              </Button>
+            </>
+          ) : resources === null ? (
             <TemplateStepsSkeleton />
           ) : resources.length === 0 ? (
             <p className="c-analysis-template__help">
@@ -154,7 +173,18 @@ export function AnalysisTemplate() {
               ) : null}
             </>
           )}
-          {page.catalogError ? <p className="c-analysis-template__error">{page.catalogError}</p> : null}
+          {page.catalogError ? (
+            <>
+              <p className="c-analysis-template__error" role="alert">
+                {page.catalogError}
+              </p>
+              <Button type="button" variant="secondary" onClick={page.retryCatalog}>
+                Reintentar
+              </Button>
+            </>
+          ) : resourceId && !catalog ? (
+            <p role="status">Cargando plantillas…</p>
+          ) : null}
         </section>
 
         {catalog ? (
@@ -162,26 +192,31 @@ export function AnalysisTemplate() {
             <h2 id="step-template" className="c-analysis-template__step-title">
               <span className="c-analysis-template__step-number">2</span> ¿Qué quieres saber?
             </h2>
-            {catalog.templates.every((t) => !t.compatible) ? (
+            {catalog.templates.length === 0 ? (
+              <p className="c-analysis-template__notice" role="status">
+                No hay plantillas disponibles para este recurso.
+              </p>
+            ) : catalog.templates.every((t) => !t.compatible) ? (
               <p className="c-analysis-template__notice">
-                Ninguna plantilla se puede usar con este recurso: {reasonText(catalog.templates[0])} Hace falta
-                describir sus variables (rol, etiquetas, universo y «no especificados»).
+                Ninguna plantilla se puede usar con este recurso: {reasonText(catalog.templates[0])} Hace
+                falta describir sus variables (rol, etiquetas, universo y «no especificados»).
               </p>
             ) : null}
-            <div className="c-analysis-template__cards" role="radiogroup" aria-label="Tipo de análisis">
+            <div className="c-analysis-template__cards" role="group" aria-label="Tipo de análisis">
               {catalog.templates.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  role="radio"
-                  aria-checked={template?.id === t.id}
+                  aria-pressed={template?.id === t.id}
                   disabled={!t.compatible}
                   className={`c-analysis-template__card${template?.id === t.id ? ' is-selected' : ''}`}
                   onClick={() => page.chooseTemplate(t.id)}
                 >
                   <span className="c-analysis-template__card-title">{t.name}</span>
                   <span className="c-analysis-template__card-text">{t.description}</span>
-                  {!t.compatible ? <span className="c-analysis-template__card-reason">{reasonText(t)}</span> : null}
+                  {!t.compatible ? (
+                    <span className="c-analysis-template__card-reason">{reasonText(t)}</span>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -201,6 +236,9 @@ export function AnalysisTemplate() {
                     <fieldset key={input.name} className="c-analysis-template__fieldset">
                       <legend className="c-analysis-template__label">{input.label}</legend>
                       <p className="c-analysis-template__help">{input.help}</p>
+                      <p className="c-analysis-template__help">
+                        Elige entre {input.multiple.min} y {input.multiple.max} condiciones.
+                      </p>
                       {input.options.map((o) => (
                         <Choice
                           key={o.column}
@@ -209,7 +247,9 @@ export function AnalysisTemplate() {
                           onChange={() => page.toggleCondition(o.column)}
                         >
                           {o.label}
-                          {o.universe ? <span className="c-analysis-template__muted"> · {o.universe}</span> : null}
+                          {o.universe ? (
+                            <span className="c-analysis-template__muted"> · {o.universe}</span>
+                          ) : null}
                         </Choice>
                       ))}
                     </fieldset>
@@ -221,7 +261,9 @@ export function AnalysisTemplate() {
                       <select
                         id={`input-${input.name}`}
                         value={input.name === 'variable' ? page.choices.variable : page.choices.measure}
-                        onChange={(e) => page.setChoice(input.name === 'variable' ? 'variable' : 'measure', e.target.value)}
+                        onChange={(e) =>
+                          page.setChoice(input.name === 'variable' ? 'variable' : 'measure', e.target.value)
+                        }
                       >
                         {input.options.map((o) => (
                           <option key={o.column} value={o.column}>
@@ -239,7 +281,11 @@ export function AnalysisTemplate() {
                   <label className="c-analysis-template__label" htmlFor="input-group">
                     {groupInput.label}
                   </label>
-                  <select id="input-group" value={page.choices.group} onChange={(e) => page.setChoice('group', e.target.value)}>
+                  <select
+                    id="input-group"
+                    value={page.choices.group}
+                    onChange={(e) => page.setChoice('group', e.target.value)}
+                  >
                     <option value="">Sin grupo (sólo el total)</option>
                     {groupInput.options.map((o) => (
                       <option key={o.column} value={o.column} disabled={mainColumns.has(o.column)}>
@@ -253,7 +299,10 @@ export function AnalysisTemplate() {
               ) : null}
 
               {template.missing ? (
-                <fieldset className="c-analysis-template__fieldset" disabled={missingDisabled || !missingAvailable}>
+                <fieldset
+                  className="c-analysis-template__fieldset"
+                  disabled={missingDisabled || !missingAvailable}
+                >
                   <legend className="c-analysis-template__label">«No especificado»</legend>
                   <Choice
                     type="radio"
@@ -279,22 +328,43 @@ export function AnalysisTemplate() {
                         : (result?.texts.missing ??
                           (page.missing === 'exclude'
                             ? 'Los registros sin respuesta salen del cálculo: el porcentaje es sobre quienes respondieron.'
-                            : 'Los registros sin respuesta cuentan en el total.'))}
+                            : template.id === 'distribution'
+                              ? 'Se muestra «No especificado» como una categoría más. El porcentaje se calcula sobre todo el universo de la pregunta.'
+                              : 'Los no especificados se incluyen sólo en el denominador; nunca cuentan como quienes cumplen la condición.'))}
                   </p>
                 </fieldset>
               ) : null}
             </div>
             {!result ? (
-              <Button type="button" variant="primary" disabled={!page.request || page.running} onClick={page.calculate}>
+              <Button
+                type="button"
+                variant="primary"
+                disabled={!page.request || page.running}
+                onClick={page.calculate}
+              >
                 {page.running ? 'Calculando…' : 'Ver resultado'}
               </Button>
             ) : null}
-            {page.runError ? <p className="c-analysis-template__error">{page.runError}</p> : null}
+            {!page.request ? (
+              <p className="c-analysis-template__help" role="status">
+                Revisa la selección de variables para ver el resultado.
+              </p>
+            ) : null}
+            {page.running ? <p role="status">Calculando el análisis…</p> : null}
+            {page.runError ? (
+              <p className="c-analysis-template__error" role="alert">
+                {page.runError}
+              </p>
+            ) : null}
           </section>
         ) : null}
 
         {result ? (
-          <section className="c-analysis-template__step" aria-labelledby="step-result" aria-busy={page.running}>
+          <section
+            className="c-analysis-template__step"
+            aria-labelledby="step-result"
+            aria-busy={page.running}
+          >
             <h2 id="step-result" className="c-analysis-template__step-title">
               <span className="c-analysis-template__step-number">4</span> Resultado
               {page.running ? <span className="c-analysis-template__muted"> · actualizando…</span> : null}
@@ -315,13 +385,16 @@ export function AnalysisTemplate() {
               {result.bases ? (
                 <div className="c-analysis-template__control">
                   <span className="c-analysis-template__label">Base del porcentaje</span>
-                  <div className="c-analysis-template__segmented" role="radiogroup" aria-label="Base del porcentaje">
+                  <div
+                    className="c-analysis-template__segmented"
+                    role="group"
+                    aria-label="Base del porcentaje"
+                  >
                     {result.bases.map((b) => (
                       <button
                         key={b.id}
                         type="button"
-                        role="radio"
-                        aria-checked={base === b.id}
+                        aria-pressed={base === b.id}
                         className={base === b.id ? 'is-selected' : undefined}
                         onClick={() => page.setBase(b.id)}
                       >
@@ -335,7 +408,11 @@ export function AnalysisTemplate() {
                 <label className="c-analysis-template__label" htmlFor="result-chart">
                   Gráfica
                 </label>
-                <select id="result-chart" value={chart} onChange={(e) => page.setChart(e.target.value as ChartType)}>
+                <select
+                  id="result-chart"
+                  value={chart}
+                  onChange={(e) => page.setChart(e.target.value as ChartType)}
+                >
                   {result.charts.compatible.map((c) => (
                     <option key={c} value={c}>
                       {CHART_LABEL[c]}
@@ -402,7 +479,12 @@ export function AnalysisTemplate() {
                 type="button"
                 variant="secondary"
                 icon="pictogram-file-download"
-                onClick={() => downloadCsv(resultCsvRows(result), `${result.template.id}_${result.inputs.group ?? 'total'}.csv`)}
+                onClick={() =>
+                  downloadCsv(
+                    resultCsvRows(result),
+                    `${result.template.id}_${result.inputs.group ?? 'total'}.csv`,
+                  )
+                }
               >
                 Descargar CSV
               </Button>
