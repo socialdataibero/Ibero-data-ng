@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Plot from '@observablehq/plot';
-import type { Base, ChartType, ResultRow, TemplateResult } from '../../../core/models/analysis-template.model';
+import type {
+  Base,
+  ChartType,
+  ResultRow,
+  TemplateResult,
+} from '../../../core/models/analysis-template.model';
 import {
   formatCount,
   formatValue,
@@ -16,6 +21,8 @@ import {
   type Precision,
   type SingleBase,
 } from '../../../core/utils/template-result';
+import { PlotFigure } from './PlotFigure';
+import { HighlightNumbers } from './HighlightNumbers';
 import './result-chart.css';
 
 /**
@@ -56,21 +63,13 @@ function useContainerWidth() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(280, Math.floor(entry.contentRect.width))));
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(280, Math.floor(entry.contentRect.width))),
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
   return { ref, width };
-}
-
-function PlotFigure({ options }: { options: Plot.PlotOptions }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const figure = Plot.plot(options);
-    ref.current?.replaceChildren(figure);
-    return () => figure.remove();
-  }, [options]);
-  return <div ref={ref} className="c-result-chart__figure" />;
 }
 
 function pointsOf(rows: ResultRow[], result: TemplateResult, bases: SingleBase[], digits: number): Point[] {
@@ -89,7 +88,7 @@ function pointsOf(rows: ResultRow[], result: TemplateResult, bases: SingleBase[]
           ? `${formatCount(row.num)} de ${formatCount(den ?? 0)} ${result.source.unitPlural}`
           : `${formatCount(den ?? 0)} ${result.source.unitPlural} con dato`,
         precision ? `Precisión: ${precision}` : null,
-        `Registros en la muestra: ${formatCount(row.casos)}`,
+        `${result.source.design === 'sample' ? 'Registros en la muestra' : 'Registros'}: ${formatCount(row.casos)}`,
       ];
       return {
         group: groupLabel(row, result),
@@ -106,33 +105,6 @@ function pointsOf(rows: ResultRow[], result: TemplateResult, bases: SingleBase[]
   );
 }
 
-/** Big figure(s) for a result without groups: one per series. */
-function HighlightNumbers({ result, base }: { result: TemplateResult; base: SingleBase }) {
-  const totals = result.rows.filter((r) => r.es_total);
-  const digits = percentDigits(totals.map((r) => rowValue(r, base)));
-  return (
-    <div className="c-result-chart__numbers">
-      {totals.map((row, i) => {
-        const value = rowValue(row, base);
-        const precision = precisionOf(value, rowSe(row, base), result);
-        const den = base === 'total' ? row.den_total : row.den;
-        return (
-          <div className="c-result-chart__number" key={i}>
-            <span className="c-result-chart__number-value">{formatValue(value, result, digits)}</span>
-            <span className="c-result-chart__number-label">{seriesLabel(row, result) ?? row.indicador}</span>
-            <span className="c-result-chart__number-detail">
-              {result.value.kind === 'proportion'
-                ? `${formatCount(row.num)} de ${formatCount(den ?? 0)} ${result.source.unitPlural}`
-                : `${formatCount(den ?? 0)} ${result.source.unitPlural} con dato`}
-              {precision ? ` · precisión ${precision}` : ''}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export function ResultChart({ result, options }: { result: TemplateResult; options: ResultChartOptions }) {
   const { ref, width } = useContainerWidth();
   const bases: SingleBase[] = options.base === 'both' ? ['own', 'total'] : [options.base];
@@ -140,10 +112,13 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
   const proportion = result.value.kind === 'proportion';
 
   const panels = useMemo(() => {
+    if (result.rows.length === 0 || options.chart === 'numero_destacado') return [];
     const allValues = result.rows.flatMap((r) => bases.map((b) => rowValue(r, b)));
     const digits = percentDigits(allValues);
     const tick = (d: number) =>
-      proportion ? `${(d * 100).toLocaleString('es-MX', { maximumFractionDigits: digits + 1 })}%` : d.toLocaleString('es-MX');
+      proportion
+        ? `${(d * 100).toLocaleString('es-MX', { maximumFractionDigits: digits + 1 })}%`
+        : d.toLocaleString('es-MX');
 
     if (options.chart === 'barras_apiladas_100') {
       const groupRows = result.rows.filter((r) => !r.es_total);
@@ -152,14 +127,16 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
       const groups = [...new Set(points.map((p) => p.group))];
       const series = [...new Set(points.map((p) => p.series ?? ''))];
       const range = series.map((s, i) => (isMissingLabel(s) ? GRAY : PALETTE[i % PALETTE.length]));
+      const labelWidth = Math.min(260, 12 + 7 * Math.max(...groups.map((g) => g.length)));
       return [
         {
           key: 'stacked',
           title: null as string | null,
           options: {
-            width,
+            ariaLabel: result.texts.title,
+            width: Math.max(width, labelWidth + 180),
             height: groups.length * 28 + 70,
-            marginLeft: Math.min(260, 12 + 7 * Math.max(...groups.map((g) => g.length))),
+            marginLeft: labelWidth,
             style: { fontSize: '13px', fontFamily: 'inherit', background: 'transparent' },
             x: { domain: [0, 1], tickFormat: tick, label: null, grid: true },
             y: { domain: groups, label: null },
@@ -167,7 +144,14 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
             marks: [
               Plot.barX(
                 points,
-                Plot.stackX({ x: 'value', y: 'group', fill: 'series', order: series, title: 'title', tip: true }),
+                Plot.stackX({
+                  x: 'value',
+                  y: 'group',
+                  fill: 'series',
+                  order: series,
+                  title: 'title',
+                  tip: true,
+                }),
               ),
               Plot.ruleX([0]),
             ],
@@ -177,21 +161,24 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
     }
 
     // One panel per series when there is a group (all with the same scale); otherwise one panel.
-    const seriesValues = grouped
-      ? [...new Set(result.rows.map((r) => seriesLabel(r, result)))]
-      : [null];
+    const seriesValues = grouped ? [...new Set(result.rows.map((r) => seriesLabel(r, result)))] : [null];
     const allPoints = pointsOf(result.rows, result, bases, digits);
     const maxValue = Math.max(
       0,
       ...allPoints.map((p) => (options.showInterval ? (p.hi ?? p.value ?? 0) : (p.value ?? 0))),
     );
     const domainMax = proportion ? (maxValue < 0.1 ? maxValue * 1.15 || 0.01 : 1) : maxValue * 1.1 || 1;
+    const domainMin =
+      Math.min(0, ...allPoints.map((p) => (options.showInterval ? (p.lo ?? p.value ?? 0) : (p.value ?? 0)))) *
+      1.1;
 
     return seriesValues.map((series) => {
       const rows = grouped
         ? result.rows.filter((r) => !r.es_total && seriesLabel(r, result) === series)
         : result.rows.filter((r) => r.es_total);
-      const total = grouped ? result.rows.find((r) => r.es_total && seriesLabel(r, result) === series) : undefined;
+      const total = grouped
+        ? result.rows.find((r) => r.es_total && seriesLabel(r, result) === series)
+        : undefined;
       let points = pointsOf(rows, result, bases, digits);
       // Without a group, each bar is a series (a condition, or a category of a distribution).
       if (!grouped) points = points.map((p) => ({ ...p, group: shortSeries(p.series) || p.group }));
@@ -215,17 +202,48 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
       const marks: Plot.Markish[] = [Plot.ruleX([0])];
       if (lollipop) {
         marks.push(
-          Plot.ruleY(points, { y: yKey, fy, x1: 0, x2: 'value', stroke: fill, strokeOpacity: opacity }),
-          Plot.dot(points, { x: 'value', y: yKey, fy, fill, fillOpacity: opacity, r: 5, title: 'title', tip: true }),
+          Plot.ruleY(points, {
+            y: yKey,
+            fy,
+            x1: 0,
+            x2: 'value',
+            stroke: fill,
+            strokeOpacity: opacity,
+          }),
+          Plot.dot(points, {
+            x: 'value',
+            y: yKey,
+            fy,
+            fill,
+            fillOpacity: opacity,
+            r: 5,
+            title: 'title',
+            tip: true,
+          }),
         );
       } else {
         marks.push(
-          Plot.barX(points, { x: 'value', y: yKey, fy, fill, fillOpacity: opacity, title: 'title', tip: true }),
+          Plot.barX(points, {
+            x: 'value',
+            y: yKey,
+            fy,
+            fill,
+            fillOpacity: opacity,
+            title: 'title',
+            tip: true,
+          }),
         );
       }
       if (options.showInterval) {
         marks.push(
-          Plot.ruleY(withInterval, { y: yKey, fy, x1: 'lo', x2: 'hi', stroke: 'currentColor', strokeWidth: 1.5 }),
+          Plot.ruleY(withInterval, {
+            y: yKey,
+            fy,
+            x1: 'lo',
+            x2: 'hi',
+            stroke: 'currentColor',
+            strokeWidth: 1.5,
+          }),
           Plot.tickX(withInterval, { x: 'lo', y: yKey, fy, stroke: 'currentColor', inset: 6 }),
           Plot.tickX(withInterval, { x: 'hi', y: yKey, fy, stroke: 'currentColor', inset: 6 }),
         );
@@ -261,13 +279,14 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
         key: series ?? 'all',
         title: grouped && series ? series : null,
         options: {
-          width,
+          ariaLabel: result.texts.title,
+          width: Math.max(width, labelWidth + 180),
           height: both ? groups.length * 44 + 60 : groups.length * 28 + 56,
           marginLeft: both ? 8 : labelWidth,
           marginTop: options.showReference && reference !== null && !both ? 30 : 16,
           marginRight: 24,
           style: { fontSize: '13px', fontFamily: 'inherit', background: 'transparent' },
-          x: { domain: [0, domainMax], tickFormat: tick, label: null, grid: true },
+          x: { domain: [domainMin, domainMax], tickFormat: tick, label: null, grid: true },
           y: both ? { axis: null, domain: bases.map((b) => BASE_LABEL[b]) } : { domain: groups, label: null },
           ...(both
             ? {
@@ -286,19 +305,20 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
     });
   }, [result, options, width, grouped, proportion, bases.join()]);
 
-  if (options.chart === 'numero_destacado') {
-    return <HighlightNumbers result={result} base={bases[0]} />;
-  }
-
   return (
     <div className="c-result-chart" ref={ref}>
+      {result.rows.length === 0 ? <p role="status">No hay población con dato para esta selección.</p> : null}
+      {options.chart === 'numero_destacado' ? <HighlightNumbers result={result} bases={bases} /> : null}
       {panels.map((panel) => (
         <figure key={panel.key} className="c-result-chart__panel">
           {panel.title ? <figcaption className="c-result-chart__caption">{panel.title}</figcaption> : null}
           <PlotFigure options={panel.options} />
         </figure>
       ))}
-      {result.source.design === 'sample' && options.chart !== 'barras_apiladas_100' ? (
+      {result.source.design === 'sample' &&
+      options.chart !== 'barras_apiladas_100' &&
+      options.chart !== 'numero_destacado' &&
+      result.rows.length > 0 ? (
         <p className="c-result-chart__legend-note">
           Las marcas más claras tienen precisión baja (coeficiente de variación mayor a 30%).
           {options.showInterval ? ' Las líneas negras son el intervalo de confianza al 95%.' : ''}

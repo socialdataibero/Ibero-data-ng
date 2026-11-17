@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { datasetsService } from '../../core/services/datasets.service';
-import { resourcesService } from '../../core/services/resources.service';
 import { analysisTemplatesService } from '../../core/services/analysis-templates.service';
-import { errorMessage, isNotFound } from '../../core/api/http';
-import type { Dataset } from '../../core/models/dataset.model';
-import type { Resource } from '../../core/models/resource.model';
+import { errorMessage } from '../../core/api/http';
+import { useTemplateSource } from './useTemplateSource';
 import type {
   Base,
   ChartType,
@@ -31,18 +28,32 @@ function defaultChoices(template: TemplateListing): Choices {
   const options = (name: string) => template.inputs.find((i) => i.name === name)?.options ?? [];
   const groups = options('group');
   const firstNonGeographic = options('variable').find((o) => o.role !== 'geographic');
-  return {
+  const choices = {
     variable: firstNonGeographic?.column ?? options('variable')[0]?.column ?? '',
     conditions: options('conditions')[0] ? [options('conditions')[0].column] : [],
     measure: options('measure')[0]?.column ?? '',
     group: groups.find((o) => o.role === 'geographic')?.column ?? '',
   };
+  const mainColumns = [choices.variable, choices.measure, ...choices.conditions];
+  if (mainColumns.includes(choices.group)) choices.group = '';
+  return choices;
 }
 
-function toRequest(resourceId: string, template: TemplateListing, choices: Choices, missing: MissingChoice): TemplateRequest | null {
-  const request: TemplateRequest = { resourceId, templateId: template.id, group: choices.group || null };
+function toRequest(
+  resourceId: string,
+  template: TemplateListing,
+  choices: Choices,
+  missing: MissingChoice,
+): TemplateRequest | null {
+  const request: TemplateRequest = {
+    resourceId,
+    templateId: template.id,
+    group: choices.group || null,
+  };
   if (template.id === 'proportion') {
-    if (choices.conditions.length === 0) return null;
+    const limits = template.inputs.find((input) => input.name === 'conditions')?.multiple;
+    if (choices.conditions.length < (limits?.min ?? 1) || choices.conditions.length > (limits?.max ?? 6))
+      return null;
     return { ...request, conditions: choices.conditions, missing };
   }
   if (template.id === 'distribution') {
@@ -57,11 +68,11 @@ export function useAnalysisTemplate() {
   const { organizationId = '', datasetId = '' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [dataset, setDataset] = useState<Dataset | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [resources, setResources] = useState<Resource[] | null>(null);
+  const source = useTemplateSource(organizationId, datasetId);
+  const { resources } = source;
   const [catalog, setCatalog] = useState<TemplateCatalog | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
 
   const [templateId, setTemplateId] = useState<TemplateId | null>(null);
   const [choices, setChoices] = useState<Choices>(EMPTY_CHOICES);
@@ -70,32 +81,15 @@ export function useAnalysisTemplate() {
   const [result, setResult] = useState<TemplateResult | null>(null);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
-  // After the first "Calcular", any change of the choices recomputes on its own.
   const [live, setLive] = useState(false);
-  const runId = useRef(0);
+  const [runAttempt, setRunAttempt] = useState(0);
+  const shape = useRef('');
 
   const [base, setBase] = useState<Base>('own');
   const [chart, setChart] = useState<ChartType>('barras_horizontales');
   const [showInterval, setShowInterval] = useState(false);
   const [showReference, setShowReference] = useState(true);
   const [sort, setSort] = useState<'catalog' | 'value'>('catalog');
-
-  useEffect(() => {
-    setNotFound(false);
-    void datasetsService
-      .get(organizationId, datasetId)
-      .then(setDataset)
-      .catch((err: unknown) => {
-        if (isNotFound(err)) setNotFound(true);
-      });
-    void resourcesService
-      .list(organizationId, datasetId)
-      .then(setResources)
-      .catch((err: unknown) => {
-        if (isNotFound(err)) setNotFound(true);
-        setResources([]);
-      });
-  }, [organizationId, datasetId]);
 
   // The resource of `?resource=`, or the first one the templates can use.
   const resourceId = useMemo(() => {
@@ -105,33 +99,45 @@ export function useAnalysisTemplate() {
   }, [resources, searchParams]);
 
   const selectResource = useCallback(
-    (id: string) => setSearchParams((params) => {
-      params.set('resource', id);
-      return params;
-    }, { replace: true }),
+    (id: string) =>
+      setSearchParams(
+        (params) => {
+          params.set('resource', id);
+          return params;
+        },
+        { replace: true },
+      ),
     [setSearchParams],
   );
 
   useEffect(() => {
-    if (!resourceId) return;
     const controller = new AbortController();
     setCatalog(null);
     setCatalogError(null);
     setTemplateId(null);
     setResult(null);
     setLive(false);
+    setRunError(null);
+    setRunning(false);
+    if (!resourceId) return;
     analysisTemplatesService
       .list(organizationId, datasetId, resourceId, controller.signal)
-      .then(setCatalog)
+      .then((answer) => {
+        if (!controller.signal.aborted) setCatalog(answer);
+      })
       .catch((err: unknown) => {
-        if (!controller.signal.aborted) setCatalogError(errorMessage(err, 'No se pudieron cargar las plantillas.'));
+        if (!controller.signal.aborted)
+          setCatalogError(errorMessage(err, 'No se pudieron cargar las plantillas.'));
       });
     return () => controller.abort();
-  }, [organizationId, datasetId, resourceId]);
+  }, [organizationId, datasetId, resourceId, catalogAttempt]);
 
   const template = useMemo(
-    () => catalog?.templates.find((t) => t.id === templateId) ?? null,
-    [catalog, templateId],
+    () =>
+      catalog?.resourceId === resourceId
+        ? (catalog.templates.find((t) => t.id === templateId) ?? null)
+        : null,
+    [catalog, resourceId, templateId],
   );
 
   const chooseTemplate = useCallback(
@@ -145,6 +151,7 @@ export function useAnalysisTemplate() {
       setRunError(null);
       setLive(false);
       setBase('own');
+      shape.current = '';
     },
     [catalog],
   );
@@ -154,70 +161,71 @@ export function useAnalysisTemplate() {
     [template, resourceId, choices, missing],
   );
 
-  const run = useCallback(async () => {
-    if (!request) return;
-    const id = ++runId.current;
-    setRunning(true);
-    setRunError(null);
-    try {
-      const answer = await analysisTemplatesService.preview(organizationId, datasetId, request);
-      if (id !== runId.current) return;
-      setResult(answer);
-      setChart((current) => (answer.charts.compatible.includes(current) ? current : answer.charts.recommended));
-      setLive(true);
-    } catch (err) {
-      if (id !== runId.current) return;
-      setRunError(errorMessage(err, 'No se pudo calcular el análisis.'));
-    } finally {
-      if (id === runId.current) setRunning(false);
-    }
-  }, [organizationId, datasetId, request]);
-
-  // Recompute when a choice changes once a result is on screen.
-  const requestKey = JSON.stringify(request);
-  const lastKey = useRef<string | null>(null);
   useEffect(() => {
-    if (!live || requestKey === lastKey.current) return;
-    lastKey.current = requestKey;
-    void run();
-  }, [live, requestKey, run]);
+    let active = true;
+    setResult(null);
+    setRunError(null);
+    setRunning(false);
+    if (!live || !request) return;
+    setRunning(true);
+    void analysisTemplatesService
+      .preview(organizationId, datasetId, request)
+      .then((answer) => {
+        if (!active) return;
+        const nextShape = `${answer.template.id}|${answer.inputs.group ?? ''}|${answer.inputs.conditions.length}`;
+        const sameShape = shape.current === nextShape;
+        setChart((current) =>
+          sameShape && answer.charts.compatible.includes(current) ? current : answer.charts.recommended,
+        );
+        shape.current = nextShape;
+        setResult(answer);
+      })
+      .catch((err: unknown) => {
+        if (active) setRunError(errorMessage(err, 'No se pudo calcular el análisis.'));
+      })
+      .finally(() => {
+        if (active) setRunning(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [organizationId, datasetId, request, live, runAttempt]);
 
   const calculate = useCallback(() => {
-    lastKey.current = requestKey;
-    void run();
-  }, [requestKey, run]);
-
-  // A new grouping or template changes which charts fit: show the recommended one.
-  const shape = result ? `${result.template.id}|${result.inputs.group ?? ''}|${result.inputs.conditions.length}` : '';
-  useEffect(() => {
-    if (result) setChart(result.charts.recommended);
-    // Only when the shape changes, not on every recompute.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shape]);
+    setLive(true);
+    setRunAttempt((value) => value + 1);
+  }, []);
 
   const setChoice = useCallback(<K extends keyof Choices>(key: K, value: Choices[K]) => {
-    setChoices((current) => ({ ...current, [key]: value }));
+    setChoices((current) => {
+      const next = { ...current, [key]: value };
+      if ([next.variable, next.measure, ...next.conditions].includes(next.group)) next.group = '';
+      return next;
+    });
   }, []);
 
   const toggleCondition = useCallback((column: string) => {
-    setChoices((current) => ({
-      ...current,
-      conditions: current.conditions.includes(column)
+    setChoices((current) => {
+      const conditions = current.conditions.includes(column)
         ? current.conditions.filter((c) => c !== column)
-        : [...current.conditions, column],
-    }));
+        : [...current.conditions, column];
+      return {
+        ...current,
+        conditions,
+        group: conditions.includes(current.group) ? '' : current.group,
+      };
+    });
   }, []);
 
   return {
     organizationId,
     datasetId,
-    dataset,
-    notFound,
-    resources,
+    ...source,
     resourceId,
     selectResource,
     catalog,
     catalogError,
+    retryCatalog: () => setCatalogAttempt((value) => value + 1),
     template,
     chooseTemplate,
     choices,

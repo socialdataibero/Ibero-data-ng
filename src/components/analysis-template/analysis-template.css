@@ -309,3 +309,28 @@
 .c-analysis-template__table tr.is-total td {
   font-weight: 600;
 }
+
+.c-analysis-template__cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+}
+
+.c-analysis-template__inputs {
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+}
+
+.c-analysis-template__step-number {
+  flex-shrink: 0;
+}
+
+.c-analysis-template__segmented {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.c-analysis-template select {
+  max-width: 100%;
+}
+
+.c-analysis-template__table-wrap {
+  min-width: 0;
+}
