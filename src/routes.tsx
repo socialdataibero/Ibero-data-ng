@@ -28,6 +28,7 @@ import { PortalHomeSkeleton } from './components/portal/portal-home/PortalHomeSk
 import { PortalDataSkeleton } from './components/portal/portal-data/PortalDataSkeleton';
 import { PortalTopicsSkeleton } from './components/portal/portal-topics/PortalTopicsSkeleton';
 import { PortalChartsViewSkeleton } from './components/portal/portal-charts-view/PortalChartsViewSkeleton';
+import { AnalysisTemplateSkeleton } from './components/analysis-template/AnalysisTemplateSkeleton';
 
 const Login = lazy(() => import('./components/login/Login').then((m) => ({ default: m.Login })));
 const Home = lazy(() => import('./components/home/Home').then((m) => ({ default: m.Home })));
@@ -60,6 +61,11 @@ const DatasetCreate = lazy(() =>
 );
 const DatasetDetail = lazy(() =>
   import('./components/dataset-detail/DatasetDetail').then((m) => ({ default: m.DatasetDetail })),
+);
+const AnalysisTemplate = lazy(() =>
+  import('./components/analysis-template/AnalysisTemplate').then((m) => ({
+    default: m.AnalysisTemplate,
+  })),
 );
 const Profile = lazy(() =>
   import('./components/profile/Profile').then((m) => ({ default: m.Profile })),
@@ -153,6 +159,11 @@ export function AppRoutes() {
               <DatasetDetail />,
               <DatasetDetailSkeleton />,
             )}
+            {lazyRoute(
+              '/datasets/:organizationId/:datasetId/templates',
+              <AnalysisTemplate />,
+              <AnalysisTemplateSkeleton />,
+            )}
             {lazyRoute('/organizations', <OrganizationsList />, <OrganizationsListSkeleton />)}
             <Route element={<RequireSysadmin redirectTo="/organizations" />}>
               {lazyRoute(
@@ -180,6 +191,11 @@ export function AppRoutes() {
               '/organizations/:organizationId/datasets/:datasetId',
               <DatasetDetail />,
               <DatasetDetailSkeleton />,
+            )}
+            {lazyRoute(
+              '/organizations/:organizationId/datasets/:datasetId/templates',
+              <AnalysisTemplate />,
+              <AnalysisTemplateSkeleton />,
             )}
             {lazyRoute('/profile', <Profile />, <ProfileSkeleton />)}
             {lazyRoute('/harmonizer', <HarmonizerHome />, <HarmonizerHomeSkeleton />)}
