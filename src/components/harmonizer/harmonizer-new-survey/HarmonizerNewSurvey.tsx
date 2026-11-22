@@ -16,6 +16,8 @@ export function HarmonizerNewSurvey() {
     setSurveyName,
     surveyDescription,
     setSurveyDescription,
+    surveyShortName,
+    setSurveyShortName,
     loading,
     loadError,
     saving,
@@ -40,7 +42,7 @@ export function HarmonizerNewSurvey() {
         title={isEdit ? 'Editar encuesta' : 'Nueva encuesta'}
         intro={
           isEdit
-            ? 'Cambia el nombre o la descripción de la encuesta. Sus ediciones y mapeos no se modifican.'
+            ? 'Cambia el nombre, la descripción o el nombre corto de la encuesta. Sus ediciones y mapeos no se modifican.'
             : 'Crea una encuesta para agrupar ediciones (CSV o DBF) y armonizar sus variables.'
         }
         crumbs={crumbs}
@@ -120,6 +122,23 @@ export function HarmonizerNewSurvey() {
                   onChange={(e) => setSurveyDescription(e.target.value)}
                   name="surveyDescription"
                 />
+              </div>
+
+              <div className="c-harmonizer-new-survey__field">
+                <label htmlFor="survey-short-name">Nombre corto de la fuente</label>
+                <input
+                  id="survey-short-name"
+                  type="text"
+                  value={surveyShortName}
+                  onChange={(e) => setSurveyShortName(e.target.value)}
+                  name="surveyShortName"
+                  placeholder="Ej: Censo 2000"
+                  aria-describedby="survey-short-name-help"
+                />
+                <p id="survey-short-name-help" className="form-help">
+                  Opcional. Aparece en las notas de los análisis y en la columna «fuente» de sus resultados.
+                  Si se deja vacío, se usa el nombre de la encuesta.
+                </p>
               </div>
 
               {error ? <p className="c-harmonizer-new-survey__error">{error}</p> : null}

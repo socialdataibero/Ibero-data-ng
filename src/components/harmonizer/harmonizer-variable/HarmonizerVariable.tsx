@@ -4,6 +4,7 @@ import { PageHeader } from '../../shared/page-header/PageHeader';
 import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { HarmonizerVariableSkeleton } from './HarmonizerVariableSkeleton';
 import { useHarmonizerVariable } from './useHarmonizerVariable';
+import { VariableAnalysisSection } from './VariableAnalysisSection';
 import type { ComparisonIssue, ComparisonStatus } from '../../../core/models/harmonizer.model';
 import './harmonizer-variable.css';
 
@@ -73,6 +74,8 @@ export function HarmonizerVariable() {
     clearRecoding,
     discard,
     review,
+    setAnalysis,
+    codeLabel,
     valueTypeLabel,
   } = useHarmonizerVariable();
 
@@ -265,6 +268,18 @@ export function HarmonizerVariable() {
                 </p>
               ) : null}
             </section>
+
+            <VariableAnalysisSection
+              surveyId={surveyId}
+              variableId={data.variable.id}
+              saved={data.variable.analysis}
+              suggestedRole={data.variable.suggestedRole}
+              dataType={data.variable.dataType}
+              knownCodes={data.variable.knownCodes}
+              codeLabel={codeLabel}
+              canEdit={canEdit}
+              onSaved={setAnalysis}
+            />
 
             <section className="c-harmonizer-variable__panel" aria-labelledby="variable-recode-title">
               <h2 id="variable-recode-title" className="c-harmonizer-variable__title">

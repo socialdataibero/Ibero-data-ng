@@ -142,3 +142,10 @@ body[data-theme='dark'] .c-harmonizer-variables__warning {
   margin: 0 0 1rem;
   font-size: 0.875rem;
 }
+
+.c-harmonizer-variables__filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}

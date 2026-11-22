@@ -23,6 +23,8 @@ import type {
   SaveRecodingPayload,
   SourceDesign,
   AnalysisUnit,
+  Coverage,
+  VariableAnalysis,
 } from '../models/harmonizer.model';
 
 export interface UploadDatasetPayload {
@@ -40,6 +42,8 @@ export interface UploadDatasetPayload {
 export interface UpdateSurveyPayload {
   name?: string;
   description?: string;
+  /** Vacío lo quita. */
+  shortName?: string;
 }
 
 export interface ListSurveysParams {
@@ -81,10 +85,15 @@ export const harmonizerService = {
     return items;
   },
 
-  createSurvey: async (name: string, organizationId: string, description?: string): Promise<HarmonizerSurvey> => {
+  createSurvey: async (
+    name: string,
+    organizationId: string,
+    description?: string,
+    shortName?: string,
+  ): Promise<HarmonizerSurvey> => {
     const created = await http.post<HarmonizerSurveyDetails>(
       '/harmonizer/surveys',
-      { name, description, organizationId },
+      { name, description, shortName, organizationId },
     );
     return { ...created, datasets: [] };
   },
@@ -105,11 +114,20 @@ export const harmonizerService = {
 
   removeDataset: (datasetId: string) => http.delete<void>(`/harmonizer/datasets/${datasetId}`),
 
-  updateDataset: (datasetId: string, changes: { design?: SourceDesign; unit?: AnalysisUnit }) =>
+  updateDataset: (
+    datasetId: string,
+    changes: { design?: SourceDesign; unit?: AnalysisUnit; coverage?: Coverage | null },
+  ) =>
     http.patch<HarmonizerDataset>(`/harmonizer/datasets/${datasetId}`, changes),
 
   listVariables: (surveyId: string, signal?: AbortSignal) =>
     http.get<SurveyCanonicalVariables>(`/harmonizer/surveys/${surveyId}/variables`, signal),
+
+  saveVariableAnalysis: (surveyId: string, variableId: string, analysis: VariableAnalysis) =>
+    http.put<{ id: string; name: string; analysis: VariableAnalysis }>(
+      `/harmonizer/surveys/${surveyId}/variables/${variableId}/analysis`,
+      analysis,
+    ),
 
   renameVariable: (surveyId: string, variableId: string, name: string) =>
     http.patch<CanonicalVariable>(`/harmonizer/surveys/${surveyId}/variables/${variableId}`, {

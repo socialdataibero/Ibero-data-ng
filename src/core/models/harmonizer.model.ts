@@ -13,6 +13,8 @@ export interface HarmonizerSurveyDetails {
   id: string;
   name: string;
   description: string | null;
+  /** Nombre corto de la fuente para las notas de un análisis («Censo 2000»); `null` = sin dar. */
+  shortName: string | null;
   organizationId: string | null;
 }
 
@@ -32,6 +34,29 @@ export interface HarmonizerDataset {
   /** `null` en ediciones subidas antes de pedir el diseño y la unidad. */
   design: SourceDesign | null;
   unit: AnalysisUnit | null;
+  /** Lugar que cubre la edición, para la fila del total de un análisis; `null` = sin dar. */
+  coverage: Coverage | null;
+}
+
+/** Nivel territorial (en el servidor, `GEO_LEVELS` de variables/variable-role.ts). */
+export type GeoLevel = 'country' | 'state' | 'municipality' | 'locality' | 'ageb' | 'block';
+
+export const GEO_LEVEL_LABEL: Record<GeoLevel, string> = {
+  country: 'País',
+  state: 'Entidad',
+  municipality: 'Municipio',
+  locality: 'Localidad',
+  ageb: 'AGEB',
+  block: 'Manzana',
+};
+
+export const GEO_LEVELS = Object.keys(GEO_LEVEL_LABEL) as GeoLevel[];
+
+/** Lugar que cubre una edición completa: nivel, clave y nombre. */
+export interface Coverage {
+  level: GeoLevel;
+  code: string;
+  label: string;
 }
 
 /** Cómo se levantó la fuente: censo (toda la población) o muestra (cada registro representa a varios). */
@@ -133,6 +158,82 @@ export const VALUE_TYPE_LABEL: Record<ValueType, string> = {
   decimal: 'Decimal',
 };
 
+/** Qué se puede hacer con una variable en un análisis (servidor: variables/variable-role.ts). */
+export type VariableRole =
+  | 'category'
+  | 'ordinal'
+  | 'dichotomous'
+  | 'geographic'
+  | 'label'
+  | 'temporal'
+  | 'measure'
+  | 'socioeconomic_stratum'
+  | 'key'
+  | 'identifier'
+  | 'free_text';
+
+export const VARIABLE_ROLE_LABEL: Record<VariableRole, string> = {
+  category: 'Categorías (sin orden)',
+  ordinal: 'Categorías ordenadas',
+  dichotomous: 'Sí o no',
+  geographic: 'Lugar (clave territorial)',
+  label: 'Nombre que acompaña a una clave',
+  temporal: 'Año o periodo',
+  measure: 'Cantidad',
+  socioeconomic_stratum: 'Estrato socioeconómico',
+  key: 'Llave para unir tablas',
+  identifier: 'Identificador de registro',
+  free_text: 'Texto libre',
+};
+
+export const VARIABLE_ROLES = Object.keys(VARIABLE_ROLE_LABEL) as VariableRole[];
+
+/** Roles cuyos valores son códigos: su tipo es texto o sin confirmar. */
+export const CODED_ROLES: VariableRole[] = [
+  'category',
+  'ordinal',
+  'dichotomous',
+  'geographic',
+  'socioeconomic_stratum',
+  'key',
+  'identifier',
+];
+
+/** Roles por los que se puede partir un resultado. */
+export const DISAGGREGABLE_ROLES: VariableRole[] = [
+  'category',
+  'ordinal',
+  'dichotomous',
+  'geographic',
+  'socioeconomic_stratum',
+  'measure',
+  'temporal',
+];
+
+/** Un grupo de una cantidad: de `from` a `to`, incluidos; `to: null` = «y más». */
+export interface AgeCut {
+  from: number;
+  to: number | null;
+  label: string;
+}
+
+export interface Disaggregation {
+  summable: boolean;
+  cuts?: AgeCut[];
+  notApplicableLabel?: string;
+  maxLevel?: GeoLevel;
+}
+
+/** Uso en análisis de una variable canónica; todo `null` = sin describir. */
+export interface VariableAnalysis {
+  role: VariableRole | null;
+  universe: string | null;
+  positiveValue: string | null;
+  geoLevel: GeoLevel | null;
+  unit: string | null;
+  disaggregation: Disaggregation | null;
+}
+
 export interface CanonicalVariable {
   id: string;
   name: string;
@@ -163,6 +264,11 @@ export interface SurveyCanonicalVariable extends CanonicalVariable {
   /** Catálogo de categorías al que se recodifican las ediciones; vacío si no tiene. */
   categories: CatalogCategory[];
   comparison: { status: ComparisonStatus; issueCount: number };
+  analysis: VariableAnalysis;
+  /** Rol muestral que le da el mapeo de una edición (factor, estrato, UPM); no necesita uso en análisis. */
+  sampleRole: SourceRole | null;
+  /** Rol que sugieren el diccionario, el catálogo o el tipo; el usuario lo confirma. */
+  suggestedRole: VariableRole | null;
 }
 
 export interface SurveyCanonicalVariables {
@@ -332,6 +438,10 @@ export interface VariableComparison {
     categories: CatalogCategory[];
     reviewedAt: string | null;
     reviewedBy: string | null;
+    analysis: VariableAnalysis;
+    suggestedRole: VariableRole | null;
+    /** Códigos que puede tomar el valor «sí»: los del catálogo o, sin él, los vistos en los datos. */
+    knownCodes: string[];
   };
   status: ComparisonStatus;
   categorical: boolean;
