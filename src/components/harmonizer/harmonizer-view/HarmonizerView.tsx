@@ -219,11 +219,11 @@ export function HarmonizerView() {
                     datos que elijas.
                   </p>
                   <p className="text-color-secondary">
-                    El recurso guarda una copia de los datos de la fuente: diseño, unidad de
-                    análisis, códigos de «No especificado» y roles muestrales (factor de expansión,
-                    estrato y UPM), tal como están ahora. Si después cambias el mapeo, el recurso
-                    conserva lo que se copió. Una encuesta con ediciones de distinto diseño, unidad
-                    o factor de expansión se adjunta sin estos datos.
+                    El recurso guarda una copia de los datos de la fuente tal como están ahora:
+                    ediciones, diseño, unidad de análisis, lugar que cubre, roles muestrales y, por
+                    variable, su uso en análisis, a quién se le preguntó, sus categorías y sus
+                    códigos de «No especificado». Si después cambias el armonizador, el recurso
+                    conserva lo que se copió y avisa que está desactualizado.
                   </p>
                   <label htmlFor="attach-search">Buscar conjunto de datos</label>
                   <input

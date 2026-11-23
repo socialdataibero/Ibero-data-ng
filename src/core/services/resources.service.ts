@@ -1,5 +1,5 @@
 import { http } from '../api/http';
-import type { QueryResult, Resource } from '../models/resource.model';
+import type { QueryResult, Resource, SourceStatus } from '../models/resource.model';
 
 const base = (organizationId: string, datasetId: string) =>
   `/organizations/${organizationId}/datasets/${datasetId}/resources`;
@@ -31,6 +31,10 @@ export const resourcesService = {
    */
   setVariableMetadata: (organizationId: string, datasetId: string, resourceId: string, metadata: unknown) =>
     http.put<Resource>(`${base(organizationId, datasetId)}/${resourceId}/variable-metadata`, { metadata }),
+
+  /** Whether the harmonizer changed after the resource was saved from it. */
+  sourceStatus: (organizationId: string, datasetId: string, resourceId: string) =>
+    http.get<SourceStatus>(`${base(organizationId, datasetId)}/${resourceId}/source-status`),
 
   runQuery: (organizationId: string, datasetId: string, resourceId: string, sql: string) =>
     http.post<QueryResult>(`${base(organizationId, datasetId)}/${resourceId}/query`, { sql }),

@@ -317,7 +317,14 @@ export function DatasetDetail() {
                   ) : null}
                 </div>
               ) : null}
-              {selectedResource ? <SourceMetadataSummary metadata={selectedResource.sourceMetadata} /> : null}
+              {selectedResource ? (
+                <SourceMetadataSummary
+                  metadata={selectedResource.sourceMetadata}
+                  organizationId={organizationId}
+                  datasetId={datasetId}
+                  resourceId={selectedResource.id}
+                />
+              ) : null}
             </>
           )}
         </section>
