@@ -16,8 +16,6 @@ export interface SourceMetadata {
   unit: AnalysisUnit;
   /** Editions the data comes from, only to trace it back. */
   sourceEditionIds: string[];
-  /** The `missingCodes` of each column, and empty cells, are already null in the file. */
-  missingCodesAreNull: true;
   /** Every column of the file, in order. */
   columns: SourceMetadataColumn[];
 }
@@ -27,6 +25,14 @@ export interface SourceMetadataColumn {
   /** Parquet type: `VARCHAR`, `BIGINT`, `DOUBLE`… */
   type: string;
   missingCodes?: string[];
+  /**
+   * With `missingCodes` only. `true`: those codes, like empty cells, are null in the file
+   * (measures, variables without a role). `false`: the codes are in the file (variables of codes);
+   * only empty cells («no aplica») are null.
+   */
+  missingCodesAreNull?: boolean;
+  /** With `missingCodesAreNull: true`: per source edition id, cells that had a code. */
+  missingCount?: Record<string, number>;
   role?: SourceRole;
 }
 

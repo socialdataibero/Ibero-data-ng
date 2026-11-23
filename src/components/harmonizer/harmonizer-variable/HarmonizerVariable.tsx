@@ -5,7 +5,11 @@ import { StatusBadge } from '../../shared/status-badge/StatusBadge';
 import { HarmonizerVariableSkeleton } from './HarmonizerVariableSkeleton';
 import { useHarmonizerVariable } from './useHarmonizerVariable';
 import { VariableAnalysisSection } from './VariableAnalysisSection';
-import type { ComparisonIssue, ComparisonStatus } from '../../../core/models/harmonizer.model';
+import {
+  CODED_ROLES,
+  type ComparisonIssue,
+  type ComparisonStatus,
+} from '../../../core/models/harmonizer.model';
 import './harmonizer-variable.css';
 
 const formatCount = (n: number) => n.toLocaleString('es-MX');
@@ -82,6 +86,9 @@ export function HarmonizerVariable() {
   if (loading) return <HarmonizerVariableSkeleton />;
 
   const catalogCodes = catalog.map((c) => c.code.trim()).filter((c) => c !== '');
+  // A variable of codes keeps its «No especificado» codes in the view, so they can be recoded (F2).
+  const role = data?.variable.analysis.role ?? null;
+  const keepsCodes = role !== null && CODED_ROLES.includes(role);
 
   return (
     <div className="c-harmonizer-variable">
@@ -291,6 +298,14 @@ export function HarmonizerVariable() {
                 la recodificación después de los códigos de «No especificado» y antes del tipo. Los
                 valores «sin recodificar» quedan como están en el archivo.
               </p>
+              {keepsCodes ? (
+                <p className="text-color-secondary">
+                  Como su uso en análisis es de códigos, la variable conserva sus códigos de «No
+                  especificado» en la vista y las descargas, así que también se pueden recodificar
+                  (por ejemplo, <code>9</code> de una edición y <code>99</code> de otra a un solo{' '}
+                  <code>99</code>).
+                </p>
+              ) : null}
               <div className="c-harmonizer-variable__actions">
                 <Button type="button" variant="secondary" size="small" onClick={applySuggestion} disabled={!canEdit}>
                   Usar la propuesta
@@ -370,14 +385,16 @@ export function HarmonizerVariable() {
               </div>
 
               {data.editions.map((edition) => {
-                const values = edition.values.filter((v) => !v.missing);
+                const values = edition.values.filter((v) => !v.missing || keepsCodes);
                 return (
                   <div key={edition.datasetId} className="c-harmonizer-variable__edition">
                     <h3 className="c-harmonizer-variable__subtitle">
                       {edition.datasetName} ({edition.year}) · columna <code>{edition.column}</code>
                     </h3>
                     {values.length === 0 ? (
-                      <p className="text-color-secondary">Sin valores fuera de «No especificado».</p>
+                      <p className="text-color-secondary">
+                        {keepsCodes ? 'Sin valores.' : 'Sin valores fuera de «No especificado».'}
+                      </p>
                     ) : (
                       <div className="container-table">
                         <table className="table-condensed">
@@ -397,6 +414,9 @@ export function HarmonizerVariable() {
                                 <tr key={v.value}>
                                   <td>
                                     <code>{v.value}</code>
+                                    {v.missing ? (
+                                      <span className="text-color-secondary"> · no especificado</span>
+                                    ) : null}
                                   </td>
                                   <td>{v.sourceLabel ?? <span className="text-color-secondary">—</span>}</td>
                                   <td>{formatCount(v.count)}</td>

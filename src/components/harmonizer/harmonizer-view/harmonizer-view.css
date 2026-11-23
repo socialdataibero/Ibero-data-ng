@@ -203,3 +203,11 @@ body[data-theme='dark'] .c-harmonizer-view__warning {
 .c-harmonizer-view__warning p {
   margin: 0.25rem 0;
 }
+
+/* A kept «No especificado» code (variables of codes, F2): apart from a valid answer. */
+.c-harmonizer-view__not-specified {
+  color: var(--text-secondary, var(--color-secondary-7));
+  font-style: italic;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}

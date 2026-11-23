@@ -468,7 +468,10 @@ export interface MappingChoice {
   role?: SourceRole | null;
 }
 
-/** `null` es un valor faltante: celda vacía o código de no especificado. */
+/**
+ * `null` es un valor faltante: celda vacía («no aplica») o, en medidas y variables sin rol, código
+ * de no especificado. Las variables de códigos conservan su código (ver `notSpecified`).
+ */
 export type HarmonizedRow = Record<string, string | number | null>;
 
 /** One page of a harmonized view (SDI-93). `offset` counts rows, starting at 0. */
@@ -481,6 +484,11 @@ export interface DatasetHarmonizedView extends ViewPage {
   dataset: HarmonizerDataset;
   headers: string[];
   rows: HarmonizedRow[];
+  /**
+   * Parallel to `rows`: the columns whose value in that row is a kept «No especificado» code
+   * (variables of codes), to tell it from a valid answer.
+   */
+  notSpecified: string[][];
   /** Rows of the whole view; `rows` holds only the requested page. */
   total: number;
   availableVariables: string[];
@@ -491,6 +499,11 @@ export interface SurveyHarmonizedView extends ViewPage {
   survey: { id: string; name: string };
   headers: string[];
   rows: HarmonizedRow[];
+  /**
+   * Parallel to `rows`: the columns whose value in that row is a kept «No especificado» code
+   * (variables of codes), to tell it from a valid answer.
+   */
+  notSpecified: string[][];
   /** Rows of the whole view; `rows` holds only the requested page. */
   total: number;
   availableVariables: string[];

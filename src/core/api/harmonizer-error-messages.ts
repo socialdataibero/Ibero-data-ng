@@ -289,6 +289,13 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
     return `«${param(b, 'value')}» no es un código de la variable.${known ? ` Sus códigos son: ${known}.` : ''}`;
   },
   coverage_invalid: () => 'La clave y el nombre del lugar que cubre la edición no pueden quedar en blanco.',
+  missing_code_conflict: (b) => {
+    const edition = (key: string) => {
+      const e = b.params?.[key] as { name?: string; year?: number } | undefined;
+      return `«${e?.name ?? ''}» (${e?.year ?? ''})`;
+    };
+    return `El código «${param(b, 'code')}» de la variable «${param(b, 'variable')}» es «No especificado» en la edición ${edition('missingIn')}, pero es una respuesta válida en ${edition('validIn')}. El recurso guarda una sola lista de códigos por variable: recodifícalo en una de las dos ediciones antes de usar la encuesta en un conjunto de datos.`;
+  },
 };
 
 /** Spanish text for a harmonizer error, or null when the code is not a harmonizer one. */

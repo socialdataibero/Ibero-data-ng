@@ -5,10 +5,21 @@ import {
   SOURCE_ROLE_LABEL,
   type SourceRole,
 } from '../../core/models/harmonizer.model';
-import type { SourceMetadata } from '../../core/models/resource.model';
+import type { SourceMetadata, SourceMetadataColumn } from '../../core/models/resource.model';
 import { roleColumn } from '../../core/utils/source-metadata';
 
 const ROLES: SourceRole[] = ['weight', 'stratum', 'psu'];
+
+const count = (n: number) => new Intl.NumberFormat('es-MX').format(n);
+
+/** Whether a column's codes are in the file or already missing values, and how many there were. */
+function codesText(c: SourceMetadataColumn): string {
+  if (c.missingCodesAreNull === false) return 'en el archivo';
+  const cells = Object.values(c.missingCount ?? {}).reduce((a, b) => a + b, 0);
+  return c.missingCount
+    ? `como valor faltante; ${count(cells)} ${cells === 1 ? 'celda' : 'celdas'}`
+    : 'como valor faltante';
+}
 
 /** What the resource knows about its harmonized source: design, unit, roles, "not specified" codes. */
 export function SourceMetadataSummary({ metadata }: { metadata: SourceMetadata | null }) {
@@ -66,7 +77,8 @@ export function SourceMetadataSummary({ metadata }: { metadata: SourceMetadata |
             : withCodes.map((c, i) => (
                 <Fragment key={c.name}>
                   {i > 0 ? '; ' : ''}
-                  <code>{c.name}</code>: {c.missingCodes!.join(', ')}
+                  <code>{c.name}</code>: {c.missingCodes!.join(', ')}{' '}
+                  <span className="text-color-secondary">({codesText(c)})</span>
                 </Fragment>
               ))}
         </dd>
@@ -76,8 +88,9 @@ export function SourceMetadataSummary({ metadata }: { metadata: SourceMetadata |
         </dd>
       </dl>
       <p className="c-dataset-detail__help">
-        Copiados del armonizador al crear el recurso; si después cambia el mapeo, esto no cambia. Los
-        códigos de «No especificado» ya vienen como valor faltante en el archivo.
+        Copiados del armonizador al crear el recurso; si después cambia el mapeo, esto no cambia. Las
+        variables de códigos conservan sus códigos de «No especificado» en el archivo; en las
+        cantidades y las variables sin rol ya vienen como valor faltante.
       </p>
     </section>
   );
