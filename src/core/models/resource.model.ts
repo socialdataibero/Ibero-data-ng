@@ -100,11 +100,6 @@ export interface Resource {
   columns?: ResourceColumn[] | null;
   /** `null` for uploaded files and for resources created before 2026-11-13. */
   sourceMetadata: SourceMetadata | null;
-  /**
-   * What the analysis templates know about each variable (server: analysis/variable-metadata.ts),
-   * or `null` until it is loaded. The templates page only needs to know whether it is there.
-   */
-  variableMetadata: { title: string; design: 'census' | 'sample' } | null;
   createdAt: string;
 }
 

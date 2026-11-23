@@ -25,13 +25,6 @@ export const resourcesService = {
     source: { editionId: string } | { surveyId: string; variables?: string[] },
   ) => http.post<Resource>(`${base(organizationId, datasetId)}/from-harmonizer`, source),
 
-  /**
-   * Replaces what the analysis templates know about each variable of the resource (README
-   * "Variable metadata"). `metadata` is the object as written, e.g. a JSON file the user picked.
-   */
-  setVariableMetadata: (organizationId: string, datasetId: string, resourceId: string, metadata: unknown) =>
-    http.put<Resource>(`${base(organizationId, datasetId)}/${resourceId}/variable-metadata`, { metadata }),
-
   /** Whether the harmonizer changed after the resource was saved from it. */
   sourceStatus: (organizationId: string, datasetId: string, resourceId: string) =>
     http.get<SourceStatus>(`${base(organizationId, datasetId)}/${resourceId}/source-status`),

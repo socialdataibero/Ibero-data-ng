@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { analysisTemplatesService } from '../../core/services/analysis-templates.service';
 import { errorMessage } from '../../core/api/http';
+import { hasTemplateMetadata } from '../../core/utils/source-metadata';
 import { useTemplateSource } from './useTemplateSource';
 import type {
   Base,
@@ -41,6 +42,7 @@ function defaultChoices(template: TemplateListing): Choices {
 
 function toRequest(
   resourceId: string,
+  edition: string | null,
   template: TemplateListing,
   choices: Choices,
   missing: MissingChoice,
@@ -49,6 +51,7 @@ function toRequest(
     resourceId,
     templateId: template.id,
     group: choices.group || null,
+    ...(edition ? { edition } : {}),
   };
   if (template.id === 'proportion') {
     const limits = template.inputs.find((input) => input.name === 'conditions')?.multiple;
@@ -95,14 +98,38 @@ export function useAnalysisTemplate() {
   const resourceId = useMemo(() => {
     const wanted = searchParams.get('resource');
     if (wanted && resources?.some((r) => r.id === wanted)) return wanted;
-    return resources?.find((r) => r.variableMetadata)?.id ?? resources?.[0]?.id ?? '';
+    return resources?.find((r) => hasTemplateMetadata(r.sourceMetadata))?.id ?? resources?.[0]?.id ?? '';
   }, [resources, searchParams]);
+
+  // The edition of the analysis, when the file has several (`?edition=`, else its first one).
+  const editions = useMemo(
+    () => resources?.find((r) => r.id === resourceId)?.sourceMetadata?.editions ?? [],
+    [resources, resourceId],
+  );
+  const edition = useMemo(() => {
+    if (editions.length < 2) return null;
+    const wanted = searchParams.get('edition');
+    return editions.find((e) => e.id === wanted)?.id ?? editions[0].id;
+  }, [editions, searchParams]);
+
+  const selectEdition = useCallback(
+    (id: string) =>
+      setSearchParams(
+        (params) => {
+          params.set('edition', id);
+          return params;
+        },
+        { replace: true },
+      ),
+    [setSearchParams],
+  );
 
   const selectResource = useCallback(
     (id: string) =>
       setSearchParams(
         (params) => {
           params.set('resource', id);
+          params.delete('edition');
           return params;
         },
         { replace: true },
@@ -121,7 +148,7 @@ export function useAnalysisTemplate() {
     setRunning(false);
     if (!resourceId) return;
     analysisTemplatesService
-      .list(organizationId, datasetId, resourceId, controller.signal)
+      .list(organizationId, datasetId, resourceId, edition, controller.signal)
       .then((answer) => {
         if (!controller.signal.aborted) setCatalog(answer);
       })
@@ -130,7 +157,7 @@ export function useAnalysisTemplate() {
           setCatalogError(errorMessage(err, 'No se pudieron cargar las plantillas.'));
       });
     return () => controller.abort();
-  }, [organizationId, datasetId, resourceId, catalogAttempt]);
+  }, [organizationId, datasetId, resourceId, edition, catalogAttempt]);
 
   const template = useMemo(
     () =>
@@ -157,8 +184,8 @@ export function useAnalysisTemplate() {
   );
 
   const request = useMemo(
-    () => (template && resourceId ? toRequest(resourceId, template, choices, missing) : null),
-    [template, resourceId, choices, missing],
+    () => (template && resourceId ? toRequest(resourceId, edition, template, choices, missing) : null),
+    [template, resourceId, edition, choices, missing],
   );
 
   useEffect(() => {
@@ -223,6 +250,9 @@ export function useAnalysisTemplate() {
     ...source,
     resourceId,
     selectResource,
+    editions,
+    edition,
+    selectEdition,
     catalog,
     catalogError,
     retryCatalog: () => setCatalogAttempt((value) => value + 1),
