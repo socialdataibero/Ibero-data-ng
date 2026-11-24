@@ -75,59 +75,6 @@ export function useDatasetDetail() {
     }
   };
 
-  const [savingMetadata, setSavingMetadata] = useState(false);
-  const [metadataError, setMetadataError] = useState<string | null>(null);
-  const [metadataSaved, setMetadataSaved] = useState<string | null>(null);
-
-  // Another resource: the message about the previous one no longer applies.
-  useEffect(() => {
-    setMetadataError(null);
-    setMetadataSaved(null);
-  }, [selectedResourceId]);
-
-  /**
-   * Loads the JSON file that describes the variables of the selected resource (the same shape as
-   * demo-plantillas/metadatos-censo2000-ags.json). The server checks it; a file that wraps it as
-   * `{ "metadata": … }`, the body of the API route, is accepted too.
-   */
-  const onMetadataFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.target;
-    const file = input.files?.[0];
-    if (!file || !selectedResourceId) return;
-    setMetadataError(null);
-    setMetadataSaved(null);
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(await file.text());
-    } catch {
-      setMetadataError(`«${file.name}» no es un JSON válido.`);
-      input.value = '';
-      return;
-    }
-    const metadata =
-      parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'metadata' in parsed && !('columns' in parsed)
-        ? (parsed as { metadata: unknown }).metadata
-        : parsed;
-    setSavingMetadata(true);
-    try {
-      const updated = await resourcesService.setVariableMetadata(
-        organizationId,
-        datasetId,
-        selectedResourceId,
-        metadata,
-      );
-      setResources((list) => list.map((r) => (r.id === updated.id ? updated : r)));
-      const count = (metadata as { columns?: unknown[] }).columns?.length ?? 0;
-      setMetadataSaved(
-        `Listo: se cargó la descripción de ${count} ${count === 1 ? 'variable' : 'variables'}. Ya puedes usar las plantillas con este archivo.`,
-      );
-    } catch (err) {
-      setMetadataError(errorMessage(err, 'No se pudo guardar la descripción de las variables.'));
-    } finally {
-      setSavingMetadata(false);
-      input.value = '';
-    }
-  };
 
   const onRequestEditResource = (analysis: Analysis) => {
     setSelectedResourceId(analysis.sourceResourceId);
@@ -180,10 +127,6 @@ export function useDatasetDetail() {
     editingAnalysis,
     setEditingAnalysis,
     onFileSelected,
-    savingMetadata,
-    metadataError,
-    metadataSaved,
-    onMetadataFileSelected,
     onRequestEditResource,
     openInVistrace,
   };

@@ -21,6 +21,7 @@ export function useHarmonizerNewSurvey() {
     : access.editableOrganizations.some((organization) => organization.id === organizationId));
   const [surveyName, setSurveyName] = useState('');
   const [surveyDescription, setSurveyDescription] = useState('');
+  const [surveyShortName, setSurveyShortName] = useState('');
   const loading = access.loading;
   const loadError = access.error;
   const [saving, setSaving] = useState(false);
@@ -36,6 +37,7 @@ export function useHarmonizerNewSurvey() {
     if (!access.survey) return;
     setSurveyName(access.survey.name);
     setSurveyDescription(access.survey.description ?? '');
+    setSurveyShortName(access.survey.shortName ?? '');
   }, [access.survey]);
 
   const submit = useCallback(
@@ -63,11 +65,18 @@ export function useHarmonizerNewSurvey() {
             await harmonizerService.updateSurvey(surveyId, {
               name,
               description: surveyDescription.trim(),
+              shortName: surveyShortName.trim(),
             });
           } else {
-            await harmonizerService.createSurvey(name, organizationId, surveyDescription.trim() || undefined);
+            await harmonizerService.createSurvey(
+              name,
+              organizationId,
+              surveyDescription.trim() || undefined,
+              surveyShortName.trim() || undefined,
+            );
             setSurveyName('');
             setSurveyDescription('');
+            setSurveyShortName('');
           }
           void navigate('/harmonizer');
         } catch (err) {
@@ -91,7 +100,7 @@ export function useHarmonizerNewSurvey() {
         }
       })();
     },
-    [surveyId, surveyName, surveyDescription, organizationId, canSubmit, saving, navigate],
+    [surveyId, surveyName, surveyDescription, surveyShortName, organizationId, canSubmit, saving, navigate],
   );
 
   return {
@@ -105,6 +114,8 @@ export function useHarmonizerNewSurvey() {
     setSurveyName,
     surveyDescription,
     setSurveyDescription,
+    surveyShortName,
+    setSurveyShortName,
     loading,
     loadError,
     saving,

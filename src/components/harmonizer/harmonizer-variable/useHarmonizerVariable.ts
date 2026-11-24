@@ -7,6 +7,7 @@ import {
   VALUE_TYPE_LABEL,
   type CatalogCategory,
   type ComparisonEdition,
+  type VariableAnalysis,
   type VariableComparison,
 } from '../../../core/models/harmonizer.model';
 import type { Crumb } from '../../shared/page-header/PageHeader';
@@ -116,6 +117,28 @@ export function useHarmonizerVariable() {
         cells: data.editions.map((e) => e.values.filter((v) => !v.missing && codeKey(v.code) === key)),
       }));
   }, [data]);
+
+  /** After «Uso en análisis» is saved: the page keeps the rest of what it loaded. */
+  const setAnalysis = useCallback(
+    (analysis: VariableAnalysis) =>
+      setData((prev) => (prev ? { ...prev, variable: { ...prev.variable, analysis } } : prev)),
+    [],
+  );
+
+  /** Label of a code: the common catalog's, or else the first dictionary that names it. */
+  const codeLabel = useCallback(
+    (code: string): string | null => {
+      if (!data) return null;
+      const fromCatalog = data.variable.categories.find((c) => c.code === code)?.label;
+      if (fromCatalog) return fromCatalog;
+      for (const e of data.editions) {
+        const found = e.values.find((v) => v.code === code && v.label);
+        if (found?.label) return found.label;
+      }
+      return null;
+    },
+    [data],
+  );
 
   const applySuggestion = () => {
     if (!canEdit || !data) return;
@@ -246,6 +269,8 @@ export function useHarmonizerVariable() {
     clearRecoding,
     discard,
     review,
+    setAnalysis,
+    codeLabel,
     valueTypeLabel: VALUE_TYPE_LABEL,
   };
 }

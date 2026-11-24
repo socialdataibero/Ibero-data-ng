@@ -54,14 +54,15 @@ const CODE_MESSAGES: Record<string, string> = {
   // Analysis templates (demo).
   template_not_found: 'La plantilla elegida no está disponible.',
   template_no_metadata:
-    'Este recurso todavía no tiene la información necesaria sobre sus variables (rol, etiquetas, no especificados).',
+    'Este recurso no trae del armonizador la descripción de sus variables (uso en análisis, etiquetas, no especificados). Vuelve a usarlo desde el armonizador con «Usar en un conjunto de datos».',
+  template_edition_required: 'Este archivo junta varias ediciones: elige una para el análisis.',
+  template_edition_unknown: 'La edición elegida no es de este archivo.',
   template_input_unavailable: 'Ninguna variable de este recurso sirve para esta plantilla.',
   template_input_required: 'Falta elegir una variable.',
   template_input_unknown: 'Esa variable no está descrita en los metadatos del recurso.',
   template_factor_required: 'Esta fuente es una muestra y no tiene un factor de expansión declarado.',
   template_variable_in_two_roles:
     'Una misma variable no puede ser lo que se mide y también el grupo que parte el resultado.',
-  variable_metadata_invalid: 'Los metadatos de las variables no tienen el formato esperado.',
   resource_file_missing: 'El archivo de este recurso ya no está en el almacenamiento.',
 };
 

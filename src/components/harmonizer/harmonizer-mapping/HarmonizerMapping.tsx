@@ -9,6 +9,8 @@ import { HarmonizerMappingContentSkeleton } from './HarmonizerMappingSkeleton';
 import { useHarmonizerMapping } from './useHarmonizerMapping';
 import {
   ANALYSIS_UNIT_LABEL,
+  GEO_LEVELS,
+  GEO_LEVEL_LABEL,
   SOURCE_DESIGN_LABEL,
   SOURCE_ROLE_LABEL,
   UPLOAD_ENCODING_LABEL,
@@ -18,6 +20,7 @@ import {
   type SourceDesign,
   type SourceRole,
   type ValueType,
+  type GeoLevel,
 } from '../../../core/models/harmonizer.model';
 import './harmonizer-mapping.css';
 
@@ -52,6 +55,12 @@ export function HarmonizerMapping() {
     setSourceDesign,
     sourceUnit,
     setSourceUnit,
+    coverageLevel,
+    setCoverageLevel,
+    coverageCode,
+    setCoverageCode,
+    coverageLabel,
+    setCoverageLabel,
     sourceChanged,
     saveSource,
     savingSource,
@@ -296,6 +305,50 @@ export function HarmonizerMapping() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+              <p className="text-color-secondary c-harmonizer-mapping__tools-help">
+                <em>Lugar que cubre la edición</em> (opcional): lo que abarca el archivo completo, para la fila
+                del total de un análisis. Por ejemplo: entidad, clave <code>01</code>, «Aguascalientes».
+              </p>
+              <div className="c-harmonizer-mapping__tools-row">
+                <div className="c-harmonizer-mapping__tool">
+                  <label htmlFor="mapping-coverage-level">Nivel</label>
+                  <select
+                    id="mapping-coverage-level"
+                    value={coverageLevel}
+                    onChange={(e) => setCoverageLevel(e.target.value as GeoLevel | '')}
+                    disabled={!canEdit || savingSource}
+                  >
+                    <option value="">— sin indicar —</option>
+                    {GEO_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {GEO_LEVEL_LABEL[level]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="c-harmonizer-mapping__tool">
+                  <label htmlFor="mapping-coverage-code">Clave</label>
+                  <input
+                    id="mapping-coverage-code"
+                    type="text"
+                    value={coverageCode}
+                    onChange={(e) => setCoverageCode(e.target.value)}
+                    disabled={!canEdit || savingSource}
+                    placeholder="01"
+                  />
+                </div>
+                <div className="c-harmonizer-mapping__tool">
+                  <label htmlFor="mapping-coverage-label">Nombre</label>
+                  <input
+                    id="mapping-coverage-label"
+                    type="text"
+                    value={coverageLabel}
+                    onChange={(e) => setCoverageLabel(e.target.value)}
+                    disabled={!canEdit || savingSource}
+                    placeholder="Aguascalientes"
+                  />
                 </div>
                 {canEdit ? (
                   <Button

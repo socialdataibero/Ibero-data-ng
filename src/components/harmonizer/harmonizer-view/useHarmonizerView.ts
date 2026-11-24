@@ -139,6 +139,8 @@ export function useHarmonizerView() {
   }, [datasetView, surveyView]);
 
   const rows = datasetView?.rows ?? surveyView?.rows ?? [];
+  // Parallel to `rows`: the columns whose value is a kept «No especificado» code.
+  const notSpecified = datasetView?.notSpecified ?? surveyView?.notSpecified ?? [];
   const total = datasetView?.total ?? surveyView?.total ?? 0;
   const offset = datasetView?.offset ?? surveyView?.offset ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -312,6 +314,7 @@ export function useHarmonizerView() {
     headers,
     originCount: surveyView ? SURVEY_ORIGIN_KEYS.length : 0,
     rows,
+    notSpecified,
     total,
     firstRow,
     lastRow,

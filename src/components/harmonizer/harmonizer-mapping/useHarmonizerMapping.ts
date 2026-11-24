@@ -12,6 +12,7 @@ import {
   type MappingInfo,
   type MappingRouteState,
   type AnalysisUnit,
+  type GeoLevel,
   type SourceDesign,
   type SourceRole,
   type ValueType,
@@ -339,16 +340,36 @@ export function useHarmonizerMapping() {
   const [savingSource, setSavingSource] = useState(false);
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [sourceNotice, setSourceNotice] = useState<string | null>(null);
+  // Lugar que cubre la edición (fila del total de un análisis): los tres campos o ninguno.
+  const [coverageLevel, setCoverageLevel] = useState<GeoLevel | ''>('');
+  const [coverageCode, setCoverageCode] = useState('');
+  const [coverageLabel, setCoverageLabel] = useState('');
   useEffect(() => {
     setSourceDesign(dataset?.design ?? '');
     setSourceUnit(dataset?.unit ?? '');
   }, [dataset?.design, dataset?.unit]);
+  useEffect(() => {
+    setCoverageLevel(dataset?.coverage?.level ?? '');
+    setCoverageCode(dataset?.coverage?.code ?? '');
+    setCoverageLabel(dataset?.coverage?.label ?? '');
+  }, [dataset?.coverage?.level, dataset?.coverage?.code, dataset?.coverage?.label]);
+  const coverageChanged =
+    !!dataset &&
+    (coverageLevel !== (dataset.coverage?.level ?? '') ||
+      coverageCode.trim() !== (dataset.coverage?.code ?? '') ||
+      coverageLabel.trim() !== (dataset.coverage?.label ?? ''));
   const sourceChanged =
-    !!dataset && (sourceDesign !== (dataset.design ?? '') || sourceUnit !== (dataset.unit ?? ''));
+    !!dataset &&
+    (sourceDesign !== (dataset.design ?? '') || sourceUnit !== (dataset.unit ?? '') || coverageChanged);
   const isSample = dataset?.design === 'sample';
 
   const saveSource = useCallback(() => {
     if (!canEdit || !dataset || savingSource || !sourceDesign || !sourceUnit) return;
+    const parts = [coverageLevel, coverageCode.trim(), coverageLabel.trim()];
+    if (parts.some((p) => p !== '') && parts.some((p) => p === '')) {
+      setSourceError('Para el lugar que cubre la edición indica el nivel, la clave y el nombre, o deja los tres vacíos.');
+      return;
+    }
     setSavingSource(true);
     setSourceError(null);
     setSourceNotice(null);
@@ -357,6 +378,14 @@ export function useHarmonizerMapping() {
         const updated = await harmonizerService.updateDataset(datasetId, {
           design: sourceDesign,
           unit: sourceUnit,
+          ...(coverageChanged
+            ? {
+                coverage:
+                  coverageLevel === ''
+                    ? null
+                    : { level: coverageLevel, code: coverageCode.trim(), label: coverageLabel.trim() },
+              }
+            : {}),
         });
         setDataset(updated);
         if (updated.design === 'census') {
@@ -369,12 +398,23 @@ export function useHarmonizerMapping() {
             : 'Se guardó la fuente.',
         );
       } catch (err) {
-        setSourceError(errorMessage(err, 'No se pudo guardar el diseño y la unidad.'));
+        setSourceError(errorMessage(err, 'No se pudieron guardar los datos de la fuente.'));
       } finally {
         setSavingSource(false);
       }
     })();
-  }, [canEdit, dataset, savingSource, sourceDesign, sourceUnit, datasetId]);
+  }, [
+    canEdit,
+    dataset,
+    savingSource,
+    sourceDesign,
+    sourceUnit,
+    datasetId,
+    coverageLevel,
+    coverageCode,
+    coverageLabel,
+    coverageChanged,
+  ]);
 
   const clearAll = useCallback(() => {
     setRows((prev) =>
@@ -828,6 +868,12 @@ export function useHarmonizerMapping() {
     setSourceDesign,
     sourceUnit,
     setSourceUnit,
+    coverageLevel,
+    setCoverageLevel,
+    coverageCode,
+    setCoverageCode,
+    coverageLabel,
+    setCoverageLabel,
     sourceChanged,
     saveSource,
     savingSource,

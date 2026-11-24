@@ -34,6 +34,12 @@ export function HarmonizerVariables() {
     surveyId,
     warningCount,
     hasCatalog,
+    onlyUndescribed,
+    setOnlyUndescribed,
+    undescribedCount,
+    visibleItems,
+    variableRoleLabel,
+    sourceRoleLabel,
     downloadCatalog,
     downloadingCatalog,
     catalogError,
@@ -82,8 +88,9 @@ export function HarmonizerVariables() {
               <em>Códigos entre ediciones</em> compara los valores de cada variable entre las
               ediciones que la usan, con las etiquetas de sus diccionarios: avisa cuando un mismo
               código significa cosas distintas, cuando una misma categoría tiene otro código o
-              cuando un código solo aparece en algunos años. Entra a <em>Comparar</em> para ver el
-              detalle, recodificar a códigos comunes o marcarla como revisada.
+              cuando un código solo aparece en algunos años. Entra a <em>Comparar y describir</em> para
+              ver el detalle, recodificar a códigos comunes, marcarla como revisada o describir su{' '}
+              <em>uso en análisis</em> (qué tipo de variable es y a quién se le preguntó).
             </p>
 
             {warningCount > 0 ? (
@@ -124,6 +131,20 @@ export function HarmonizerVariables() {
               </p>
             ) : null}
 
+            {data.items.length > 0 ? (
+              <div className="c-harmonizer-variables__filter">
+                <input
+                  id="variables-only-undescribed"
+                  type="checkbox"
+                  checked={onlyUndescribed}
+                  onChange={(e) => setOnlyUndescribed(e.target.checked)}
+                />
+                <label htmlFor="variables-only-undescribed">
+                  Solo las que no tienen uso en análisis ({undescribedCount.toLocaleString('es-MX')})
+                </label>
+              </div>
+            ) : null}
+
             {data.items.length === 0 ? (
               <p className="text-color-secondary">
                 Esta encuesta todavía no tiene variables canónicas. Se crean al mapear una edición.
@@ -135,13 +156,14 @@ export function HarmonizerVariables() {
                     <tr>
                       <th scope="col">Nombre</th>
                       <th scope="col">Tipo</th>
+                      <th scope="col">Uso en análisis</th>
                       <th scope="col">Mapeada en</th>
                       <th scope="col">Códigos entre ediciones</th>
                       <th scope="col">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.items.map((variable) => {
+                    {visibleItems.map((variable) => {
                       const inUse = variable.usages.length > 0;
                       return (
                         <tr key={variable.id}>
@@ -219,6 +241,23 @@ export function HarmonizerVariables() {
                             )}
                           </td>
                           <td>
+                            {variable.analysis.role ? (
+                              variableRoleLabel[variable.analysis.role]
+                            ) : variable.sampleRole ? (
+                              <span>{sourceRoleLabel[variable.sampleRole]} (en el mapeo)</span>
+                            ) : (
+                              <span className="text-color-secondary">
+                                Sin describir
+                                {variable.suggestedRole
+                                  ? ` (sugerido: ${variableRoleLabel[variable.suggestedRole].toLowerCase()})`
+                                  : ''}
+                              </span>
+                            )}
+                            {variable.analysis.universe ? (
+                              <div className="c-harmonizer-variables__description">{variable.analysis.universe}</div>
+                            ) : null}
+                          </td>
+                          <td>
                             {inUse ? (
                               <ul className="c-harmonizer-variables__usages">
                                 {variable.usages.map((usage) => (
@@ -254,9 +293,9 @@ export function HarmonizerVariables() {
                               <Link
                                 to={`/harmonizer/surveys/${surveyId}/variables/${variable.id}`}
                                 className="hyperlink"
-                                aria-label={`Comparar códigos de ${variable.name} entre ediciones`}
+                                aria-label={`Comparar códigos de ${variable.name} entre ediciones y describir su uso en análisis`}
                               >
-                                Comparar
+                                Comparar y describir
                               </Link>
                               <span
                                 className="c-harmonizer-variables__separator"

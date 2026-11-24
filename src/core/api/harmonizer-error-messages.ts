@@ -35,6 +35,58 @@ const ROLE_TEXT: Record<string, string> = {
   psu: 'UPM',
 };
 
+// Mirrors VARIABLE_ROLES in the server's variables/variable-role.ts.
+const ANALYSIS_ROLE_TEXT: Record<string, string> = {
+  category: 'categorías',
+  ordinal: 'categorías ordenadas',
+  dichotomous: 'sí o no',
+  geographic: 'lugar',
+  socioeconomic_stratum: 'estrato socioeconómico',
+  key: 'llave',
+  identifier: 'identificador',
+  measure: 'cantidad',
+};
+
+const ANALYSIS_FIELD_TEXT: Record<string, string> = {
+  role: 'el rol',
+  universe: 'a quién se le preguntó',
+  positiveValue: 'el valor que cuenta como «sí»',
+  geoLevel: 'el nivel territorial',
+  unit: 'la unidad',
+  disaggregation: 'el uso para partir resultados',
+  'disaggregation.cuts': 'los grupos',
+  'disaggregation.maxLevel': 'el nivel más detallado',
+};
+
+/** `variable_analysis_invalid`: which field and what is wrong with it (variable-role.ts). */
+function variableAnalysisInvalid(b: ApiErrorBody): string {
+  const field = param(b, 'field');
+  const group = /^disaggregation\.cuts\[(\d+)\]$/.exec(field);
+  const name = group ? `el grupo ${Number(group[1]) + 1}` : (ANALYSIS_FIELD_TEXT[field] ?? field);
+  switch (param(b, 'problem')) {
+    case 'required':
+      return `Falta ${name}.`;
+    case 'not_for_role':
+      return `Con este rol no se indica ${name}.`;
+    case 'role_required':
+      return `Elige un rol antes de indicar ${name}.`;
+    case 'unknown':
+      return `El valor de ${name} no es válido.`;
+    case 'label_required':
+      return `Falta la etiqueta de ${name}.`;
+    case 'bounds':
+      return `En ${name}, el final es menor que el inicio.`;
+    case 'overlap':
+      return `${name.charAt(0).toUpperCase()}${name.slice(1)} se encima con el anterior o está fuera de orden.`;
+    case 'open_not_last':
+      return 'Solo el último grupo puede quedar abierto («y más»).';
+    case 'not_a_number':
+      return `Los límites de ${name} deben ser números.`;
+    default:
+      return b.message ?? 'El uso en análisis no es válido.';
+  }
+}
+
 function sourceInfoRequired(b: ApiErrorBody): string {
   const missing = Array.isArray(b.params?.missing) ? (b.params.missing as string[]) : [];
   if (missing.includes('design') && missing.includes('unit'))
@@ -227,6 +279,23 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
     `La columna «${param(b, 'column')}» está marcada como ${ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}, pero no está mapeada a una variable. Mapéala o quítale el rol.`,
   source_role_not_allowed: (b) =>
     `Solo las fuentes muestrales llevan factor de expansión, estrato o UPM. Quita el rol de la columna «${param(b, 'column')}» o cambia el diseño de la edición a muestral.`,
+  variable_analysis_invalid: variableAnalysisInvalid,
+  variable_role_type_mismatch: (b) =>
+    param(b, 'role') === 'measure'
+      ? `La variable «${param(b, 'variable')}» solo puede ser una cantidad si su tipo está confirmado como número (entero o decimal) en el mapeo.`
+      : `La variable «${param(b, 'variable')}» tiene códigos como valores (${ANALYSIS_ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}), así que su tipo debe ser texto o quedar sin confirmar, no ${VALUE_TYPE_LABEL[param(b, 'dataType')] ?? param(b, 'dataType')}. Cambia primero el rol o el tipo.`,
+  variable_positive_value_unknown: (b) => {
+    const known = quoteList(b.params?.known);
+    return `«${param(b, 'value')}» no es un código de la variable.${known ? ` Sus códigos son: ${known}.` : ''}`;
+  },
+  coverage_invalid: () => 'La clave y el nombre del lugar que cubre la edición no pueden quedar en blanco.',
+  missing_code_conflict: (b) => {
+    const edition = (key: string) => {
+      const e = b.params?.[key] as { name?: string; year?: number } | undefined;
+      return `«${e?.name ?? ''}» (${e?.year ?? ''})`;
+    };
+    return `El código «${param(b, 'code')}» de la variable «${param(b, 'variable')}» es «No especificado» en la edición ${edition('missingIn')}, pero es una respuesta válida en ${edition('validIn')}. El recurso guarda una sola lista de códigos por variable: recodifícalo en una de las dos ediciones antes de usar la encuesta en un conjunto de datos.`;
+  },
 };
 
 /** Spanish text for a harmonizer error, or null when the code is not a harmonizer one. */

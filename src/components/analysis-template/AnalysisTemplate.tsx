@@ -5,6 +5,7 @@ import { PageHeader } from '../shared/page-header/PageHeader';
 import { PageHeaderSkeleton } from '../shared/page-header/PageHeaderSkeleton';
 import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
 import { ResultChart } from '../shared/result-chart/ResultChart';
+import { hasTemplateMetadata } from '../../core/utils/source-metadata';
 import { CHART_LABEL, type ChartType, type TemplateListing } from '../../core/models/analysis-template.model';
 import { translateApiError } from '../../core/api/error-messages';
 import { downloadCsv } from '../../core/utils/csv';
@@ -162,10 +163,34 @@ export function AnalysisTemplate() {
                 {resources.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.filename}
-                    {r.variableMetadata ? '' : ' (sin metadatos de variables)'}
+                    {hasTemplateMetadata(r.sourceMetadata) ? '' : ' (sin uso en análisis de sus variables)'}
                   </option>
                 ))}
               </select>
+              {page.editions.length > 1 && page.edition ? (
+                <>
+                  <label className="c-analysis-template__label" htmlFor="template-edition">
+                    Edición
+                  </label>
+                  <select
+                    id="template-edition"
+                    value={page.edition}
+                    onChange={(e) => page.selectEdition(e.target.value)}
+                    aria-describedby="template-edition-help"
+                  >
+                    {page.editions.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name ?? e.id}
+                        {e.year !== null ? ` (${e.year})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="template-edition-help" className="c-analysis-template__help">
+                    Este archivo junta varias ediciones: cada análisis se hace sobre una. Comparar
+                    ediciones llegará después.
+                  </p>
+                </>
+              ) : null}
               {catalog?.source ? (
                 <p className="c-analysis-template__help">
                   {catalog.source.title}. Fuente {catalog.source.design === 'sample' ? 'muestral' : 'censal'}.

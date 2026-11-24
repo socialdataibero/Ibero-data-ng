@@ -31,6 +31,7 @@ export function HarmonizerView() {
     headers,
     originCount,
     rows,
+    notSpecified,
     total,
     firstRow,
     lastRow,
@@ -218,11 +219,11 @@ export function HarmonizerView() {
                     datos que elijas.
                   </p>
                   <p className="text-color-secondary">
-                    El recurso guarda una copia de los datos de la fuente: diseño, unidad de
-                    análisis, códigos de «No especificado» y roles muestrales (factor de expansión,
-                    estrato y UPM), tal como están ahora. Si después cambias el mapeo, el recurso
-                    conserva lo que se copió. Una encuesta con ediciones de distinto diseño, unidad
-                    o factor de expansión se adjunta sin estos datos.
+                    El recurso guarda una copia de los datos de la fuente tal como están ahora:
+                    ediciones, diseño, unidad de análisis, lugar que cubre, roles muestrales y, por
+                    variable, su uso en análisis, a quién se le preguntó, sus categorías y sus
+                    códigos de «No especificado». Si después cambias el armonizador, el recurso
+                    conserva lo que se copió y avisa que está desactualizado.
                   </p>
                   <label htmlFor="attach-search">Buscar conjunto de datos</label>
                   <input
@@ -343,6 +344,14 @@ export function HarmonizerView() {
                     Edición.
                   </p>
                 ) : null}
+                {notSpecified.some((cols) => cols.length > 0) ? (
+                  <p className="c-harmonizer-view__note">
+                    <span className="c-harmonizer-view__not-specified">En gris</span>: código de «No
+                    especificado» (se preguntó y no respondió); las variables de códigos lo
+                    conservan. <span className="text-color-secondary">—</span>: celda vacía (no
+                    aplica) o, en cantidades, no especificado.
+                  </p>
+                ) : null}
                 <div className="c-harmonizer-view__page-bar">
                   <p className="c-harmonizer-view__range" aria-live="polite">
                     {total === 0
@@ -407,10 +416,16 @@ export function HarmonizerView() {
                         <tr key={rowIndex}>
                           {headers.map((header, i) => (
                             <td key={header} className={originClass(i, originCount)}>
-                              {row[header] ?? (
+                              {row[header] === null || row[header] === undefined ? (
                                 <span className="text-color-secondary" title="Valor faltante">
                                   —
                                 </span>
+                              ) : notSpecified[rowIndex]?.includes(header) ? (
+                                <span className="c-harmonizer-view__not-specified" title="No especificado">
+                                  {row[header]}
+                                </span>
+                              ) : (
+                                row[header]
                               )}
                             </td>
                           ))}

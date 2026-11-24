@@ -7,6 +7,8 @@ import {
   VALUE_TYPE_LABEL,
   type SurveyCanonicalVariable,
   type SurveyCanonicalVariables,
+  VARIABLE_ROLE_LABEL,
+  SOURCE_ROLE_LABEL,
 } from '../../../core/models/harmonizer.model';
 import { canonicalNameProblem, sameCanonicalName } from '../../../core/utils/validation';
 import type { Crumb } from '../../shared/page-header/PageHeader';
@@ -152,6 +154,16 @@ export function useHarmonizerVariables() {
   const warningCount = data?.items.filter((v) => v.comparison.status === 'warning').length ?? 0;
   const hasCatalog = data?.items.some((v) => v.categories.length > 0) ?? false;
 
+  // Variables sin «Uso en análisis», para completarlas en bloque (plan de plantillas, fase 1).
+  const [onlyUndescribed, setOnlyUndescribed] = useState(false);
+  // Las de rol muestral (factor, estrato, UPM) ya tienen su uso, marcado en el mapeo.
+  const undescribed = (v: SurveyCanonicalVariable) => v.analysis.role === null && v.sampleRole === null;
+  const undescribedCount = data?.items.filter(undescribed).length ?? 0;
+  const visibleItems = useMemo(
+    () => (data?.items ?? []).filter((v) => !onlyUndescribed || undescribed(v)),
+    [data, onlyUndescribed],
+  );
+
   return {
     canEdit,
     readOnlyMessage,
@@ -159,6 +171,12 @@ export function useHarmonizerVariables() {
     data,
     warningCount,
     hasCatalog,
+    onlyUndescribed,
+    setOnlyUndescribed,
+    undescribedCount,
+    visibleItems,
+    variableRoleLabel: VARIABLE_ROLE_LABEL,
+    sourceRoleLabel: SOURCE_ROLE_LABEL,
     downloadCatalog,
     downloadingCatalog,
     catalogError,

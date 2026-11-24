@@ -52,9 +52,18 @@ export interface TemplateListing {
   missing: { input: 'variable' | 'conditions'; options: MissingChoice[]; default: MissingChoice } | null;
 }
 
+/** An edition of the resource's source (its metadata `editions`). */
+export interface TemplateEdition {
+  id: string;
+  name: string | null;
+  year: number | null;
+}
+
 export interface TemplateCatalog {
   resourceId: string;
   source: { title: string; design: 'census' | 'sample'; unitPlural: string } | null;
+  /** Editions of the file; with several, the analysis is about one (`edition` of the request). */
+  editions: TemplateEdition[];
   templates: TemplateListing[];
 }
 
@@ -66,6 +75,8 @@ export interface TemplateRequest {
   measure?: string;
   group?: string | null;
   missing?: MissingChoice;
+  /** Needed when the resource has several editions (`template_edition_required`). */
+  edition?: string | null;
 }
 
 /** One row of the result table (column names of the proposal, section 3.6). */
@@ -95,6 +106,8 @@ export type Base = 'own' | 'total' | 'both';
 export interface TemplateResult {
   template: { id: TemplateId; version: number; contract: string; name: string };
   source: { title: string; design: 'census' | 'sample'; unitPlural: string };
+  /** The edition the figures are about. */
+  edition: TemplateEdition;
   inputs: {
     variable: string | null;
     conditions: string[];

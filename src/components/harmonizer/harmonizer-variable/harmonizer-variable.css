@@ -96,3 +96,31 @@
   font-size: 0.875rem;
   color: var(--error, #b00020);
 }
+
+.c-harmonizer-variable__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  max-width: 60rem;
+}
+
+.c-harmonizer-variable__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.c-harmonizer-variable__field .form-help {
+  margin: 0;
+}
+
+.c-harmonizer-variable__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-harmonizer-variable__cuts input {
+  width: 100%;
+  min-width: 6rem;
+}
