@@ -8,6 +8,11 @@ function quote(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
+/** Neutralize spreadsheet formulas in text cells; numeric values should stay numeric. */
+export function csvText(value: string): string {
+  return /^[=+@-]/.test(value) ? `'${value}` : value;
+}
+
 /** Texto CSV con BOM, para que Excel lo abra como UTF-8. */
 export function toCsv(rows: string[][]): string {
   return `﻿${rows.map((row) => row.map(quote).join(',')).join('\r\n')}\r\n`;

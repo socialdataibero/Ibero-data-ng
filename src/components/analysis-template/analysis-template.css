@@ -334,3 +334,17 @@
 .c-analysis-template__table-wrap {
   min-width: 0;
 }
+
+.c-analysis-template__multiples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(24rem, 100%), 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.c-analysis-template__multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}

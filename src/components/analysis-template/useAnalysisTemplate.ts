@@ -20,9 +20,16 @@ export interface Choices {
   conditions: string[];
   measure: string;
   group: string;
+  breakdowns: string[];
 }
 
-const EMPTY_CHOICES: Choices = { variable: '', conditions: [], measure: '', group: '' };
+const EMPTY_CHOICES: Choices = {
+  variable: '',
+  conditions: [],
+  measure: '',
+  group: '',
+  breakdowns: [],
+};
 
 /** Reasonable first choices so the user sees a result with one click: the first options. */
 function defaultChoices(template: TemplateListing): Choices {
@@ -34,10 +41,23 @@ function defaultChoices(template: TemplateListing): Choices {
     conditions: options('conditions')[0] ? [options('conditions')[0].column] : [],
     measure: options('measure')[0]?.column ?? '',
     group: groups.find((o) => o.role === 'geographic')?.column ?? '',
+    breakdowns: [],
   };
   const mainColumns = [choices.variable, choices.measure, ...choices.conditions];
   if (mainColumns.includes(choices.group)) choices.group = '';
   return choices;
+}
+
+const toggled = (list: string[], column: string) =>
+  list.includes(column) ? list.filter((c) => c !== column) : [...list, column];
+
+/** Drops the group and the breakdowns read from a column the analysis already uses. */
+function prune(choices: Choices, originOf: (column: string) => string): Choices {
+  const main = [choices.variable, choices.measure, ...choices.conditions].map(originOf);
+  const group = choices.group && main.includes(originOf(choices.group)) ? '' : choices.group;
+  const used = group ? [...main, originOf(group)] : main;
+  const breakdowns = choices.breakdowns.filter((c) => !used.includes(originOf(c)));
+  return { ...choices, group, breakdowns };
 }
 
 function toRequest(
@@ -51,6 +71,7 @@ function toRequest(
     resourceId,
     templateId: template.id,
     group: choices.group || null,
+    ...(choices.breakdowns.length ? { breakdowns: choices.breakdowns } : {}),
     ...(edition ? { edition } : {}),
   };
   if (template.id === 'proportion') {
@@ -142,6 +163,7 @@ export function useAnalysisTemplate() {
     setCatalog(null);
     setCatalogError(null);
     setTemplateId(null);
+    setChoices(EMPTY_CHOICES);
     setResult(null);
     setLive(false);
     setRunError(null);
@@ -218,31 +240,36 @@ export function useAnalysisTemplate() {
     };
   }, [organizationId, datasetId, request, live, runAttempt]);
 
+  const originOf = useCallback(
+    (column: string) =>
+      template?.inputs.flatMap((i) => i.options).find((o) => o.column === column)?.origin ?? column,
+    [template],
+  );
+
   const calculate = useCallback(() => {
     setLive(true);
     setRunAttempt((value) => value + 1);
   }, []);
 
-  const setChoice = useCallback(<K extends keyof Choices>(key: K, value: Choices[K]) => {
-    setChoices((current) => {
-      const next = { ...current, [key]: value };
-      if ([next.variable, next.measure, ...next.conditions].includes(next.group)) next.group = '';
-      return next;
-    });
-  }, []);
+  const setChoice = useCallback(
+    <K extends keyof Choices>(key: K, value: Choices[K]) =>
+      setChoices((current) => prune({ ...current, [key]: value }, originOf)),
+    [originOf],
+  );
 
-  const toggleCondition = useCallback((column: string) => {
-    setChoices((current) => {
-      const conditions = current.conditions.includes(column)
-        ? current.conditions.filter((c) => c !== column)
-        : [...current.conditions, column];
-      return {
-        ...current,
-        conditions,
-        group: conditions.includes(current.group) ? '' : current.group,
-      };
-    });
-  }, []);
+  const toggleCondition = useCallback(
+    (column: string) =>
+      setChoices((current) => prune({ ...current, conditions: toggled(current.conditions, column) }, originOf)),
+    [originOf],
+  );
+
+  const toggleBreakdown = useCallback(
+    (column: string) =>
+      setChoices((current) =>
+        prune({ ...current, breakdowns: toggled(current.breakdowns, column).slice(0, 2) }, originOf),
+      ),
+    [originOf],
+  );
 
   return {
     organizationId,
@@ -261,6 +288,8 @@ export function useAnalysisTemplate() {
     choices,
     setChoice,
     toggleCondition,
+    toggleBreakdown,
+    originOf,
     missing,
     setMissing,
     request,

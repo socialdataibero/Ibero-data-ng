@@ -1,4 +1,6 @@
-import type { ResultRow, TemplateResult } from '../models/analysis-template.model';
+import type { Base, ResultRow, TemplateResult } from '../models/analysis-template.model';
+import { csvText } from './csv';
+import { breakdownLabel } from './template-breakdowns';
 
 /**
  * Reading a template result in the browser. The server sends numerators and denominators, never
@@ -68,6 +70,32 @@ export function interval(value: number | null, se: number | null, kind: 'proport
   return kind === 'proportion' ? [Math.max(0, lo), Math.min(1, hi)] : [lo, hi];
 }
 
+/** Shared value scale for chart panels and breakdown small multiples. */
+export function valueDomain(
+  result: TemplateResult,
+  base: Base,
+  showInterval: boolean,
+): [number, number] {
+  const bases: SingleBase[] = base === 'both' ? ['own', 'total'] : [base];
+  const ranges = result.rows.flatMap((row) =>
+    bases.map((b) => {
+      const value = rowValue(row, b);
+      return (
+        (showInterval ? interval(value, rowSe(row, b), result.value.kind) : null) ?? [
+          value ?? 0,
+          value ?? 0,
+        ]
+      );
+    }),
+  );
+  const max = Math.max(0, ...ranges.map((range) => range[1]));
+  const min = Math.min(0, ...ranges.map((range) => range[0])) * 1.1;
+  return [
+    min,
+    result.value.kind === 'proportion' ? (max < 0.1 ? max * 1.15 || 0.01 : 1) : max * 1.1 || 1,
+  ];
+}
+
 /** What the rows of a result are split by, as text: the group (place or category) and the series. */
 export function groupLabel(row: ResultRow, result: TemplateResult): string {
   const group = result.dimensions.group;
@@ -118,10 +146,23 @@ export function resultCsvRows(result: TemplateResult, now = new Date()): string[
     'es_total',
   ];
   const used = columns.filter((c) => result.rows.some((r) => r[c] !== null));
-  const cell = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+  const cell = (v: unknown) =>
+    v === null || v === undefined ? '' : typeof v === 'string' ? csvText(v) : String(v);
+  const breakdowns = result.dimensions.breakdowns ?? [];
+  const split = used.indexOf('num');
   return [
-    [`# ${result.texts.title}. Fuente: ${result.source.title}. ${result.texts.note} Generado el ${now.toLocaleDateString('es-MX')}.`],
-    used,
-    ...result.rows.map((r) => used.map((c) => cell(r[c]))),
+    [
+      `# ${result.texts.title}. Fuente: ${result.source.title}. ${result.texts.note} Generado el ${now.toLocaleDateString('es-MX')}.`,
+    ],
+    [
+      ...used.slice(0, split),
+      ...breakdowns.map((dimension) => csvText(dimension.column.toLowerCase())),
+      ...used.slice(split),
+    ],
+    ...result.rows.map((r) => [
+      ...used.slice(0, split).map((c) => cell(r[c])),
+      ...breakdowns.map((dimension) => csvText(breakdownLabel(r, dimension))),
+      ...used.slice(split).map((c) => cell(r[c])),
+    ]),
   ];
 }

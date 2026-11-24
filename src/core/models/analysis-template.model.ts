@@ -4,7 +4,7 @@
  */
 
 export type TemplateId = 'distribution' | 'proportion' | 'weighted_mean';
-export type InputName = 'variable' | 'conditions' | 'measure' | 'group';
+export type InputName = 'variable' | 'conditions' | 'measure' | 'group' | 'breakdowns';
 export type MissingChoice = 'exclude' | 'include';
 export type VariableRole =
   | 'category'
@@ -27,6 +27,8 @@ export interface InputOption {
   categoryCount: number | null;
   hasMissingCodes: boolean;
   universe: string | null;
+  /** The column it is read from (groups of a measure); absent in older servers. */
+  origin?: string;
 }
 
 export interface TemplateInput {
@@ -72,6 +74,7 @@ export interface TemplateRequest {
   templateId: TemplateId;
   variable?: string;
   conditions?: string[];
+  breakdowns?: string[];
   measure?: string;
   group?: string | null;
   missing?: MissingChoice;
@@ -92,6 +95,7 @@ export interface ResultRow {
   grupo: string | null;
   corte_codigo: string | null;
   corte: string | null;
+  desagregaciones: Record<string, string | null>;
   num: number;
   den: number;
   den_total: number | null;
@@ -103,6 +107,12 @@ export interface ResultRow {
 
 export type Base = 'own' | 'total' | 'both';
 
+export interface BreakdownDimension {
+  column: string;
+  label: string;
+  categories: { code: string; label: string }[];
+}
+
 export interface TemplateResult {
   template: { id: TemplateId; version: number; contract: string; name: string };
   source: { title: string; design: 'census' | 'sample'; unitPlural: string };
@@ -111,11 +121,13 @@ export interface TemplateResult {
   inputs: {
     variable: string | null;
     conditions: string[];
+    breakdowns: string[];
     measure: string | null;
     group: string | null;
     missing: MissingChoice | null;
   };
   dimensions: {
+    breakdowns: BreakdownDimension[];
     group: { column: 'nombre' | 'grupo'; codeColumn: 'cve' | 'grupo_codigo'; label: string; role: VariableRole } | null;
     series: { column: 'criterio' | 'corte'; codeColumn: 'criterio' | 'corte_codigo'; label: string } | null;
   };

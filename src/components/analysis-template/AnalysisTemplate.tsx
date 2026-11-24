@@ -1,15 +1,17 @@
-import { useId, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from 'sectei-library';
 import { PageHeader } from '../shared/page-header/PageHeader';
 import { PageHeaderSkeleton } from '../shared/page-header/PageHeaderSkeleton';
 import { DatasetNotFound } from '../shared/dataset-not-found/DatasetNotFound';
-import { ResultChart } from '../shared/result-chart/ResultChart';
 import { hasTemplateMetadata } from '../../core/utils/source-metadata';
 import { CHART_LABEL, type ChartType, type TemplateListing } from '../../core/models/analysis-template.model';
 import { translateApiError } from '../../core/api/error-messages';
 import { downloadCsv } from '../../core/utils/csv';
 import { resultCsvRows } from '../../core/utils/template-result';
+import { Choice } from './TemplateChoice';
+import { TemplateBreakdownChoices } from './TemplateBreakdownChoices';
+import { TemplateBreakdownControls, TemplateBreakdownCharts } from './TemplateBreakdownResults';
+import { useTemplateBreakdowns } from './useTemplateBreakdowns';
 import { TemplateResultTable } from './TemplateResultTable';
 import { TemplateStepsSkeleton } from './AnalysisTemplateSkeleton';
 import { useAnalysisTemplate } from './useAnalysisTemplate';
@@ -22,32 +24,6 @@ const ROLE_LABEL: Record<string, string> = {
   dichotomous: 'sí o no',
   measure: 'medida',
 };
-
-/** A checkbox or radio as Sisdai draws it: the input, then its label. */
-function Choice(props: {
-  type: 'checkbox' | 'radio';
-  name?: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  children: ReactNode;
-}) {
-  const id = useId();
-  return (
-    <div className="c-analysis-template__choice">
-      <input
-        id={id}
-        type={props.type}
-        name={props.name}
-        checked={props.checked}
-        onChange={(e) => props.onChange(e.target.checked)}
-      />
-      {/* One span: Sisdai's label is a flex row, which would split the text into columns. */}
-      <label htmlFor={id}>
-        <span>{props.children}</span>
-      </label>
-    </div>
-  );
-}
 
 function reasonText(template: TemplateListing): string {
   if (!template.reason) return '';
@@ -77,6 +53,7 @@ export function AnalysisTemplate() {
     base,
     chart,
   } = page;
+  const breakdowns = useTemplateBreakdowns(result);
 
   if (page.notFound) return <DatasetNotFound />;
 
@@ -92,7 +69,7 @@ export function AnalysisTemplate() {
 
   const groupInput = template?.inputs.find((i) => i.name === 'group');
   const mainColumns = new Set(
-    [...page.choices.conditions, page.choices.variable, page.choices.measure].filter(Boolean),
+    [...page.choices.conditions, page.choices.variable, page.choices.measure].filter(Boolean).map(page.originOf),
   );
   const missingDisabled = template?.id === 'proportion' && base === 'total';
   // With both bases a warning true of each one would show twice: once is enough.
@@ -255,14 +232,14 @@ export function AnalysisTemplate() {
             </h2>
             <div className="c-analysis-template__inputs">
               {template.inputs
-                .filter((input) => input.name !== 'group')
+                .filter((input) => input.name !== 'group' && input.name !== 'breakdowns')
                 .map((input) =>
-                  input.multiple ? (
+                  input.name === 'conditions' ? (
                     <fieldset key={input.name} className="c-analysis-template__fieldset">
                       <legend className="c-analysis-template__label">{input.label}</legend>
                       <p className="c-analysis-template__help">{input.help}</p>
                       <p className="c-analysis-template__help">
-                        Elige entre {input.multiple.min} y {input.multiple.max} condiciones.
+                        Elige entre {input.multiple?.min ?? 1} y {input.multiple?.max ?? 6} condiciones.
                       </p>
                       {input.options.map((o) => (
                         <Choice
@@ -313,15 +290,21 @@ export function AnalysisTemplate() {
                   >
                     <option value="">Sin grupo (sólo el total)</option>
                     {groupInput.options.map((o) => (
-                      <option key={o.column} value={o.column} disabled={mainColumns.has(o.column)}>
+                      <option key={o.column} value={o.column} disabled={mainColumns.has(page.originOf(o.column))}>
                         {o.label}
-                        {mainColumns.has(o.column) ? ' (ya es lo que se mide)' : ''}
+                        {mainColumns.has(page.originOf(o.column)) ? ' (ya es lo que se mide)' : ''}
                       </option>
                     ))}
                   </select>
                   <p className="c-analysis-template__help">{groupInput.help}</p>
                 </div>
               ) : null}
+
+              <TemplateBreakdownChoices
+                input={template.inputs.find((input) => input.name === 'breakdowns')}
+                choices={page.choices} originOf={page.originOf}
+                onToggle={page.toggleBreakdown}
+              />
 
               {template.missing ? (
                 <fieldset
@@ -384,7 +367,7 @@ export function AnalysisTemplate() {
           </section>
         ) : null}
 
-        {result ? (
+        {result && breakdowns.view ? (
           <section
             className="c-analysis-template__step"
             aria-labelledby="step-result"
@@ -407,6 +390,11 @@ export function AnalysisTemplate() {
             </div>
 
             <div className="c-analysis-template__controls">
+              <TemplateBreakdownControls
+                dimensions={result.dimensions.breakdowns ?? []}
+                selections={breakdowns.selections}
+                onSelect={breakdowns.select}
+              />
               {result.bases ? (
                 <div className="c-analysis-template__control">
                   <span className="c-analysis-template__label">Base del porcentaje</span>
@@ -486,8 +474,8 @@ export function AnalysisTemplate() {
             ) : null}
 
             {chart !== 'tabla' ? (
-              <ResultChart
-                result={result}
+              <TemplateBreakdownCharts
+                view={breakdowns.view}
                 options={{
                   chart,
                   base: result.bases ? base : 'own',
@@ -514,7 +502,11 @@ export function AnalysisTemplate() {
                 Descargar CSV
               </Button>
             </div>
-            <TemplateResultTable result={result} base={result.bases ? base : 'own'} />
+            <TemplateResultTable
+              result={breakdowns.view.result}
+              base={result.bases ? base : 'own'}
+              comparedBreakdown={breakdowns.view.compared}
+            />
             <p className="c-analysis-template__help">
               Vista previa: este análisis no se guarda. Los umbrales de precisión (15% y 30% de coeficiente de
               variación) y el aviso de cifras con uno o dos registros son provisionales.

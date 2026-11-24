@@ -18,6 +18,7 @@ import {
   rowValue,
   seriesLabel,
   shortSeries,
+  valueDomain,
   type Precision,
   type SingleBase,
 } from '../../../core/utils/template-result';
@@ -37,6 +38,7 @@ export interface ResultChartOptions {
   showInterval: boolean;
   showReference: boolean;
   sort: 'catalog' | 'value';
+  xDomain?: [number, number];
 }
 
 const BASE_LABEL: Record<SingleBase, string> = { own: 'Universo propio', total: 'Población total' };
@@ -162,15 +164,7 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
 
     // One panel per series when there is a group (all with the same scale); otherwise one panel.
     const seriesValues = grouped ? [...new Set(result.rows.map((r) => seriesLabel(r, result)))] : [null];
-    const allPoints = pointsOf(result.rows, result, bases, digits);
-    const maxValue = Math.max(
-      0,
-      ...allPoints.map((p) => (options.showInterval ? (p.hi ?? p.value ?? 0) : (p.value ?? 0))),
-    );
-    const domainMax = proportion ? (maxValue < 0.1 ? maxValue * 1.15 || 0.01 : 1) : maxValue * 1.1 || 1;
-    const domainMin =
-      Math.min(0, ...allPoints.map((p) => (options.showInterval ? (p.lo ?? p.value ?? 0) : (p.value ?? 0)))) *
-      1.1;
+    const domain = options.xDomain ?? valueDomain(result, options.base, options.showInterval);
 
     return seriesValues.map((series) => {
       const rows = grouped
@@ -286,7 +280,7 @@ export function ResultChart({ result, options }: { result: TemplateResult; optio
           marginTop: options.showReference && reference !== null && !both ? 30 : 16,
           marginRight: 24,
           style: { fontSize: '13px', fontFamily: 'inherit', background: 'transparent' },
-          x: { domain: [domainMin, domainMax], tickFormat: tick, label: null, grid: true },
+          x: { domain, tickFormat: tick, label: null, grid: true },
           y: both ? { axis: null, domain: bases.map((b) => BASE_LABEL[b]) } : { domain: groups, label: null },
           ...(both
             ? {

@@ -1,4 +1,9 @@
-import type { Base, TemplateResult } from '../../core/models/analysis-template.model';
+import type {
+  Base,
+  BreakdownDimension,
+  TemplateResult,
+} from '../../core/models/analysis-template.model';
+import { breakdownLabel } from '../../core/utils/template-breakdowns';
 import {
   formatCount,
   formatValue,
@@ -20,7 +25,15 @@ const BASE_HEADING: Record<SingleBase, string> = {
  * The result as a table (section 6.10): every row with its numerator, denominator, value,
  * precision and records, so no information is lost by the chart. Totals go last, in bold.
  */
-export function TemplateResultTable({ result, base }: { result: TemplateResult; base: Base }) {
+export function TemplateResultTable({
+  result,
+  base,
+  comparedBreakdown,
+}: {
+  result: TemplateResult;
+  base: Base;
+  comparedBreakdown?: BreakdownDimension;
+}) {
   const proportion = result.value.kind === 'proportion';
   const bases: SingleBase[] = !proportion ? ['own'] : base === 'both' ? ['own', 'total'] : [base];
   const digits = percentDigits(result.rows.flatMap((r) => bases.map((b) => rowValue(r, b))));
@@ -44,6 +57,7 @@ export function TemplateResultTable({ result, base }: { result: TemplateResult; 
         <caption className="c-analysis-template__help">{result.texts.title}</caption>
         <thead>
           <tr>
+            {comparedBreakdown ? <th scope="col">{comparedBreakdown.label}</th> : null}
             {series ? <th scope="col">{series.label}</th> : null}
             <th scope="col">{group ? group.label : 'Lugar'}</th>
             {bases.map((b) => (
@@ -74,6 +88,7 @@ export function TemplateResultTable({ result, base }: { result: TemplateResult; 
         <tbody>
           {result.rows.map((row, i) => (
             <tr key={i} className={row.es_total ? 'is-total' : undefined}>
+              {comparedBreakdown ? <td>{breakdownLabel(row, comparedBreakdown)}</td> : null}
               {series ? <td>{seriesLabel(row, result)}</td> : null}
               <td>{group ? groupLabel(row, result) : row.nombre}</td>
               {bases.map((b) => (
@@ -95,7 +110,9 @@ export function TemplateResultTable({ result, base }: { result: TemplateResult; 
           ))}
         </tbody>
       </table>
-      {result.rows.length === 0 ? <p role="status">No hay población con dato para esta selección.</p> : null}
+      {result.rows.length === 0 ? (
+        <p role="status">No hay población con dato para esta selección.</p>
+      ) : null}
     </div>
   );
 }

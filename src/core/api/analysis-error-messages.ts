@@ -60,6 +60,10 @@ const CODE_MESSAGES: Record<string, string> = {
   template_input_unavailable: 'Ninguna variable de este recurso sirve para esta plantilla.',
   template_input_required: 'Falta elegir una variable.',
   template_input_unknown: 'Esa variable no está descrita en los metadatos del recurso.',
+  template_too_many_cells:
+    'Esta combinación produciría demasiadas celdas. Quita un cruce o elige un grupo con menos categorías.',
+  template_too_many_breakdowns: 'Elige como máximo dos cruces.',
+  template_breakdown_unavailable: 'Esa variable no se puede usar para cruzar.',
   template_factor_required: 'Esta fuente es una muestra y no tiene un factor de expansión declarado.',
   template_variable_in_two_roles:
     'Una misma variable no puede ser lo que se mide y también el grupo que parte el resultado.',
