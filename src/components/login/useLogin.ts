@@ -52,8 +52,7 @@ export function useLogin() {
 
     setLoading(true);
     try {
-      console.log('Logging in with', email, password);
-      await login(email, password);
+      await login(email.trim(), password);
       const dest = (location.state as RouteState | null)?.from?.pathname ?? '/dashboard';
       navigate(dest, { replace: true });
     } catch (error) {
@@ -64,17 +63,14 @@ export function useLogin() {
   };
 
   const handleLoginError = (error: unknown) => {
-    console.log(error)
     if (error instanceof ApiError) {
       const code = error.body?.code ?? null;
-      console.log('Login error code:', code, 'message:', error.body?.message);
 
       switch (code) {
         case 'user_not_found':
           setErrorEmail('Usuario no encontrado o inactivo');
           return;
         case 'wrong_password':
-          console.log('Contraseña incorrecta', errorPassword);
           setErrorPassword('Contraseña incorrecta');
           return;
         default:
