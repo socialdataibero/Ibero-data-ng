@@ -20,7 +20,8 @@ export function PortalChartBlock({
   description = '',
   chart,
   children,
-  actions = ['table', 'download', 'chart'],
+  // Downloading the image and editing the chart are not implemented: both opened the table.
+  actions = ['table'],
   onAction,
   className = '',
   ...rest

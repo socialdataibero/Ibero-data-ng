@@ -28,7 +28,7 @@ export interface ChartBlock {
 }
 
 const SERIES_COLOR = 'var(--color-primario-3)';
-const NOT_A_MEASURE = /^(_?id|.*_id|folio.*|clave.*|c(o|ó)digo.*|a(n|ñ)i?o|year|fecha)$/i;
+const NOT_A_MEASURE = /^(_?id|.*_id|folio.*|clave.*|cve(_.*)?|c(o|ó)digo.*|a(n|ñ)i?o|year|fecha)$/i;
 const MAX_BARS = 12;
 const MAX_CHARTS = 3;
 const MAX_CATEGORIES = 15;
@@ -43,10 +43,14 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Text that only looks like a number: "01001" is a place, and adding it up means nothing. */
+const LEADING_ZERO = /^0\d/;
+
 interface ProfiledColumn extends TableColumn {
   distinct: number;
   present: number;
   numeric: boolean;
+  code: boolean;
 }
 
 function profile(columns: TableColumn[], rows: Record<string, unknown>[]): ProfiledColumn[] {
@@ -59,6 +63,7 @@ function profile(columns: TableColumn[], rows: Record<string, unknown>[]): Profi
       distinct,
       present: present.length,
       numeric: present.length > 0 && present.every(isNumber),
+      code: NOT_A_MEASURE.test(column.id) || present.some((v) => typeof v === 'string' && LEADING_ZERO.test(v)),
     };
   });
 }
@@ -104,13 +109,16 @@ export function deriveCharts(
 
   const profiled = profile(columns, rows);
 
-  const measure = profiled.find((c) => c.numeric && c.distinct > 1 && !NOT_A_MEASURE.test(c.id));
+  const measure = profiled.find((c) => c.numeric && c.distinct > 1 && !c.code);
 
   const candidates = profiled.filter(
     (c) => c.id !== measure?.id && c.distinct > 1 && c.present > 0,
   );
-  const readable = candidates.filter((c) => c.distinct <= MAX_CATEGORIES);
-  const chosen = (readable.length ? readable : candidates)
+  // Another measure is not a category, unless there is nothing else to split by.
+  const named = candidates.filter((c) => !c.numeric || c.code);
+  const pool = named.length ? named : candidates;
+  const readable = pool.filter((c) => c.distinct <= MAX_CATEGORIES);
+  const chosen = (readable.length ? readable : pool)
     .sort((a, b) => a.distinct - b.distinct)
     .slice(0, maxCharts);
 
