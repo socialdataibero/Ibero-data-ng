@@ -36,6 +36,8 @@ export interface ColumnRow {
   dataType: ValueType;
   /** Rol de diseño muestral; `''` = ninguno. Solo en ediciones muestrales. */
   role: SourceRole | '';
+  /** Con rol de enumeración completa: sus códigos separados por comas, tal como los escribe el usuario. */
+  certaintyCodes: string;
 }
 
 /** `confirmed`: el guardado de la canónica; `suggested`: el inferido, sin confirmar; `changed`: lo cambió el usuario. */
@@ -92,6 +94,8 @@ function isRowDirty(row: ColumnRow, canonicals: CanonicalVariable[]): boolean {
       : '';
   if (row.choice !== savedChoice) return true;
   if (row.role !== (column.role ?? '')) return true;
+  if (row.role === 'certainty' && parseMissingCodes(row.certaintyCodes).join('\n') !== column.certaintyCodes.join('\n'))
+    return true;
   if (row.choice === '') return false;
   if (row.dataType !== confirmedType(row.choice, canonicals)) return true;
   return parseMissingCodes(row.missingCodes).join('\n') !== column.missingCodes.join('\n');
@@ -114,6 +118,7 @@ function initialRow(column: MappingColumn, canonicals: CanonicalVariable[]): Col
     missingCodes: column.missingCodes.join(', '),
     dataType: defaultType(choice, column, canonicals),
     role: column.role ?? '',
+    certaintyCodes: column.certaintyCodes.join(', '),
   };
 }
 
@@ -334,6 +339,10 @@ export function useHarmonizerMapping() {
     );
   }, []);
 
+  const setCertaintyCodes = useCallback((index: number, certaintyCodes: string) => {
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, certaintyCodes } : row)));
+  }, []);
+
   // Diseño y unidad de la fuente: se cambian aparte del mapeo, con su propio botón.
   const [sourceDesign, setSourceDesign] = useState<SourceDesign | ''>('');
   const [sourceUnit, setSourceUnit] = useState<AnalysisUnit | ''>('');
@@ -550,6 +559,7 @@ export function useHarmonizerMapping() {
               dataType: defaultType(choice, row.column, canonicalVariables),
               // Los roles solo aplican si esta edición también es muestral.
               role: isSample ? (source.role ?? '') : '',
+              certaintyCodes: isSample && source.role === 'certainty' ? source.certaintyCodes.join(', ') : '',
             };
           }
           const target = rowTarget(row, canonicalVariables);
@@ -799,6 +809,13 @@ export function useHarmonizerMapping() {
         setSaveError(harmonizerErrorText({ code: 'sample_weight_required' }));
         return;
       }
+      const noCodes = rows.find(
+        (row) => isSample && row.choice !== '' && row.role === 'certainty' && parseMissingCodes(row.certaintyCodes).length === 0,
+      );
+      if (noCodes) {
+        setSaveError(harmonizerErrorText({ code: 'certainty_codes_required', params: { column: noCodes.column.name } }));
+        return;
+      }
 
       setSaving(true);
 
@@ -813,6 +830,7 @@ export function useHarmonizerMapping() {
           dataType: row.dataType,
           missingCodes: parseMissingCodes(row.missingCodes),
           role: isSample ? row.role || null : undefined,
+          certaintyCodes: isSample && row.role === 'certainty' ? parseMissingCodes(row.certaintyCodes) : undefined,
         }));
 
       void (async () => {
@@ -863,6 +881,7 @@ export function useHarmonizerMapping() {
     setMissingCodes,
     setDataType,
     setRole,
+    setCertaintyCodes,
     isSample,
     sourceDesign,
     setSourceDesign,

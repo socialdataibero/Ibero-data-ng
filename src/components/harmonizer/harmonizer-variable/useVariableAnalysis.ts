@@ -21,6 +21,9 @@ export interface CutRow {
 export interface AnalysisForm {
   role: VariableRole | '';
   universe: string;
+  /** «Sólo a partir de»: the numeric variable (`''` = no rule) and its minimum, as typed. */
+  universeVariable: string;
+  universeMin: string;
   positiveValue: string;
   geoLevel: GeoLevel | '';
   unit: string;
@@ -36,6 +39,8 @@ function toForm(a: VariableAnalysis): AnalysisForm {
   return {
     role: a.role ?? '',
     universe: a.universe ?? '',
+    universeVariable: a.universeRule?.variable ?? '',
+    universeMin: a.universeRule ? String(a.universeRule.min) : '',
     positiveValue: a.positiveValue ?? '',
     geoLevel: a.geoLevel ?? '',
     unit: a.unit ?? '',
@@ -58,7 +63,15 @@ const isNumber = (v: string) => v.trim() !== '' && Number.isFinite(Number(v));
 function toPayload(f: AnalysisForm): VariableAnalysis {
   const role = f.role === '' ? null : f.role;
   if (role === null) {
-    return { role: null, universe: null, positiveValue: null, geoLevel: null, unit: null, disaggregation: null };
+    return {
+      role: null,
+      universe: null,
+      universeRule: null,
+      positiveValue: null,
+      geoLevel: null,
+      unit: null,
+      disaggregation: null,
+    };
   }
   const splits = f.splits && DISAGGREGABLE_ROLES.includes(role);
   const cuts =
@@ -72,6 +85,8 @@ function toPayload(f: AnalysisForm): VariableAnalysis {
   return {
     role,
     universe: text(f.universe),
+    universeRule:
+      f.universeVariable !== '' ? { variable: f.universeVariable, min: Number(f.universeMin) } : null,
     positiveValue: role === 'dichotomous' ? text(f.positiveValue) : null,
     geoLevel: role === 'geographic' && f.geoLevel !== '' ? f.geoLevel : null,
     unit: role === 'measure' ? text(f.unit) : null,
@@ -116,6 +131,22 @@ export function useVariableAnalysis({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Numeric variables of the survey, for «Sólo a partir de» (the universe rule).
+  const [numericVariables, setNumericVariables] = useState<{ name: string; label: string }[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    harmonizerService
+      .listVariables(surveyId, controller.signal)
+      .then((res) =>
+        setNumericVariables(
+          res.items
+            .filter((v) => v.id !== variableId && (v.dataType === 'integer' || v.dataType === 'decimal'))
+            .map((v) => ({ name: v.name, label: v.description ? `${v.name} · ${v.description}` : v.name })),
+        ),
+      )
+      .catch(() => setNumericVariables([]));
+    return () => controller.abort();
+  }, [surveyId, variableId]);
 
   // Reloading the page data (after a recoding, for instance) keeps what is being typed unless
   // what is saved changed.
@@ -158,6 +189,10 @@ export function useVariableAnalysis({
       setError('Los límites de cada grupo deben ser números. Deja vacío el «hasta» del último para que quede abierto («y más»).');
       return;
     }
+    if (form.role !== '' && form.universeVariable !== '' && !isNumber(form.universeMin)) {
+      setError(`Escribe a partir de qué valor de ${form.universeVariable} se cuenta el universo (por ejemplo, 15).`);
+      return;
+    }
     setSaving(true);
     setError(null);
     setNotice(null);
@@ -193,6 +228,7 @@ export function useVariableAnalysis({
     save,
     discard,
     typeHint: typeHint(form.role, dataType),
+    numericVariables,
     splitsAllowed: form.role !== '' && DISAGGREGABLE_ROLES.includes(form.role),
   };
 }

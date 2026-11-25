@@ -113,6 +113,9 @@ export function analysisErrorText(body: ApiErrorBody): string | null {
   if (body.code === 'template_input_role_mismatch') {
     return `«${param(body, 'variable')}» no se puede usar aquí: esta plantilla necesita otro tipo de variable.`;
   }
+  if (body.code === 'template_universe_variable_missing') {
+    return `El universo de «${param(body, 'variable')}» depende de «${param(body, 'universeVariable')}», que no está en este recurso. Vuelve a usar la vista armonizada en el conjunto de datos incluyendo esa variable.`;
+  }
   if (body.code === 'template_too_many_categories') {
     return `«${param(body, 'variable')}» tiene ${param(body, 'categories')} categorías y aquí se admiten hasta ${param(body, 'max')}.`;
   }

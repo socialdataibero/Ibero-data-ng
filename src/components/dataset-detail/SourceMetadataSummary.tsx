@@ -17,7 +17,7 @@ import type {
 import { resourcesService } from '../../core/services/resources.service';
 import { roleColumn } from '../../core/utils/source-metadata';
 
-const ROLES: SourceRole[] = ['weight', 'stratum', 'psu'];
+const ROLES: SourceRole[] = ['weight', 'stratum', 'psu', 'certainty'];
 
 const count = (n: number) => new Intl.NumberFormat('es-MX').format(n);
 
@@ -170,6 +170,18 @@ export function SourceMetadataSummary({
                 <dt>{SOURCE_ROLE_LABEL[role]}</dt>
                 <dd>
                   <code>{column}</code>
+                  {role === 'certainty' && metadata.editions.length === 1 && metadata.editions[0].certainty ? (
+                    <span className="text-color-secondary">
+                      {' '}
+                      · códigos {metadata.editions[0].certainty.codes.map((c, i) => (
+                        <Fragment key={c}>
+                          {i > 0 ? ', ' : ''}
+                          <code>{c}</code>
+                        </Fragment>
+                      ))}{' '}
+                      o todos los factores en 1: sin error de muestreo
+                    </span>
+                  ) : null}
                 </dd>
               </Fragment>
             ))}
@@ -193,6 +205,12 @@ export function SourceMetadataSummary({
                     <>
                       {' '}
                       · factor <code>{e.weight}</code>
+                    </>
+                  ) : null}
+                  {e.certainty && metadata.editions.length > 1 ? (
+                    <>
+                      {' '}
+                      · enumeración completa <code>{e.certainty.column}</code> = {e.certainty.codes.join(', ')}
                     </>
                   ) : null}
                 </Fragment>
@@ -230,7 +248,15 @@ export function SourceMetadataSummary({
                       </span>
                     ) : null}
                   </td>
-                  <td>{c.universe ?? <span className="text-color-secondary">—</span>}</td>
+                  <td>
+                    {c.universe ?? (c.universeRule ? null : <span className="text-color-secondary">—</span>)}
+                    {c.universeRule ? (
+                      <span className="text-color-secondary">
+                        {c.universe ? ' · ' : ''}
+                        sólo <code>{c.universeRule.column}</code> ≥ {c.universeRule.min}
+                      </span>
+                    ) : null}
+                  </td>
                   <td>
                     {c.missingCodes?.length ? (
                       <>
