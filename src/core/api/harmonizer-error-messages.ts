@@ -33,6 +33,7 @@ const ROLE_TEXT: Record<string, string> = {
   weight: 'factor de expansión',
   stratum: 'estrato',
   psu: 'UPM',
+  certainty: 'enumeración completa',
 };
 
 // Mirrors VARIABLE_ROLES in the server's variables/variable-role.ts.
@@ -56,6 +57,9 @@ const ANALYSIS_FIELD_TEXT: Record<string, string> = {
   disaggregation: 'el uso para partir resultados',
   'disaggregation.cuts': 'los grupos',
   'disaggregation.maxLevel': 'el nivel más detallado',
+  universeRule: '«Sólo a partir de»',
+  'universeRule.variable': 'la variable de «Sólo a partir de»',
+  'universeRule.min': 'el valor mínimo de «Sólo a partir de»',
 };
 
 /** `variable_analysis_invalid`: which field and what is wrong with it (variable-role.ts). */
@@ -63,6 +67,19 @@ function variableAnalysisInvalid(b: ApiErrorBody): string {
   const field = param(b, 'field');
   const group = /^disaggregation\.cuts\[(\d+)\]$/.exec(field);
   const name = group ? `el grupo ${Number(group[1]) + 1}` : (ANALYSIS_FIELD_TEXT[field] ?? field);
+  if (field === 'universeRule.variable') {
+    switch (param(b, 'problem')) {
+      case 'self':
+        return 'El universo de una variable no puede depender de ella misma: elige otra en «Sólo a partir de».';
+      case 'unknown':
+        return 'La variable de «Sólo a partir de» no es de esta encuesta.';
+      case 'not_a_number':
+        return 'La variable de «Sólo a partir de» debe tener su tipo confirmado como número (Entero o Decimal) en el mapeo.';
+    }
+  }
+  if (field === 'universeRule.min' && param(b, 'problem') === 'not_a_number') {
+    return 'El valor mínimo de «Sólo a partir de» debe ser un número.';
+  }
   switch (param(b, 'problem')) {
     case 'required':
       return `Falta ${name}.`;
@@ -277,8 +294,10 @@ const MESSAGES: Record<string, (b: ApiErrorBody) => string> = {
     `Solo una columna puede ser ${ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}, y la tienen: ${quoteList(b.params?.columns)}.`,
   source_role_unmapped: (b) =>
     `La columna «${param(b, 'column')}» está marcada como ${ROLE_TEXT[param(b, 'role')] ?? param(b, 'role')}, pero no está mapeada a una variable. Mapéala o quítale el rol.`,
+  certainty_codes_required: (b) =>
+    `La columna «${param(b, 'column')}» está marcada como enumeración completa: escribe los códigos que indican un estrato enumerado completo (por ejemplo, 1).`,
   source_role_not_allowed: (b) =>
-    `Solo las fuentes muestrales llevan factor de expansión, estrato o UPM. Quita el rol de la columna «${param(b, 'column')}» o cambia el diseño de la edición a muestral.`,
+    `Solo las fuentes muestrales llevan factor de expansión, estrato, UPM o enumeración completa. Quita el rol de la columna «${param(b, 'column')}» o cambia el diseño de la edición a muestral.`,
   variable_analysis_invalid: variableAnalysisInvalid,
   variable_role_type_mismatch: (b) =>
     param(b, 'role') === 'measure'

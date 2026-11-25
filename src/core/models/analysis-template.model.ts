@@ -15,6 +15,7 @@ export type VariableRole =
   | 'weight'
   | 'stratum'
   | 'psu'
+  | 'certainty'
   | 'identifier'
   | 'label'
   | 'temporal'

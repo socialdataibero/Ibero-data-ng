@@ -114,6 +114,23 @@
   margin: 0;
 }
 
+/* «Sólo a partir de»: the variable, "mayor o igual a" and the minimum on one line when they fit. */
+.c-harmonizer-variable__inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-harmonizer-variable__inline select {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.c-harmonizer-variable__inline input {
+  width: 6rem;
+}
+
 .c-harmonizer-variable__check {
   display: flex;
   align-items: center;

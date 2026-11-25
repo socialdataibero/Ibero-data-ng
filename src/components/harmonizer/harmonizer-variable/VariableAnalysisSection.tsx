@@ -42,8 +42,22 @@ interface Props {
 /** «Uso en análisis»: role, universe, "yes" code, level, unit and groups of a canonical variable. */
 export function VariableAnalysisSection(props: Props) {
   const { suggestedRole, knownCodes, codeLabel, canEdit } = props;
-  const { form, set, setCut, addCut, removeCut, dirty, saving, error, notice, save, discard, typeHint, splitsAllowed } =
-    useVariableAnalysis(props);
+  const {
+    form,
+    set,
+    setCut,
+    addCut,
+    removeCut,
+    dirty,
+    saving,
+    error,
+    notice,
+    save,
+    discard,
+    typeHint,
+    splitsAllowed,
+    numericVariables,
+  } = useVariableAnalysis(props);
   const disabled = !canEdit || saving;
 
   return (
@@ -100,6 +114,49 @@ export function VariableAnalysisSection(props: Props) {
             <p className="form-help">
               Una celda vacía es alguien a quien no se le hizo la pregunta: queda fuera de los cálculos de
               esta variable.
+            </p>
+          </div>
+        ) : null}
+
+        {form.role !== '' ? (
+          <div className="c-harmonizer-variable__field">
+            <label htmlFor="analysis-universe-variable">Sólo a partir de (opcional)</label>
+            <div className="c-harmonizer-variable__inline">
+              <select
+                id="analysis-universe-variable"
+                value={form.universeVariable}
+                disabled={disabled}
+                onChange={(e) => set('universeVariable', e.target.value)}
+              >
+                <option value="">— toda la población a la que se le preguntó —</option>
+                {form.universeVariable !== '' && !numericVariables.some((v) => v.name === form.universeVariable) ? (
+                  <option value={form.universeVariable}>{form.universeVariable}</option>
+                ) : null}
+                {numericVariables.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+              {form.universeVariable !== '' ? (
+                <>
+                  <label htmlFor="analysis-universe-min">mayor o igual a</label>
+                  <input
+                    id="analysis-universe-min"
+                    type="number"
+                    value={form.universeMin}
+                    disabled={disabled}
+                    placeholder="15"
+                    onChange={(e) => set('universeMin', e.target.value)}
+                  />
+                </>
+              ) : null}
+            </div>
+            <p className="form-help">
+              Limita el universo con otra variable numérica de la encuesta, por ejemplo la escolaridad
+              sólo para EDAD de 15 y más. Quien no cumple, o no tiene ese dato (edad no especificada),
+              queda fuera de los cálculos y, al partir resultados, en «no aplica». Sólo se ofrecen
+              variables con tipo confirmado como número.
             </p>
           </div>
         ) : null}

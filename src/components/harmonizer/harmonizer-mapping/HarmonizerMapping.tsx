@@ -50,6 +50,7 @@ export function HarmonizerMapping() {
     setMissingCodes,
     setDataType,
     setRole,
+    setCertaintyCodes,
     isSample,
     sourceDesign,
     setSourceDesign,
@@ -735,6 +736,26 @@ export function HarmonizerMapping() {
                                       </option>
                                     ))}
                                   </select>
+                                  {row.role === 'certainty' ? (
+                                    <>
+                                      <label className="form-label" htmlFor={`certainty-${row.column.name}`}>
+                                        Códigos de enumeración completa
+                                      </label>
+                                      <input
+                                        id={`certainty-${row.column.name}`}
+                                        type="text"
+                                        value={row.certaintyCodes}
+                                        onChange={(e) => setCertaintyCodes(index, e.target.value)}
+                                        name={`certainty-${row.column.name}`}
+                                        placeholder="ej. 1"
+                                        disabled={!canEdit}
+                                        aria-describedby={`certainty-${row.column.name}-hint`}
+                                      />
+                                      <p id={`certainty-${row.column.name}-hint`} className="form-help c-harmonizer-mapping__type-hint">
+                                        Como vienen en el archivo. Los estratos con estos códigos, o con todos sus factores en 1, no tienen error de muestreo.
+                                      </p>
+                                    </>
+                                  ) : null}
                                 </div>
                               </td>
                             ) : null}

@@ -22,7 +22,7 @@ export function weightColumn(metadata: SourceMetadata | null): string | null {
  */
 export function hasTemplateMetadata(metadata: SourceMetadata | null): boolean {
   return (
-    metadata?.columns.some((c) => c.role !== undefined && !['weight', 'stratum', 'psu'].includes(c.role)) ??
+    metadata?.columns.some((c) => c.role !== undefined && !['weight', 'stratum', 'psu', 'certainty'].includes(c.role)) ??
     false
   );
 }

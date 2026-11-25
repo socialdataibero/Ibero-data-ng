@@ -76,13 +76,17 @@ export const ANALYSIS_UNIT_LABEL: Record<AnalysisUnit, string> = {
   household: 'Hogar',
 };
 
-/** Rol de una columna en el diseño muestral. */
-export type SourceRole = 'weight' | 'stratum' | 'psu';
+/**
+ * Rol de una columna en el diseño muestral. `certainty` es la columna que dice qué estratos se
+ * enumeraron completos (sus códigos van en `certaintyCodes`).
+ */
+export type SourceRole = 'weight' | 'stratum' | 'psu' | 'certainty';
 
 export const SOURCE_ROLE_LABEL: Record<SourceRole, string> = {
   weight: 'Factor de expansión',
   stratum: 'Estrato',
   psu: 'UPM',
+  certainty: 'Enumeración completa',
 };
 
 /**
@@ -224,10 +228,20 @@ export interface Disaggregation {
   maxLevel?: GeoLevel;
 }
 
+/**
+ * Universo que se puede calcular: los registros cuyo valor de `variable` (otra variable de la
+ * encuesta, numérica, como EDAD) es al menos `min`. Sin ese valor (edad no especificada) quedan fuera.
+ */
+export interface UniverseRule {
+  variable: string;
+  min: number;
+}
+
 /** Uso en análisis de una variable canónica; todo `null` = sin describir. */
 export interface VariableAnalysis {
   role: VariableRole | null;
   universe: string | null;
+  universeRule: UniverseRule | null;
   positiveValue: string | null;
   geoLevel: GeoLevel | null;
   unit: string | null;
@@ -320,6 +334,8 @@ export interface MappingColumn {
   missingCodes: string[];
   /** Rol de diseño muestral guardado. */
   role: SourceRole | null;
+  /** Con rol `certainty`: los códigos (como en el archivo) que marcan un estrato enumerado completo. */
+  certaintyCodes: string[];
   /** Tipo que sugieren los valores de esta edición. */
   inferredType: ValueType;
   values: ColumnValues;
@@ -347,6 +363,7 @@ export interface SavedMapping {
     canonicalName: string;
     missingCodes: string[];
     role: SourceRole | null;
+    certaintyCodes: string[];
   }[];
 }
 
@@ -466,6 +483,8 @@ export interface MappingChoice {
   dataType?: ValueType;
   missingCodes?: string[];
   role?: SourceRole | null;
+  /** Solo con `role: 'certainty'` (y entonces obligatorio). */
+  certaintyCodes?: string[];
 }
 
 /**

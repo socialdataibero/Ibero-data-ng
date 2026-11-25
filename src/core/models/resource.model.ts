@@ -39,6 +39,11 @@ export interface SourceMetadataEdition {
   coverage: Coverage | null;
   /** Column of the file with this edition's expansion factor. */
   weight: string | null;
+  /**
+   * Strata enumerated completely: the column and its codes as in the file. They add nothing to
+   * the variance. `null`: none declared (or a copy made before 2026-11-23, without it).
+   */
+  certainty?: { column: string; codes: string[] } | null;
 }
 
 export interface SourceOrigin {
@@ -63,6 +68,8 @@ export interface SourceMetadataColumn {
   role?: string;
   label?: string;
   universe?: string;
+  /** Narrower universe: the records whose `column` (a number of the file) is at least `min`. */
+  universeRule?: { column: string; min: number };
   categories?: SourceMetadataCategory[];
   positiveValue?: string;
   notApplicableLabel?: string;
