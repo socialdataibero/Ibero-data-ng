@@ -628,6 +628,9 @@ export function AnalysisBuilder({
                     {analysis.origin === 'VISTRACE' ? (
                       <span className="c-analysis-builder__origin">vistrace</span>
                     ) : null}
+                    {analysis.origin === 'TEMPLATE' ? (
+                      <span className="c-analysis-builder__origin">plantilla</span>
+                    ) : null}
                     <span
                       className={`c-analysis-builder__status c-analysis-builder__status--${analysis.status.toLowerCase()}`}
                     >
@@ -635,7 +638,7 @@ export function AnalysisBuilder({
                     </span>
                   </button>
                   <div className="c-analysis-builder__item-actions">
-                    {canEdit && analysis.origin !== 'VISTRACE' ? (
+                    {canEdit && analysis.origin === 'IBERO' ? (
                       <Button
                         type="button"
                         variant="secondary"

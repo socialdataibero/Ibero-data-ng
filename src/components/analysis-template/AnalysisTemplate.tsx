@@ -15,6 +15,8 @@ import { useTemplateBreakdowns } from './useTemplateBreakdowns';
 import { TemplateResultTable } from './TemplateResultTable';
 import { TemplateStepsSkeleton } from './AnalysisTemplateSkeleton';
 import { useAnalysisTemplate } from './useAnalysisTemplate';
+import { TemplatePublish } from './TemplatePublish';
+import { useOrganizationRole } from '../../core/hooks/useOrganizationRole';
 import './analysis-template.css';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -54,6 +56,7 @@ export function AnalysisTemplate() {
     chart,
   } = page;
   const breakdowns = useTemplateBreakdowns(result);
+  const { canEdit } = useOrganizationRole(organizationId);
 
   if (page.notFound) return <DatasetNotFound />;
 
@@ -508,9 +511,19 @@ export function AnalysisTemplate() {
               comparedBreakdown={breakdowns.view.compared}
             />
             <p className="c-analysis-template__help">
-              Vista previa: este análisis no se guarda. Los umbrales de precisión (15% y 30% de coeficiente de
+              Vista previa: este análisis no se guarda hasta que lo publiques. Los umbrales de precisión (15% y 30% de coeficiente de
               variación) y el aviso de cifras con uno o dos registros son provisionales.
             </p>
+            {canEdit && page.request ? (
+              <TemplatePublish
+                key={JSON.stringify(page.request)}
+                organizationId={organizationId}
+                datasetId={datasetId}
+                datasetHref={datasetHref}
+                request={page.request}
+                result={result}
+              />
+            ) : null}
           </section>
         ) : null}
       </div>

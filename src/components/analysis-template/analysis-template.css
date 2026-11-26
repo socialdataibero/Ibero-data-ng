@@ -348,3 +348,41 @@
   gap: 0.75rem;
   min-width: 0;
 }
+
+/* Publish the result as an analysis */
+.c-analysis-template__publish {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-secondary-4, #ddd);
+}
+
+.c-analysis-template__publish fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.c-analysis-template__publish-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.c-analysis-template__publish-field input,
+.c-analysis-template__publish-field textarea,
+.c-analysis-template__publish-field select {
+  font: inherit;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-secondary-5, #ccc);
+  border-radius: 4px;
+  background: var(--background, #fff);
+  color: inherit;
+}
+
+.c-analysis-template__publish > button {
+  justify-self: start;
+}

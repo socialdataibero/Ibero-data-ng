@@ -31,7 +31,7 @@ export const ANALYSIS_STATUS_LABEL: Record<AnalysisStatus, string> = {
   FAILED: 'Falló',
 };
 
-export type AnalysisOrigin = 'IBERO' | 'VISTRACE';
+export type AnalysisOrigin = 'IBERO' | 'VISTRACE' | 'TEMPLATE';
 
 export interface Analysis {
   id: string;
