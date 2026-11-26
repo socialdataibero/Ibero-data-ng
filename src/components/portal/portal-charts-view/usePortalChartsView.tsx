@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { portalCatalogService, mainResource, type CatalogPackage } from '../../../core/services/portal-catalog.service';
 import { deriveCharts, labelColumn, tableToCsv, tableForModal, type TableData, type ChartBlock } from '../../../core/utils/portal-charts';
+import { isTemplateTable, templateTabs } from '../../../core/utils/portal-template-charts';
 import { describeSteps } from '../../../core/utils/portal-recipe';
 import { usePortalRequest } from '../../../core/hooks/usePortalRequest';
 import type { PortalChartsHeaderTab } from '../../shared/portal/portal-charts-header/PortalChartsHeader';
@@ -45,6 +46,7 @@ interface TabDef {
 
 function buildTabs(table: TableData | null): TabDef[] {
   if (!table?.rows?.length) return [];
+  if (isTemplateTable(table)) return templateTabs(table);
 
   const period = (table.columns ?? []).find((c) => PERIOD_COLUMN.test(c.id));
   const values = period
