@@ -24,6 +24,11 @@ export function selectBreakdown(
   return next;
 }
 
+/** The code of a breakdown cell for exports: `*` is the marginal total («Todos»), so it never collides with a real code. */
+export function breakdownCode(row: ResultRow, dimension: BreakdownDimension): string {
+  return row.desagregaciones[dimension.column] ?? '*';
+}
+
 export function breakdownLabel(row: ResultRow, dimension: BreakdownDimension): string {
   const code = row.desagregaciones[dimension.column];
   if (code === null) return 'Todos';

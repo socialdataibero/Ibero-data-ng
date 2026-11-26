@@ -1,6 +1,6 @@
 import type { Base, ResultRow, TemplateResult } from '../models/analysis-template.model';
 import { csvText } from './csv';
-import { breakdownLabel } from './template-breakdowns';
+import { breakdownCode, breakdownLabel } from './template-breakdowns';
 
 /**
  * Reading a template result in the browser. The server sends numerators and denominators, never
@@ -33,7 +33,7 @@ export function precisionOf(
   if (result.source.design === 'census') return 'sin error de muestreo';
   if (se === null) return 'no calculada';
   if (value === 0 || (result.value.kind === 'proportion' && value === 1)) return 'no calculable';
-  const cv = se / value;
+  const cv = se / Math.abs(value);
   return cv <= 0.15 ? 'alta' : cv <= 0.3 ? 'moderada' : 'baja';
 }
 
@@ -156,12 +156,18 @@ export function resultCsvRows(result: TemplateResult, now = new Date()): string[
     ],
     [
       ...used.slice(0, split),
-      ...breakdowns.map((dimension) => csvText(dimension.column.toLowerCase())),
+      ...breakdowns.flatMap((dimension) => {
+        const name = csvText(`desag_${dimension.column.toLowerCase()}`);
+        return [`${name}_codigo`, name];
+      }),
       ...used.slice(split),
     ],
     ...result.rows.map((r) => [
       ...used.slice(0, split).map((c) => cell(r[c])),
-      ...breakdowns.map((dimension) => csvText(breakdownLabel(r, dimension))),
+      ...breakdowns.flatMap((dimension) => [
+        csvText(breakdownCode(r, dimension)),
+        csvText(breakdownLabel(r, dimension)),
+      ]),
       ...used.slice(split).map((c) => cell(r[c])),
     ]),
   ];
